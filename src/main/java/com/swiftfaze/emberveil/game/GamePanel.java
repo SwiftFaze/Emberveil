@@ -5,12 +5,9 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 import com.swiftfaze.emberveil.DrawableImageEntity;
 import com.swiftfaze.emberveil.Positionable;
 import com.swiftfaze.emberveil.entities.player.Player;
-import com.swiftfaze.emberveil.entities.scenery.BigGrass;
-import com.swiftfaze.emberveil.entities.scenery.GrassPatch;
-import com.swiftfaze.emberveil.entities.scenery.Lake;
-import com.swiftfaze.emberveil.world.Background;
+import com.swiftfaze.emberveil.world.TileTestScene;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -18,25 +15,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GamePanel extends JPanel {
-    static final int COLS = 60;
-    static final int ROWS = 30;
-    static final int CHAR_WIDTH = 20;
-    static final int CHAR_HEIGHT = 20;
+    static final int GAME_WIDTH = 50;
+    static final int GAME_HEIGHT = 50;
+    static final int CHAR_WIDTH = 15;
+    static final int CHAR_HEIGHT = 15;
 
-    private final Player player = new Player(COLS / 2, ROWS / 2);
-    private final Background background = new Background(COLS, ROWS);
-    private final Camera camera = new Camera(COLS, ROWS);
+    private final Player player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    private final TileTestScene scene = new TileTestScene(100 , 100);
+    private final Camera camera = new Camera(GAME_WIDTH, GAME_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
+    private List<GameListener> listeners = new ArrayList<>();
 
     public GamePanel() {
-        setPreferredSize(new Dimension(COLS * CHAR_WIDTH, ROWS * CHAR_HEIGHT));
+        setPreferredSize(new Dimension(GAME_WIDTH * CHAR_WIDTH, GAME_HEIGHT * CHAR_HEIGHT));
         setBackground(Color.BLACK);
         setFocusable(true);
+        setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
 
-        addEntity(background);
-//        addEntity(new Grass(31, 16));
+
+        addEntity(scene);
         addEntity(player);
-
         keyListen();
     }
 
@@ -45,10 +43,13 @@ public class GamePanel extends JPanel {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_Z, KeyEvent.VK_UP -> player.moveUp();
-                    case KeyEvent.VK_S, KeyEvent.VK_DOWN -> player.moveDown();
-                    case KeyEvent.VK_Q, KeyEvent.VK_LEFT -> player.moveLeft();
-                    case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> player.moveRight();
+                    case KeyEvent.VK_Z, KeyEvent.VK_UP -> player.moveUp(scene);
+                    case KeyEvent.VK_S, KeyEvent.VK_DOWN -> player.moveDown(scene);
+                    case KeyEvent.VK_Q, KeyEvent.VK_LEFT -> player.moveLeft(scene);
+                    case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> player.moveRight(scene);
+                }
+                for (GameListener l : listeners) {
+                    l.onPlayerMoved(player.getX(), player.getY());
                 }
                 repaint();
             }
@@ -62,6 +63,11 @@ public class GamePanel extends JPanel {
     public void startGameLoop() {
         requestFocusInWindow();
     }
+
+    public void addGameListener(GameListener listener) {
+        listeners.add(listener);
+    }
+
 
     @Override
     protected void paintComponent(Graphics g) {

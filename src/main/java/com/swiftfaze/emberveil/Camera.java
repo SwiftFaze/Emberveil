@@ -3,17 +3,17 @@ package com.swiftfaze.emberveil;
 public class Camera {
     private int x;
     private int y;
-    private final int viewportCols;
-    private final int viewportRows;
+    private final int viewportWidth;
+    private final int viewportHeight;
 
-    public Camera(int viewportCols, int viewportRows) {
-        this.viewportCols = viewportCols;
-        this.viewportRows = viewportRows;
+    public Camera(int viewportWidth, int viewportHeight) {
+        this.viewportWidth = viewportWidth;
+        this.viewportHeight = viewportHeight;
     }
 
     public void centerOn(int targetX, int targetY) {
-        x = targetX - viewportCols / 2;
-        y = targetY - viewportRows / 2;
+        x = targetX - viewportWidth / 2;
+        y = targetY - viewportHeight / 2;
     }
 
     public int getX() { return x; }

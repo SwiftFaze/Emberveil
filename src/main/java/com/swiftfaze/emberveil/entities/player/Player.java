@@ -1,14 +1,15 @@
 package com.swiftfaze.emberveil.entities.player;
 
 import com.swiftfaze.emberveil.DrawableAsciiEntity;
+import com.swiftfaze.emberveil.world.WorldScene;
 
 import java.awt.*;
 
 public class Player implements DrawableAsciiEntity {
     private int x;
     private int y;
-    private static final char symbol = 'H';
-    private static final Color color = Color.PINK;
+    private static final char symbol = '⏺';
+    private static final Color color = Color.decode("#ef481f");
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 18);
 
     public Player(int startX, int startY) {
@@ -21,21 +22,32 @@ public class Player implements DrawableAsciiEntity {
         y += dy;
     }
 
-    public void moveUp() {
-        move(0, -1);
+    public void moveUp(WorldScene worldScene) {
+        tryMove(0, -1, worldScene);
     }
 
-    public void moveDown() {
-        move(0, 1);
+    public void moveDown(WorldScene worldScene) {
+        tryMove(0, 1, worldScene);
     }
 
-    public void moveLeft() {
-        move(-1, 0);
+    public void moveLeft(WorldScene worldScene) {
+        tryMove(-1, 0, worldScene);
     }
 
-    public void moveRight() {
-        move(1, 0);
+    public void moveRight(WorldScene worldScene) {
+        tryMove(1, 0, worldScene);
     }
+
+    private void tryMove(int dx, int dy, WorldScene worldScene) {
+        int newX = x + dx;
+        int newY = y + dy;
+
+        if (worldScene.isWalkable(newX, newY)) {
+            x = newX;
+            y = newY;
+        }
+    }
+
 
     @Override
     public int getX() {
