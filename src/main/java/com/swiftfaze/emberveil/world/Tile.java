@@ -3,24 +3,28 @@ package com.swiftfaze.emberveil.world;
 import java.awt.*;
 
 public enum Tile {
-    GRASS('〴', new Color(179, 224, 160), true),
-//    GRASS('葤', new Color(179, 224, 160), true),
+//    GRASS('〴', new Color(179, 224, 160), true),
+    GRASS('⡐', new Color(179, 224, 160), true),
 
-    DIRT('凷', new Color(216, 178, 140), true),
-    WATER('☵', new Color(174, 191, 232), false),
-    STONE('㔣', new Color(154, 155, 159), false),
-    SAND('⠋', new Color(255, 240, 189), true),
-    MUD('⠊', new Color(196, 168, 140), true),
-    SNOW('❄', Color.WHITE, true),
-    ICE('㚣', new Color(210, 240, 255), false),
+    DIRT('⠍', new Color(216, 178, 140), true),
+//    WATER('☵', new Color(174, 191, 232), false),
+    WATER('⠭', new Color(174, 191, 232), false),
+//    STONE('㔣', new Color(88, 88, 92), false),
+    STONE('⠿', new Color(88, 88, 92), false),
+    SAND('⠋', new Color(197, 175, 110), true),
+    MUD('⠊', new Color(103, 76, 41), true),
+    SNOW('⠞', Color.WHITE, true),
+    ICE('⠨', new Color(210, 240, 255), false),
     PATH('·', new Color(224, 209, 180), true),
     EMPTY(' ', new Color(211, 211, 211), true),
 
     WALL('▓', new Color(190, 190, 190), false),
     BRIDGE('=', new Color(210, 178, 140), true),
 
-    TREE('㣺', new Color(163, 209, 163), false),
-    ROCK('҈', new Color(197, 197, 197), false),
+    TREE('㣺', new Color(79, 106, 79), false),
+//    TREE('⡊', new Color(79, 106, 79), false),
+//    ROCK('҈', new Color(197, 197, 197), false),
+    ROCK('⠶', new Color(197, 197, 197), false),
 
     BUSH('b', new Color(180, 224, 180), false),
     DOOR('D', new Color(224, 196, 160), true),

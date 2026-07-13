@@ -3,16 +3,18 @@ package com.swiftfaze.emberveil.game;
 import javax.swing.*;
 import java.awt.*;
 
-import static com.swiftfaze.emberveil.game.GamePanel.*;
+import static com.swiftfaze.emberveil.game.GamePanel.CHAR_HEIGHT;
+import static com.swiftfaze.emberveil.game.GamePanel.GAME_WIDTH;
 
-public class TopbarPanel extends JPanel {
+public class NorthPanel extends JPanel {
     private JLabel title;
 
-    public TopbarPanel() {
+    public NorthPanel() {
         setPreferredSize(new Dimension(GAME_WIDTH, 4 * CHAR_HEIGHT));
         setBackground(Color.BLACK);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
+        setFocusable(false);
 
         title = makeLabel("Emberveil");
         title.setForeground(Color.decode("#eeb392"));

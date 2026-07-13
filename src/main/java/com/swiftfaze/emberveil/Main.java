@@ -1,9 +1,9 @@
 package com.swiftfaze.emberveil;
 
-import com.swiftfaze.emberveil.game.BottomPanel;
+import com.swiftfaze.emberveil.game.EastPanel;
 import com.swiftfaze.emberveil.game.GamePanel;
-import com.swiftfaze.emberveil.game.SidebarPanel;
-import com.swiftfaze.emberveil.game.TopbarPanel;
+import com.swiftfaze.emberveil.game.NorthPanel;
+import com.swiftfaze.emberveil.game.SouthPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,17 +12,19 @@ public class Main {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Emberveil");
 
-        TopbarPanel topbarPanel = new TopbarPanel();
-        BottomPanel bottomPanel = new BottomPanel();
-        SidebarPanel sidebar = new SidebarPanel();
+        NorthPanel northPanel = new NorthPanel();
+        SouthPanel southPanel = new SouthPanel();
+        EastPanel eastPanel = new EastPanel();
         GamePanel gamePanel = new GamePanel();
-        gamePanel.addGameListener(sidebar);
+
+        gamePanel.addGameListener(eastPanel);
+        gamePanel.setEastPanel(eastPanel); // wire "I" key to EastPanel's toggle
 
         frame.setLayout(new BorderLayout());
-        frame.add(topbarPanel, BorderLayout.NORTH);
-        frame.add(bottomPanel, BorderLayout.SOUTH);
+        frame.add(northPanel, BorderLayout.NORTH);
+        frame.add(southPanel, BorderLayout.SOUTH);
         frame.add(gamePanel, BorderLayout.CENTER);
-        frame.add(sidebar, BorderLayout.EAST);
+        frame.add(eastPanel, BorderLayout.EAST);
 
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -30,6 +32,7 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
+        gamePanel.requestFocusInWindow();
         gamePanel.startGameLoop();
     }
 }

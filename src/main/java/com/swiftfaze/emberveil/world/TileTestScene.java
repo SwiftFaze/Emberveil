@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 public class TileTestScene extends WorldScene {
     private Logger logger = Logger.getLogger(this.getClass().getName());
-    private Random rand = new Random(1000);
+    private Random rand = new Random();
 
     public TileTestScene(int width, int height) {
         super(width, height);
@@ -15,25 +15,28 @@ public class TileTestScene extends WorldScene {
         fillAll(Tile.EMPTY);
 
         NoiseGenerator noiseGen = new NoiseGenerator();
-        noiseGen.setSeed(56465);
+        noiseGen.setSeed(rand.nextDouble()*100000);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 double noise = noiseGen.noise(x, y);
 
 
-                if (noise > -1 && noise < -0.65) {
+                if (noise > -1 && noise < -0.6) {
                     fillRegion(x, y, 1, 1, Tile.WATER);
                     continue;
                 }
-                if (noise > -0.65 && noise < -0.6) {
+                if (noise > -0.6 && noise < -0.55) {
                     fillRegion(x, y, 1, 1, Tile.SAND);
                     continue;
                 }
-                if (noise > -0.6 && noise < -0.5) {
+                if (noise > -0.55 && noise < -0.5) {
                     fillRegion(x, y, 1, 1, Tile.MUD);
                     continue;
                 }
-
+                if (noise > -0.5 && noise < -0.4) {
+                    fillRegion(x, y, 1, 1, Tile.DIRT);
+                    continue;
+                }
 
                 if (noise > -0.2 && noise < 0.2) {
                     fillRegion(x, y, 1, 1, Tile.GRASS);

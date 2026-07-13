@@ -1,6 +1,7 @@
 package com.swiftfaze.emberveil.game;
 
+import com.swiftfaze.emberveil.entities.player.Player;
+
 public interface GameListener {
-    void onPlayerMoved(int x, int y);
-    void onHealthChanged(int hp, int maxHp);
+    void updatePlayer(Player player);
 }

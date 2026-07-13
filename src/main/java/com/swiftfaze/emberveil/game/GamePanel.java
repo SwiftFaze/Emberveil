@@ -15,16 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GamePanel extends JPanel {
+
     static final int GAME_WIDTH = 50;
     static final int GAME_HEIGHT = 50;
     static final int CHAR_WIDTH = 15;
     static final int CHAR_HEIGHT = 15;
 
     private final Player player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    private final TileTestScene scene = new TileTestScene(100 , 100);
+    private final TileTestScene scene = new TileTestScene(100, 100);
     private final Camera camera = new Camera(GAME_WIDTH, GAME_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
     private List<GameListener> listeners = new ArrayList<>();
+
+    private EastPanel eastPanel;
 
     public GamePanel() {
         setPreferredSize(new Dimension(GAME_WIDTH * CHAR_WIDTH, GAME_HEIGHT * CHAR_HEIGHT));
@@ -32,10 +35,14 @@ public class GamePanel extends JPanel {
         setFocusable(true);
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
 
-
         addEntity(scene);
         addEntity(player);
+
         keyListen();
+    }
+
+    public void setEastPanel(EastPanel eastPanel) {
+        this.eastPanel = eastPanel;
     }
 
     private void keyListen() {
@@ -47,9 +54,14 @@ public class GamePanel extends JPanel {
                     case KeyEvent.VK_S, KeyEvent.VK_DOWN -> player.moveDown(scene);
                     case KeyEvent.VK_Q, KeyEvent.VK_LEFT -> player.moveLeft(scene);
                     case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> player.moveRight(scene);
+                    case KeyEvent.VK_I -> {
+                        if (eastPanel != null) {
+                            eastPanel.toggleInventory();
+                        }
+                    }
                 }
                 for (GameListener l : listeners) {
-                    l.onPlayerMoved(player.getX(), player.getY());
+                    l.updatePlayer(player);
                 }
                 repaint();
             }
@@ -68,6 +80,9 @@ public class GamePanel extends JPanel {
         listeners.add(listener);
     }
 
+    public Player getPlayer() {
+        return player;
+    }
 
     @Override
     protected void paintComponent(Graphics g) {

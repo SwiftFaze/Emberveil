@@ -4,50 +4,53 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 import com.swiftfaze.emberveil.world.WorldScene;
 
 import java.awt.*;
+import java.util.logging.Logger;
 
 public class Player implements DrawableAsciiEntity {
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
     private int x;
     private int y;
-    private static final char symbol = '⏺';
+    private static final char symbol = '◼';
     private static final Color color = Color.decode("#ef481f");
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 18);
 
+    private final PlayerInfo playerInfo;
+
     public Player(int startX, int startY) {
+        this.playerInfo = new PlayerInfo();
         this.x = startX;
         this.y = startY;
     }
 
-    private void move(int dx, int dy) {
-        x += dx;
-        y += dy;
-    }
-
     public void moveUp(WorldScene worldScene) {
-        tryMove(0, -1, worldScene);
+        move(0, -1, worldScene);
     }
 
     public void moveDown(WorldScene worldScene) {
-        tryMove(0, 1, worldScene);
+        move(0, 1, worldScene);
     }
 
     public void moveLeft(WorldScene worldScene) {
-        tryMove(-1, 0, worldScene);
+        move(-1, 0, worldScene);
     }
 
     public void moveRight(WorldScene worldScene) {
-        tryMove(1, 0, worldScene);
+        move(1, 0, worldScene);
     }
 
-    private void tryMove(int dx, int dy, WorldScene worldScene) {
+    private void move(int dx, int dy, WorldScene worldScene) {
         int newX = x + dx;
         int newY = y + dy;
-
         if (worldScene.isWalkable(newX, newY)) {
             x = newX;
             y = newY;
         }
     }
 
+    public PlayerInfo getPlayerInfo() {
+        return playerInfo;
+    }
 
     @Override
     public int getX() {
