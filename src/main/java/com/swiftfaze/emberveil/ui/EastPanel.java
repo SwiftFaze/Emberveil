@@ -1,12 +1,14 @@
-package com.swiftfaze.emberveil.game;
+package com.swiftfaze.emberveil.ui;
 
 import com.swiftfaze.emberveil.entities.player.Player;
+import com.swiftfaze.emberveil.game.GameListener;
 
 import javax.swing.*;
 import java.awt.*;
 
 import static com.swiftfaze.emberveil.game.GamePanel.CHAR_HEIGHT;
 import static com.swiftfaze.emberveil.game.GamePanel.GAME_HEIGHT;
+
 
 public class EastPanel extends JPanel implements GameListener {
 

@@ -1,4 +1,4 @@
-package com.swiftfaze.emberveil.game;
+package com.swiftfaze.emberveil.ui;
 
 import javax.swing.*;
 import java.awt.*;

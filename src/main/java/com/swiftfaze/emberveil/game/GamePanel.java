@@ -5,6 +5,7 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 import com.swiftfaze.emberveil.DrawableImageEntity;
 import com.swiftfaze.emberveil.Positionable;
 import com.swiftfaze.emberveil.entities.player.Player;
+import com.swiftfaze.emberveil.ui.EastPanel;
 import com.swiftfaze.emberveil.world.TileTestScene;
 
 import javax.swing.*;
@@ -16,10 +17,10 @@ import java.util.List;
 
 public class GamePanel extends JPanel {
 
-    static final int GAME_WIDTH = 50;
-    static final int GAME_HEIGHT = 50;
-    static final int CHAR_WIDTH = 15;
-    static final int CHAR_HEIGHT = 15;
+    public static final int GAME_WIDTH = 50;
+    public static final int GAME_HEIGHT = 50;
+    public static final int CHAR_WIDTH = 15;
+    public static final int CHAR_HEIGHT = 15;
 
     private final Player player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     private final TileTestScene scene = new TileTestScene(100, 100);

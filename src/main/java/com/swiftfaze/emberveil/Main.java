@@ -1,9 +1,9 @@
 package com.swiftfaze.emberveil;
 
-import com.swiftfaze.emberveil.game.EastPanel;
+import com.swiftfaze.emberveil.ui.EastPanel;
 import com.swiftfaze.emberveil.game.GamePanel;
-import com.swiftfaze.emberveil.game.NorthPanel;
-import com.swiftfaze.emberveil.game.SouthPanel;
+import com.swiftfaze.emberveil.ui.NorthPanel;
+import com.swiftfaze.emberveil.ui.SouthPanel;
 
 import javax.swing.*;
 import java.awt.*;
