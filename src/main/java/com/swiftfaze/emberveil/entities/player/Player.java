@@ -1,7 +1,6 @@
 package com.swiftfaze.emberveil.entities.player;
 
 import com.swiftfaze.emberveil.DrawableAsciiEntity;
-import com.swiftfaze.emberveil.world.Tile;
 import com.swiftfaze.emberveil.world.WorldScene;
 
 import java.awt.*;
@@ -72,16 +71,12 @@ public class Player implements DrawableAsciiEntity {
         }
     }
 
-    public void ascend(WorldScene worldScene) {
-        if (worldScene.isWalkable(x, y, z + 1)) {
+    public void forceAscend() {
             z++;
-        }
     }
 
-    public void descend(WorldScene worldScene) {
-        if (z > 0 && worldScene.isWalkable(x, y, z - 1)) {
+    public void forceDescend() {
             z--;
-        }
     }
     public PlayerInfo getPlayerInfo() {
         return playerInfo;

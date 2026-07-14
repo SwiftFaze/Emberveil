@@ -6,8 +6,8 @@ import com.swiftfaze.emberveil.game.GameListener;
 import javax.swing.*;
 import java.awt.*;
 
-import static com.swiftfaze.emberveil.game.GamePanel.CHAR_HEIGHT;
-import static com.swiftfaze.emberveil.game.GamePanel.GAME_HEIGHT;
+import static com.swiftfaze.emberveil.GameConst.CHAR_HEIGHT;
+import static com.swiftfaze.emberveil.GameConst.GAME_HEIGHT;
 
 
 public class EastPanel extends JPanel implements GameListener {

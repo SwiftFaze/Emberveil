@@ -2,7 +2,6 @@ package com.swiftfaze.emberveil.game;
 
 import com.swiftfaze.emberveil.Camera;
 import com.swiftfaze.emberveil.DrawableAsciiEntity;
-import com.swiftfaze.emberveil.DrawableImageEntity;
 import com.swiftfaze.emberveil.Positionable;
 import com.swiftfaze.emberveil.entities.player.Player;
 import com.swiftfaze.emberveil.ui.EastPanel;
@@ -15,20 +14,20 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.swiftfaze.emberveil.GameConst.*;
+
 public class GamePanel extends JPanel {
 
-    public static final int GAME_WIDTH = 50;
-    public static final int GAME_HEIGHT = 50;
-    public static final int CHAR_WIDTH = 15;
-    public static final int CHAR_HEIGHT = 15;
 
     private final Player player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    private final TileTestScene scene = new TileTestScene(100, 100, 10);
+    private final TileTestScene scene = new TileTestScene(GAME_WIDTH * 2, GAME_HEIGHT * 2, GAME_DEPTH);
     private final Camera camera = new Camera(GAME_WIDTH, GAME_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
     private List<GameListener> listeners = new ArrayList<>();
 
     private EastPanel eastPanel;
+    private float preciseZLevel = 0;
+
 
     public GamePanel() {
         setPreferredSize(new Dimension(GAME_WIDTH * CHAR_WIDTH, GAME_HEIGHT * CHAR_HEIGHT));
@@ -40,6 +39,7 @@ public class GamePanel extends JPanel {
         int startY = GAME_HEIGHT / 2;
         int startZ = scene.getSurfaceHeight(startX, startY);
         player.setPosition(startX, startY, startZ);
+        preciseZLevel = startZ;
 
         addEntity(scene);
         addEntity(player);
@@ -60,8 +60,8 @@ public class GamePanel extends JPanel {
                     case KeyEvent.VK_S, KeyEvent.VK_DOWN -> player.moveDown(scene);
                     case KeyEvent.VK_Q, KeyEvent.VK_LEFT -> player.moveLeft(scene);
                     case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> player.moveRight(scene);
-                    case KeyEvent.VK_PAGE_UP -> player.ascend(scene);
-                    case KeyEvent.VK_PAGE_DOWN -> player.descend(scene);
+                    case KeyEvent.VK_PAGE_UP -> player.forceAscend();
+                    case KeyEvent.VK_PAGE_DOWN -> player.forceDescend();
                     case KeyEvent.VK_I -> {
                         if (eastPanel != null) {
                             eastPanel.toggleInventory();
@@ -96,33 +96,82 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-
+        roundZLevel();
         camera.centerOn(player.getX(), player.getY());
 
-        int playerZ = player.getZ();
+        float visualZLevel = preciseZLevel;
 
-        for (int z = 0; z <= playerZ; z++) {
-            int depthBelow = playerZ - z;
-            float brightness = brightnessForDepth(depthBelow);
-            scene.renderLayer(g2d, CHAR_WIDTH, CHAR_HEIGHT, camera.getX(), camera.getY(), z, brightness);
+        int lowestVisibleZ = Math.max(0, (int) Math.floor(visualZLevel) - 3);
+        int highestVisibleZ = scene.getDepth() - 1;
+
+        for (int zLevel = lowestVisibleZ; zLevel <= highestVisibleZ; zLevel++) {
+
+            float zDistanceFromPlayer = preciseZLevel - zLevel;
+
+            float brightness;
+
+            if (zDistanceFromPlayer > 0) {
+                brightness = getBrightnessFromDepth(zDistanceFromPlayer);
+            } else {
+                brightness = MAX_BRIGHTNESS;
+            }
+
+            scene.renderWorld(
+                    g2d,
+                    CHAR_WIDTH,
+                    CHAR_HEIGHT,
+                    camera.getX(),
+                    camera.getY(),
+                    zLevel,
+                    brightness
+            );
+
+            float fogStartingHeight = zLevel - visualZLevel;
+            scene.renderClouds(
+                    g2d,
+                    CHAR_WIDTH,
+                    CHAR_HEIGHT,
+                    camera.getX(),
+                    camera.getY(),
+                    zLevel,
+                    fogStartingHeight
+            );
+
         }
-
         for (Positionable entity : entitiesToDraw) {
             if (entity == scene) continue;
+
             if (entity instanceof DrawableAsciiEntity ascii) {
-                ascii.render(g2d, CHAR_WIDTH, CHAR_HEIGHT, camera.getX(), camera.getY());
-            } else if (entity instanceof DrawableImageEntity image) {
-                image.render(g2d, CHAR_WIDTH, CHAR_HEIGHT, camera.getX(), camera.getY());
+                ascii.render(
+                        g2d,
+                        CHAR_WIDTH,
+                        CHAR_HEIGHT,
+                        camera.getX(),
+                        camera.getY()
+                );
+
             }
         }
     }
 
-    private static final float DECAY_RATE = 0.55f; // lower = darker per floor, higher = subtler falloff
-    private static final float MIN_BRIGHTNESS = 0.12f;
+    /**
+     * Every time player moves, smoothly transition render Z level
+     */
+    private void roundZLevel() {
+        float targetZ = player.getZ();
+        float difference = targetZ - preciseZLevel;
+        ///  STOP FLOATING POINT DRIFT
+        if (Math.abs(difference) < 0.001f) {
+            preciseZLevel = targetZ;
+            return;
+        }
+        preciseZLevel += difference * Z_TRANSITION_SPEED;
+    }
 
-    private float brightnessForDepth(int depthBelow) {
-        if (depthBelow <= 0) return 1.0f;
-        float brightness = (float) Math.pow(DECAY_RATE, depthBelow);
+
+    private float getBrightnessFromDepth(float zDistanceFromPlayer) {
+        if (zDistanceFromPlayer <= 0) return MAX_BRIGHTNESS;
+        float brightness = (float) Math.pow(BRIGHTNESS_LEVEL_DECAY_RATE, zDistanceFromPlayer);
         return Math.max(MIN_BRIGHTNESS, brightness);
     }
 }

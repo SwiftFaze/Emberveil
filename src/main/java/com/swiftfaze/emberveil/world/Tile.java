@@ -29,6 +29,7 @@ public enum Tile {
     ROCK('⠶', new Color(197, 197, 197), false),
 
     BUSH('b', new Color(180, 224, 180), false),
+    CLOUD('☵', new Color(185, 213, 228, 255), false),
     DOOR('D', new Color(224, 196, 160), true),
     CHEST('C', new Color(240, 219, 160), false),
     PORTAL('O', new Color(216, 180, 232), false),

@@ -4,15 +4,18 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 
 import java.awt.*;
 
+import static com.swiftfaze.emberveil.GameConst.*;
+import static com.swiftfaze.emberveil.GameConst.LEVEL_ABOVE_FOG_Z_LEVEL_START;
+
 public abstract class WorldScene implements DrawableAsciiEntity {
-    private final Tile[][][] tiles; // [z][x][y]
+    private final Tile[][][] tiles;
     private final int width;
     private final int height;
     private final int depth;
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 15);
 
     protected WorldScene(int width, int height) {
-        this(width, height, 1); // default: single floor, backward compatible
+        this(width, height, 10);
     }
 
     protected WorldScene(int width, int height, int depth) {
@@ -98,15 +101,15 @@ public abstract class WorldScene implements DrawableAsciiEntity {
 
     @Override
     public void render(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY) {
-        renderLayer(g2d, tileWidth, tileHeight, cameraX, cameraY, 0, 1.0f);
+        renderWorld(g2d, tileWidth, tileHeight, cameraX, cameraY, 0, MAX_BRIGHTNESS);
     }
     public int getSurfaceHeight(int x, int y) {
         for (int z = getDepth() - 1; z >= 0; z--) {
             if (isWalkable(x, y, z)) return z;
         }
-        return -1; // no ground found in this column
+        return -1;
     }
-    public void renderLayer(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY, int z, float brightness) {
+    public void renderWorld(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY, int z, float brightness) {
         Tile[][] layer = tiles[z];
         g2d.setFont(font);
 
@@ -123,9 +126,60 @@ public abstract class WorldScene implements DrawableAsciiEntity {
             }
         }
     }
+    public void renderClouds(Graphics2D g2d,
+                             int tileWidth,
+                             int tileHeight,
+                             int cameraX,
+                             int cameraY,
+                             int z,
+                             float heightAbove){
 
+
+        float fogAmount = 0f;
+
+        if (heightAbove > LEVEL_ABOVE_FOG_Z_LEVEL_START) {
+            fogAmount = Math.min(MAX_BRIGHTNESS, heightAbove - LEVEL_ABOVE_FOG_Z_LEVEL_START);
+        }
+
+        if (fogAmount <= 0) return;
+
+
+        Tile[][] layer = tiles[z];
+
+        g2d.setFont(font);
+
+        g2d.setComposite(
+                AlphaComposite.getInstance(
+                        AlphaComposite.SRC_OVER,
+                        FOG_ALPHA_COEFFICIENT * fogAmount
+                )
+        );
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+
+                Tile tile = layer[x][y];
+
+                if (tile == null)
+                    continue;
+
+                int screenX = (x - cameraX) * tileWidth;
+                int screenY = (y - cameraY) * tileHeight + tileHeight;
+
+                g2d.setColor(Tile.CLOUD.getColor());
+
+                g2d.drawString(
+                        String.valueOf(Tile.CLOUD.getSymbol()),
+                        screenX,
+                        screenY
+                );
+            }
+        }
+
+        g2d.setComposite(AlphaComposite.SrcOver);
+    }
     private static Color dim(Color color, float factor) {
-        if (factor >= 1.0f) return color;
+        if (factor >= MAX_BRIGHTNESS) return color;
         int r = (int) (color.getRed() * factor);
         int g = (int) (color.getGreen() * factor);
         int b = (int) (color.getBlue() * factor);
