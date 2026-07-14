@@ -35,7 +35,7 @@ public class PlayerInfoPanel extends JPanel {
                 + " | " + player.getPlayerInfo().getPlayerClass().getName());
         levelLabel.setText("LV " + player.getPlayerInfo().getLevel().getCurrentLevel()
                 + " | " + player.getPlayerInfo().getLevel().getXp() + "/" + player.getPlayerInfo().getLevel().getMaxXp() + " XP");
-        positionLabel.setText("Pos: (" + player.getX() + ", " + player.getY() + ")");
+        positionLabel.setText("Pos: (" + player.getX() + ", " + player.getY() + ", " + player.getZ() + ")");
     }
 
     private JLabel makeLabel(String text) {

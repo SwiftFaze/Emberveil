@@ -6,7 +6,7 @@ public class MountainScene extends WorldScene {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     public MountainScene(int width, int height) {
-        super(width, height);
+        super(width, height, 0);
 
 
         fillAll(Tile.EMPTY);

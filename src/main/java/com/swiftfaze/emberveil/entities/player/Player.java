@@ -1,6 +1,7 @@
 package com.swiftfaze.emberveil.entities.player;
 
 import com.swiftfaze.emberveil.DrawableAsciiEntity;
+import com.swiftfaze.emberveil.world.Tile;
 import com.swiftfaze.emberveil.world.WorldScene;
 
 import java.awt.*;
@@ -11,6 +12,7 @@ public class Player implements DrawableAsciiEntity {
 
     private int x;
     private int y;
+    private int z = 0;
     private static final char symbol = '◼';
     private static final Color color = Color.decode("#ef481f");
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 18);
@@ -38,20 +40,56 @@ public class Player implements DrawableAsciiEntity {
     public void moveRight(WorldScene worldScene) {
         move(1, 0, worldScene);
     }
-
+    public void setPosition(int x, int y, int z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
     private void move(int dx, int dy, WorldScene worldScene) {
         int newX = x + dx;
         int newY = y + dy;
-        if (worldScene.isWalkable(newX, newY)) {
+
+        // Same floor.
+        if (worldScene.isWalkable(newX, newY, z)) {
             x = newX;
             y = newY;
+            return;
+        }
+
+        // Natural terrain step-up.
+        if (worldScene.isWalkable(newX, newY, z + 1)) {
+            x = newX;
+            y = newY;
+            z++;
+            return;
+        }
+
+        // Natural terrain step-down.
+        if (worldScene.isWalkable(newX, newY, z - 1)) {
+            x = newX;
+            y = newY;
+            z--;
         }
     }
 
+    public void ascend(WorldScene worldScene) {
+        if (worldScene.isWalkable(x, y, z + 1)) {
+            z++;
+        }
+    }
+
+    public void descend(WorldScene worldScene) {
+        if (z > 0 && worldScene.isWalkable(x, y, z - 1)) {
+            z--;
+        }
+    }
     public PlayerInfo getPlayerInfo() {
         return playerInfo;
     }
-
+    @Override
+    public int getZ() {
+        return z;
+    }
     @Override
     public int getX() {
         return x;

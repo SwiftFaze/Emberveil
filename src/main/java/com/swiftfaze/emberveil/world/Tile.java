@@ -16,7 +16,9 @@ public enum Tile {
     SNOW('⠞', Color.WHITE, true),
     ICE('⠨', new Color(210, 240, 255), false),
     PATH('·', new Color(224, 209, 180), true),
-    EMPTY(' ', new Color(211, 211, 211), true),
+    STAIR_UP('▓', new Color(58, 87, 193), true),
+    STAIR_DOWN('▓', new Color(179, 71, 71), true),
+    EMPTY(' ', new Color(211, 211, 211), false),
 
     WALL('▓', new Color(190, 190, 190), false),
     BRIDGE('=', new Color(210, 178, 140), true),
