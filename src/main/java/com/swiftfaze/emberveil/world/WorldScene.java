@@ -103,12 +103,7 @@ public abstract class WorldScene implements DrawableAsciiEntity {
     public void render(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY) {
         renderWorld(g2d, tileWidth, tileHeight, cameraX, cameraY, 0, MAX_BRIGHTNESS);
     }
-    public int getSurfaceHeight(int x, int y) {
-        for (int z = getDepth() - 1; z >= 0; z--) {
-            if (isWalkable(x, y, z)) return z;
-        }
-        return -1;
-    }
+
     public void renderWorld(Graphics2D g2d,
                             int tileWidth,
                             int tileHeight,

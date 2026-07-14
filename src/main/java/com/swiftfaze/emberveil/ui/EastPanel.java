@@ -6,8 +6,8 @@ import com.swiftfaze.emberveil.game.GameListener;
 import javax.swing.*;
 import java.awt.*;
 
-import static com.swiftfaze.emberveil.GameConst.CHAR_HEIGHT;
-import static com.swiftfaze.emberveil.GameConst.GAME_HEIGHT;
+import static com.swiftfaze.emberveil.GameConst.TILE_HEIGHT;
+import static com.swiftfaze.emberveil.GameConst.GAME_WINDOW_HEIGHT;
 
 
 public class EastPanel extends JPanel implements GameListener {
@@ -17,7 +17,7 @@ public class EastPanel extends JPanel implements GameListener {
     private final MenuPanel menuPanel;
 
     public EastPanel() {
-        setPreferredSize(new Dimension(500, GAME_HEIGHT * CHAR_HEIGHT));
+        setPreferredSize(new Dimension(500, GAME_WINDOW_HEIGHT * TILE_HEIGHT));
         setBackground(Color.BLACK);
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));

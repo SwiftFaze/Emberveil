@@ -18,10 +18,9 @@ import static com.swiftfaze.emberveil.GameConst.*;
 
 public class GamePanel extends JPanel {
 
-
-    private final Player player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    private final TileTestScene scene = new TileTestScene(GAME_WIDTH * 2, GAME_HEIGHT * 2, GAME_DEPTH);
-    private final Camera camera = new Camera(GAME_WIDTH, GAME_HEIGHT);
+    private final Player player = new Player(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y);
+    private final TileTestScene scene = new TileTestScene(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, DEFAULT_MAP_DEPTH);
+    private final Camera camera = new Camera(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
     private List<GameListener> listeners = new ArrayList<>();
 
@@ -30,16 +29,13 @@ public class GamePanel extends JPanel {
 
 
     public GamePanel() {
-        setPreferredSize(new Dimension(GAME_WIDTH * CHAR_WIDTH, GAME_HEIGHT * CHAR_HEIGHT));
+        setPreferredSize(new Dimension(GAME_WINDOW_WIDTH * TILE_WIDTH, GAME_WINDOW_HEIGHT * TILE_HEIGHT));
         setBackground(Color.BLACK);
         setFocusable(true);
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
 
-        int startX = GAME_WIDTH / 2;
-        int startY = GAME_HEIGHT / 2;
-        int startZ = scene.getSurfaceHeight(startX, startY);
-        player.setPosition(startX, startY, startZ);
-        preciseZLevel = startZ;
+        player.setPosition(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y, DEFAULT_PLAYER_START_Z);
+        preciseZLevel = DEFAULT_PLAYER_START_Z;
 
         addEntity(scene);
         addEntity(player);
@@ -118,8 +114,8 @@ public class GamePanel extends JPanel {
 
             scene.renderWorld(
                     g2d,
-                    CHAR_WIDTH,
-                    CHAR_HEIGHT,
+                    TILE_WIDTH,
+                    TILE_HEIGHT,
                     camera.getX(),
                     camera.getY(),
                     zLevel,
@@ -129,8 +125,8 @@ public class GamePanel extends JPanel {
             float fogStartingHeight = zLevel - visualZLevel;
             scene.renderClouds(
                     g2d,
-                    CHAR_WIDTH,
-                    CHAR_HEIGHT,
+                    TILE_WIDTH,
+                    TILE_HEIGHT,
                     camera.getX(),
                     camera.getY(),
                     zLevel,
@@ -144,8 +140,8 @@ public class GamePanel extends JPanel {
             if (entity instanceof DrawableAsciiEntity ascii) {
                 ascii.render(
                         g2d,
-                        CHAR_WIDTH,
-                        CHAR_HEIGHT,
+                        TILE_WIDTH,
+                        TILE_HEIGHT,
                         camera.getX(),
                         camera.getY()
                 );
