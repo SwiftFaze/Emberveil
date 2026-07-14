@@ -45,17 +45,20 @@ public class Player implements DrawableAsciiEntity {
         this.z = z;
     }
     private void move(int dx, int dy, WorldScene worldScene) {
+
         int newX = x + dx;
         int newY = y + dy;
 
-        // Same floor.
+
+        // Same floor
         if (worldScene.isWalkable(newX, newY, z)) {
             x = newX;
             y = newY;
             return;
         }
 
-        // Natural terrain step-up.
+
+        // Step up one level
         if (worldScene.isWalkable(newX, newY, z + 1)) {
             x = newX;
             y = newY;
@@ -63,14 +66,27 @@ public class Player implements DrawableAsciiEntity {
             return;
         }
 
-        // Natural terrain step-down.
-        if (worldScene.isWalkable(newX, newY, z - 1)) {
+
+        // Fall down to the highest walkable floor
+        int landingZ = findFloorBelow(newX, newY, z, worldScene);
+
+        if (landingZ >= 0) {
             x = newX;
             y = newY;
-            z--;
+            z = landingZ;
         }
     }
+    private int findFloorBelow(int x, int y, int currentZ, WorldScene worldScene) {
 
+        for (int level = currentZ - 1; level >= 0; level--) {
+
+            if (worldScene.isWalkable(x, y, level)) {
+                return level;
+            }
+        }
+
+        return -1;
+    }
     public void forceAscend() {
             z++;
     }

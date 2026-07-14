@@ -33,7 +33,8 @@ public enum Tile {
     DOOR('D', new Color(224, 196, 160), true),
     CHEST('C', new Color(240, 219, 160), false),
     PORTAL('O', new Color(216, 180, 232), false),
-    LAVA('^', new Color(240, 160, 160), false);
+    LAVA('^', new Color(240, 160, 160), false),
+    PLACEHOLDER('▓', new Color(190, 190, 190), false);
 
     private final char symbol;
     private final Color color;

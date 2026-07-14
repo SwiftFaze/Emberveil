@@ -43,11 +43,11 @@ public abstract class WorldScene implements DrawableAsciiEntity {
         fillRegion(0, startX, startY, width, height, type);
     }
 
-    public void fillRegion(int z, int startX, int startY, int width, int height, Tile type) {
+    public void fillRegion(int startZ, int startX, int startY, int width, int height, Tile type) {
         for (int x = startX; x < startX + width; x++) {
             for (int y = startY; y < startY + height; y++) {
                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-                    tiles[z][x][y] = type;
+                    tiles[startZ][x][y] = type;
                 }
             }
         }
@@ -109,20 +109,37 @@ public abstract class WorldScene implements DrawableAsciiEntity {
         }
         return -1;
     }
-    public void renderWorld(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY, int z, float brightness) {
+    public void renderWorld(Graphics2D g2d,
+                            int tileWidth,
+                            int tileHeight,
+                            int cameraX,
+                            int cameraY,
+                            int z,
+                            float brightness) {
+
         Tile[][] layer = tiles[z];
+
         g2d.setFont(font);
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
+
                 Tile type = layer[x][y];
-                if (type == null) continue;
+
+                if (type == null || type == Tile.EMPTY)
+                    continue;
+
 
                 int screenX = (x - cameraX) * tileWidth;
                 int screenY = (y - cameraY) * tileHeight + tileHeight;
 
+
                 g2d.setColor(dim(type.getColor(), brightness));
-                g2d.drawString(String.valueOf(type.getSymbol()), screenX, screenY);
+                g2d.drawString(
+                        String.valueOf(type.getSymbol()),
+                        screenX,
+                        screenY
+                );
             }
         }
     }

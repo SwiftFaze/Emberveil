@@ -106,7 +106,7 @@ public class GamePanel extends JPanel {
 
         for (int zLevel = lowestVisibleZ; zLevel <= highestVisibleZ; zLevel++) {
 
-            float zDistanceFromPlayer = preciseZLevel - zLevel;
+            float zDistanceFromPlayer = visualZLevel - zLevel;
 
             float brightness;
 
@@ -170,8 +170,14 @@ public class GamePanel extends JPanel {
 
 
     private float getBrightnessFromDepth(float zDistanceFromPlayer) {
-        if (zDistanceFromPlayer <= 0) return MAX_BRIGHTNESS;
-        float brightness = (float) Math.pow(BRIGHTNESS_LEVEL_DECAY_RATE, zDistanceFromPlayer);
+        if (zDistanceFromPlayer <= SHADOW_START_DEPTH) {
+            return MAX_BRIGHTNESS;
+        }
+        float shadowDepth = zDistanceFromPlayer - SHADOW_START_DEPTH;
+        float brightness = (float) Math.pow(
+                BRIGHTNESS_LEVEL_DECAY_RATE,
+                shadowDepth
+        );
         return Math.max(MIN_BRIGHTNESS, brightness);
     }
 }

@@ -13,8 +13,8 @@ public class GameConst {
     /// DELAYS Z TRANSITION, CLOUDS AND SHADOWS
     public static final float Z_TRANSITION_SPEED = 0.12f;
     /// LOWER = DARKER PER LEVEL
-    public static final float BRIGHTNESS_LEVEL_DECAY_RATE = 0.70f;
-
+    public static final float BRIGHTNESS_LEVEL_DECAY_RATE = 0.50f;
+    public static final int SHADOW_START_DEPTH = 3;
 
     public static final float MAX_BRIGHTNESS = 1.0f;
     public static final float MIN_BRIGHTNESS = 0.12f;
