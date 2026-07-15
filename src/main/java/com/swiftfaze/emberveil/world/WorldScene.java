@@ -5,7 +5,6 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 import java.awt.*;
 
 import static com.swiftfaze.emberveil.GameConst.*;
-import static com.swiftfaze.emberveil.GameConst.LEVEL_ABOVE_FOG_Z_LEVEL_START;
 
 public abstract class WorldScene implements DrawableAsciiEntity {
     private final Tile[][][] tiles;
@@ -53,6 +52,27 @@ public abstract class WorldScene implements DrawableAsciiEntity {
         }
     }
 
+    public void fillHouseRegion(int startZ, int startX, int startY, int width, int height, Tile wallTile, Tile floorTile) {
+        for (int x = startX; x < startX + width; x++) {
+            for (int y = startY; y < startY + height; y++) {
+                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+
+                    Tile tile = getTile(x, y, startZ);
+
+                    if (tile == Tile.WOOD && wallTile == Tile.STONE) {
+                        tiles[startZ][x][y] = floorTile;
+                    } else {
+                        tiles[startZ][x][y] = wallTile;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+
     public void createBorder(int width, int height, Tile type) {
         createBorder(0, width, height, type);
     }
@@ -86,18 +106,33 @@ public abstract class WorldScene implements DrawableAsciiEntity {
     public int getDepth() {
         return depth;
     }
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 
     @Override
-    public int getX() { return 0; }
+    public int getX() {
+        return 0;
+    }
 
     @Override
-    public int getY() { return 0; }
+    public int getY() {
+        return 0;
+    }
 
     @Override
-    public char getSymbol() { return ' '; }
+    public char getSymbol() {
+        return ' ';
+    }
 
     @Override
-    public Color getColor() { return Color.WHITE; }
+    public Color getColor() {
+        return Color.WHITE;
+    }
 
     @Override
     public void render(Graphics2D g2d, int tileWidth, int tileHeight, int cameraX, int cameraY) {
@@ -138,13 +173,14 @@ public abstract class WorldScene implements DrawableAsciiEntity {
             }
         }
     }
+
     public void renderClouds(Graphics2D g2d,
                              int tileWidth,
                              int tileHeight,
                              int cameraX,
                              int cameraY,
                              int z,
-                             float heightAbove){
+                             float heightAbove) {
 
 
         float fogAmount = 0f;
@@ -190,6 +226,7 @@ public abstract class WorldScene implements DrawableAsciiEntity {
 
         g2d.setComposite(AlphaComposite.SrcOver);
     }
+
     private static Color dim(Color color, float factor) {
         if (factor >= MAX_BRIGHTNESS) return color;
         int r = (int) (color.getRed() * factor);
