@@ -1,6 +1,8 @@
 package com.swiftfaze.emberveil.world;
 
 import com.swiftfaze.emberveil.DrawableAsciiEntity;
+import com.swiftfaze.emberveil.entities.buildings.Building;
+import com.swiftfaze.emberveil.entities.buildings.BuildingLoader;
 
 import java.awt.*;
 
@@ -12,6 +14,7 @@ public abstract class WorldScene implements DrawableAsciiEntity {
     private final int height;
     private final int depth;
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 15);
+
 
     protected WorldScene(int width, int height) {
         this(width, height, 10);
@@ -52,25 +55,29 @@ public abstract class WorldScene implements DrawableAsciiEntity {
         }
     }
 
-    public void fillHouseRegion(int startZ, int startX, int startY, int width, int height, Tile wallTile, Tile floorTile) {
-        for (int x = startX; x < startX + width; x++) {
-            for (int y = startY; y < startY + height; y++) {
-                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+    public void placeBuilding(Building building) {
 
-                    Tile tile = getTile(x, y, startZ);
+        Tile[][][] blueprint = building.getBlueprint();
 
-                    if (tile == Tile.WOOD && wallTile == Tile.STONE) {
-                        tiles[startZ][x][y] = floorTile;
-                    } else {
-                        tiles[startZ][x][y] = wallTile;
-                    }
+
+        for (int z = 0; z < blueprint.length; z++) {
+
+            for (int y = 0; y < blueprint[z].length; y++) {
+
+                for (int x = 0; x < blueprint[z][y].length; x++) {
+
+
+                    tiles
+                            [building.getWorldZ() + z]
+                            [building.getWorldY() + y]
+                            [building.getWorldX() + x]
+                            =
+                            blueprint[z][y][x];
+
                 }
             }
         }
     }
-
-
-
 
 
     public void createBorder(int width, int height, Tile type) {
@@ -106,6 +113,7 @@ public abstract class WorldScene implements DrawableAsciiEntity {
     public int getDepth() {
         return depth;
     }
+
     public int getWidth() {
         return width;
     }

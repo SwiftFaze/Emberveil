@@ -3,10 +3,11 @@ package com.swiftfaze.emberveil.world;
 import com.swiftfaze.emberveil.tools.NoiseGenerator;
 
 import java.util.Random;
-import java.util.logging.Logger;
+
 
 public class TileTestScene extends WorldScene {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+
     private Random rand = new Random();
 
     public TileTestScene(int width, int height, int depth) {

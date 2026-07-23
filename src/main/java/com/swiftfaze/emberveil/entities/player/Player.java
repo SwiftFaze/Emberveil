@@ -4,10 +4,10 @@ import com.swiftfaze.emberveil.DrawableAsciiEntity;
 import com.swiftfaze.emberveil.world.WorldScene;
 
 import java.awt.*;
-import java.util.logging.Logger;
+
 
 public class Player implements DrawableAsciiEntity {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+
 
     private int x;
     private int y;

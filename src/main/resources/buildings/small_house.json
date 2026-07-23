@@ -1,0 +1,37 @@
+{
+  "name": "small_house",
+  "type": "house",
+  "width": 7,
+  "height": 7,
+  "floors": 2,
+
+  "layers": [
+    {
+      "z": 0,
+      "name": "ground_floor",
+      "tiles": [
+        ["STONE","STONE","STONE","STONE","STONE","STONE","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","DOOR","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","STONE","STONE"],
+        ["STONE","STONE","STONE","STONE","STONE","STONE","STONE"]
+      ]
+    },
+
+    {
+      "z": 1,
+      "name": "second_floor",
+      "tiles": [
+        ["STONE","STONE","STONE","STONE","STONE","STONE","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","WOOD","WOOD","WOOD","WOOD","WOOD","STONE"],
+        ["STONE","STONE","STONE","STONE","WOOD","STONE","STONE"]
+      ]
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 package com.swiftfaze.emberveil.world;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class MountainScene extends WorldScene {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static final Logger logger = LoggerFactory.getLogger(MountainScene.class);
 
     public MountainScene(int width, int height) {
         super(width, height, 0);
