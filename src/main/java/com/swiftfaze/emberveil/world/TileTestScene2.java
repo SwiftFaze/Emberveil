@@ -18,15 +18,14 @@ public class TileTestScene2 extends WorldScene {
         super(width, height, depth);
         fillAll(DEFAULT_PLAYER_START_Z, Tile.GRASS);
 
-        Building house = BuildingLoader.load("small_house.json");
+        Building house2 = BuildingLoader.load("small_house_01.json");
 
 
-        house.setWorldX(130);
-        house.setWorldY(130);
-        house.setWorldZ(DEFAULT_PLAYER_START_Z);
+        house2.setWorldX(130);
+        house2.setWorldY(130);
+        house2.setWorldZ(DEFAULT_PLAYER_START_Z);
 
-
-        placeBuilding(house);
+        placeBuilding(house2);
 
     }
 
