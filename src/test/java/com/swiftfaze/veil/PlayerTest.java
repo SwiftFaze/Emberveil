@@ -5,7 +5,13 @@ import com.swiftfaze.veil.world.Tile;
 import com.swiftfaze.veil.world.WorldScene;
 import org.junit.jupiter.api.Test;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PlayerTest {
 
@@ -49,5 +55,52 @@ class PlayerTest {
 
         assertEquals(5, player.getX());
         assertEquals(5, player.getY());
+    }
+
+    @Test
+    void movingDownIncreasesYWhenTileIsWalkable() {
+        WorldScene scene = sceneOf(10, 10);
+        scene.fillAll(Tile.GRASS);
+        Player player = new Player(5, 5);
+
+        player.moveDown(scene);
+
+        assertEquals(5, player.getX());
+        assertEquals(6, player.getY());
+    }
+
+    @Test
+    void movingLeftDecreasesXWhenTileIsWalkable() {
+        WorldScene scene = sceneOf(10, 10);
+        scene.fillAll(Tile.GRASS);
+        Player player = new Player(5, 5);
+
+        player.moveLeft(scene);
+
+        assertEquals(4, player.getX());
+        assertEquals(5, player.getY());
+    }
+
+    @Test
+    void getPlayerInfoIsNeverNull() {
+        Player player = new Player(0, 0);
+
+        assertNotNull(player.getPlayerInfo());
+    }
+
+    @Test
+    void symbolAndColorAreFixedDefaults() {
+        Player player = new Player(0, 0);
+
+        assertEquals('◼', player.getSymbol());
+        assertEquals(Color.decode("#ef481f"), player.getColor());
+    }
+
+    @Test
+    void renderDrawsWithoutThrowing() {
+        Player player = new Player(3, 3);
+        Graphics2D g2d = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB).createGraphics();
+
+        assertDoesNotThrow(() -> player.render(g2d, 15, 15, 0, 0));
     }
 }

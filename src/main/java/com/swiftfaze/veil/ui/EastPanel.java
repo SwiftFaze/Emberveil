@@ -71,6 +71,10 @@ public class EastPanel extends JPanel implements GameListener {
         return inventoryPanel;
     }
 
+    public MenuPanel getMenuPanel() {
+        return menuPanel;
+    }
+
     @Override
     public void updatePlayer(Player player) {
         playerInfoPanel.updatePlayer(player);
