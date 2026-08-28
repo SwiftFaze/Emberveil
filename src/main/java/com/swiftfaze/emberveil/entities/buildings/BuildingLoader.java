@@ -8,28 +8,20 @@ import com.swiftfaze.emberveil.world.Tile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
 public class BuildingLoader {
     private static final Logger logger = LoggerFactory.getLogger(BuildingLoader.class);
-    private static final boolean DEV_MODE = true;
-    private static final String DEV_RESOURCES_PATH = "src/main/resources/buildings/";
 
     private BuildingLoader() {
     }
 
     public static Building load(String fileName) {
         try {
-            Reader reader;
-            if (DEV_MODE) {
-                reader = new FileReader(DEV_RESOURCES_PATH + fileName);
-            } else {
-                InputStream stream = BuildingLoader.class.getResourceAsStream("/buildings/" + fileName);
-                reader = new InputStreamReader(stream);
-            }
+            InputStream stream = BuildingLoader.class.getResourceAsStream("/buildings/" + fileName);
+            Reader reader = new InputStreamReader(stream);
 
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             JsonArray layers = json.getAsJsonArray("layers");

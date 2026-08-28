@@ -35,13 +35,10 @@ there's no separate collision or sprite system.
 `src/main/resources/buildings/` (one 2D array of `Tile` enum names per
 floor) and loaded by `BuildingLoader.load(fileName)` into a `Building` (a
 `Tile[][][]` blueprint plus a world offset), then stamped into a scene via
-`WorldScene.placeBuilding`. **Important quirk:**
-`BuildingLoader.DEV_MODE` is hardcoded `true`, so it reads buildings via a
-relative `FileReader` on `src/main/resources/buildings/<file>`
-(project-root-relative path) instead of the classpath resource — this only
-works when the process's working directory is the repo root (true for both
-Maven and a normal IDE run), and will break in a packaged jar until
-`DEV_MODE` is flipped to use `getResourceAsStream`.
+`WorldScene.placeBuilding`. Buildings are read via
+`getResourceAsStream("/buildings/<file>")`, i.e. off the classpath — this
+works identically whether run from the IDE, `mvn test`, or the packaged
+Windows installer (see `docs/release.md`).
 
 **Player movement** (`entities/player/Player.java`): each directional move
 checks the target tile's walkability on the current floor, then one floor up

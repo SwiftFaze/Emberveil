@@ -15,8 +15,13 @@ Emberveil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engin
 - Run a single Cucumber scenario: `mvn test -Dcucumber.filter.name="A newly created player starts as a Warrior"`
 - Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
-- There is no `exec-maven-plugin` or shaded jar configured in `pom.xml`, so `Main` must be launched either from the IDE (IntelliJ run config on `com.swiftfaze.emberveil.Main`) or manually with a classpath that includes the Maven dependencies (gson, slf4j-api, logback-classic) plus `target/classes`.
+- `mvn package` also produces `target/Emberveil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into a Windows installer `.exe` on release.
 - Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
+
+## CI / releases
+
+- `.github/workflows/ci.yml` runs `mvn verify` on every PR/push to `master`/`develop`; it's a required status check on both (branch protection).
+- Versioning and changelog generation are fully automatic via Release Please — see `docs/release.md`. Don't hand-edit `pom.xml`'s `<version>` or write `CHANGELOG.md` entries by hand; they're derived from Conventional Commits on `master`.
 
 ## Architecture
 
