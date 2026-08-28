@@ -15,7 +15,7 @@ Emberveil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engin
 - Run a single Cucumber scenario: `mvn test -Dcucumber.filter.name="A newly created player starts as a Warrior"`
 - Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
-- `mvn package` also produces `target/Emberveil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into a Windows installer `.exe` on release.
+- `mvn package` also produces `target/Emberveil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
 - Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
 
 ## CI / releases
