@@ -43,3 +43,24 @@ This repo follows the intent → spec → approval → implementation pipeline (
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.
 
 **Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).
+
+### Repo-specific Step 4.5 — Manual playtest (Human)
+
+Inserted between the global pipeline's Step 4 (Implementation) and Step 5
+(Acceptance tests): after implementation lands, the human runs the game
+(`mvn compile exec:java`) and actually plays through the changed behavior
+before acceptance tests get wired up.
+
+- **Why this exists:** `mvn verify` and Cucumber can confirm the code does
+  what the spec says, but not whether movement, menu navigation, or
+  rendering actually *feel* right — that's a judgment call only a human
+  playtesting the running game can make.
+- **Model:** no model — a human decision gate, like Step 3.
+- **For a multi-area change** (e.g. a restructure spanning several
+  `.feature` files), playtest each area right after it's implemented, not
+  only once at the end — this mirrors the per-area `mvn verify`
+  checkpoints already used in intent docs' Verification sections.
+- Note what was tested and any issues found (PR description or a status
+  note) so Step 7 documentation and PR review can see it.
+- No feature is "done" without this playtest, same as Steps 5-7 aren't
+  optional per the global workflow's notes for the agent.
