@@ -11,7 +11,6 @@ public class Player implements DrawableAsciiEntity {
 
     private int x;
     private int y;
-    private int z = 0;
     private static final char symbol = '◼';
     private static final Color color = Color.decode("#ef481f");
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 18);
@@ -39,68 +38,26 @@ public class Player implements DrawableAsciiEntity {
     public void moveRight(WorldScene worldScene) {
         move(1, 0, worldScene);
     }
-    public void setPosition(int x, int y, int z) {
+
+    public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
-        this.z = z;
     }
-    private void move(int dx, int dy, WorldScene worldScene) {
 
+    private void move(int dx, int dy, WorldScene worldScene) {
         int newX = x + dx;
         int newY = y + dy;
 
-
-        // Same floor
-        if (worldScene.isWalkable(newX, newY, z)) {
+        if (worldScene.isWalkable(newX, newY)) {
             x = newX;
             y = newY;
-            return;
-        }
-
-
-        // Step up one level
-        if (worldScene.isWalkable(newX, newY, z + 1)) {
-            x = newX;
-            y = newY;
-            z++;
-            return;
-        }
-
-
-        // Fall down to the highest walkable floor
-        int landingZ = findFloorBelow(newX, newY, z, worldScene);
-
-        if (landingZ >= 0) {
-            x = newX;
-            y = newY;
-            z = landingZ;
         }
     }
-    private int findFloorBelow(int x, int y, int currentZ, WorldScene worldScene) {
 
-        for (int level = currentZ - 1; level >= 0; level--) {
-
-            if (worldScene.isWalkable(x, y, level)) {
-                return level;
-            }
-        }
-
-        return -1;
-    }
-    public void forceAscend() {
-            z++;
-    }
-
-    public void forceDescend() {
-            z--;
-    }
     public PlayerInfo getPlayerInfo() {
         return playerInfo;
     }
-    @Override
-    public int getZ() {
-        return z;
-    }
+
     @Override
     public int getX() {
         return x;

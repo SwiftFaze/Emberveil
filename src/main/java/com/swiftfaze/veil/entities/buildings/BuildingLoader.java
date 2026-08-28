@@ -24,57 +24,18 @@ public class BuildingLoader {
             Reader reader = new InputStreamReader(stream);
 
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray layers = json.getAsJsonArray("layers");
+            JsonArray rows = json.getAsJsonArray("tiles");
 
+            int height = rows.size();
+            int width = rows.get(0).getAsJsonArray().size();
 
-            int floors = layers.size();
+            Tile[][] blueprint = new Tile[height][width];
 
+            for (int y = 0; y < height; y++) {
+                JsonArray row = rows.get(y).getAsJsonArray();
 
-            JsonArray firstFloor = layers
-                    .get(0)
-                    .getAsJsonObject()
-                    .getAsJsonArray("tiles");
-
-
-            int height = firstFloor.size();
-            int width = firstFloor
-                    .get(0)
-                    .getAsJsonArray()
-                    .size();
-
-
-            Tile[][][] blueprint = new Tile[floors][height][width];
-
-
-            for (int z = 0; z < floors; z++) {
-
-
-                JsonArray rows = layers
-                        .get(z)
-                        .getAsJsonObject()
-                        .getAsJsonArray("tiles");
-
-
-                for (int y = 0; y < height; y++) {
-
-
-                    JsonArray row = rows
-                            .get(y)
-                            .getAsJsonArray();
-
-
-                    for (int x = 0; x < width; x++) {
-
-
-                        String tileName = row
-                                .get(x)
-                                .getAsString();
-
-
-                        blueprint[z][y][x] =
-                                Tile.valueOf(tileName);
-
-                    }
+                for (int x = 0; x < width; x++) {
+                    blueprint[y][x] = Tile.valueOf(row.get(x).getAsString());
                 }
             }
 

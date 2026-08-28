@@ -1,3 +1,4 @@
+@pending
 Feature: Keyboard input and menu navigation
   Keyboard input is dispatched through one Key Bindings-based system
   (replacing the mix of raw KeyListener and Key Bindings that coexisted

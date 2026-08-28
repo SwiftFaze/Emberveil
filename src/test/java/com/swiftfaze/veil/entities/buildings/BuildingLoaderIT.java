@@ -15,12 +15,11 @@ class BuildingLoaderIT {
     void loadsSmallHouseBlueprintFromDisk() {
         Building building = BuildingLoader.load("small_house_01.json");
 
-        Tile[][][] blueprint = building.getBlueprint();
+        Tile[][] blueprint = building.getBlueprint();
 
-        assertEquals(1, blueprint.length, "fixture defines one floor");
-        assertEquals(7, blueprint[0].length, "fixture is 7 rows tall");
-        assertEquals(7, blueprint[0][0].length, "fixture is 7 columns wide");
-        assertEquals(Tile.STONE, blueprint[0][0][0], "top-left corner is a stone wall");
-        assertEquals(Tile.DOOR, blueprint[0][6][3], "door sits in the middle of the south wall");
+        assertEquals(7, blueprint.length, "fixture is 7 rows tall");
+        assertEquals(7, blueprint[0].length, "fixture is 7 columns wide");
+        assertEquals(Tile.STONE, blueprint[0][0], "top-left corner is a stone wall");
+        assertEquals(Tile.DOOR, blueprint[6][3], "door sits in the middle of the south wall");
     }
 }

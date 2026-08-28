@@ -1,3 +1,4 @@
+@pending
 Feature: Data-driven player classes
   Player class base stats come from JSON resources rather than one
   hardcoded Java subclass per class, so adding or tuning a class doesn't

@@ -18,8 +18,6 @@ public enum Tile {
     SNOW('⠞', Color.WHITE, true),
     ICE('⠨', new Color(210, 240, 255), false),
     PATH('·', new Color(224, 209, 180), true),
-    STAIR_UP('▓', new Color(58, 87, 193), true),
-    STAIR_DOWN('▓', new Color(179, 71, 71), true),
     EMPTY(' ', new Color(211, 211, 211), false),
 
     WALL('▓', new Color(190, 190, 190), false),
@@ -31,7 +29,6 @@ public enum Tile {
     ROCK('⠶', new Color(197, 197, 197), false),
 
     BUSH('b', new Color(180, 224, 180), false),
-    CLOUD('☵', new Color(185, 213, 228, 255), false),
     CHEST('C', new Color(240, 219, 160), false),
     PORTAL('O', new Color(216, 180, 232), false),
     LAVA('^', new Color(240, 160, 160), false),
