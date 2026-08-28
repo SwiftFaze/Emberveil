@@ -15,6 +15,7 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - Run a single Cucumber scenario: `mvn test -Dcucumber.filter.name="A newly created player starts as a Warrior"`
 - Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
+- Run the game from source: `mvn compile exec:java` (no packaging or version number needed).
 - `mvn package` also produces `target/Veil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
 - Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
 
@@ -23,6 +24,10 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - `.github/workflows/ci.yml` runs `mvn verify` on every PR/push to `master`/`develop`; it's a required status check on both (branch protection).
 - Versioning and changelog generation are fully automatic via Release Please — see `docs/release.md`. Don't hand-edit `pom.xml`'s `<version>` or write `CHANGELOG.md` entries by hand; they're derived from Conventional Commits.
 - Two release channels: `master` → stable (`vX.Y.Z`), `develop` → beta prereleases (`vX.Y.Z-beta.N`, marked "Pre-release" on GitHub). Merging `develop` into `master` is what promotes accumulated beta work into the next stable release.
+- **No direct commits to `master`, ever — including for admins.** Branch protection has `enforce_admins` on, so this is enforced, not just a convention. The only two ways changes reach `master`:
+  - A PR from `develop` (a release promotion), or
+  - A PR from a `hotfix/*` branch (an urgent fix that can't wait for the next promotion — branch off `master`, fix, PR back to `master`, then bring the same fix into `develop` too so it isn't lost on the next promotion).
+  - The `master-source-check` CI job (in `.github/workflows/ci.yml`) enforces this mechanically: it fails any PR into `master` whose head branch isn't `develop`, `hotfix/*`, or Release Please's own `release-please--branches--master`.
 
 ## Architecture
 
@@ -32,8 +37,8 @@ See `docs/architecture.md` for the full write-up (entry point/window assembly, t
 
 This repo follows the intent → spec → approval → implementation pipeline (see the global development workflow instructions):
 
-- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*.
-- `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`).
+- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*. Copy `specs/intent/TEMPLATE.md` to start one.
+- `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.
 - `docs/` — narrative/reference documentation (architecture, testing) kept up to date as part of each feature's definition of done, not left to be reverse-engineered from diffs.
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.
 
