@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.swiftfaze</groupId>
-    <artifactId>Emberveil</artifactId>
+    <artifactId>Veil</artifactId>
     <version>0.3.0</version>
 
     <properties>
@@ -9,7 +9,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cucumber.version>7.34.6</cucumber.version>
-        <main.class>com.swiftfaze.emberveil.Main</main.class>
+        <main.class>com.swiftfaze.veil.Main</main.class>
     </properties>
 
     <dependencyManagement>
@@ -100,7 +100,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Produces target/emberveil-<version>-app.jar, a single runnable jar with all
+            <!-- Produces target/veil-<version>-app.jar, a single runnable jar with all
                  dependencies bundled, which the Windows installer build (docs/release.md)
                  feeds into jpackage. -->
             <plugin>
