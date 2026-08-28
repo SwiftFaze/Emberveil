@@ -1,6 +1,6 @@
 # Architecture
 
-Emberveil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game
+Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game
 engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString`
 onto a `JPanel`; there is no sprite/texture pipeline for tiles (a `grass.png`
 resource and a `DrawableImageEntity` interface exist but are currently

@@ -54,18 +54,18 @@ across three runners, since `jpackage` only builds for the OS it runs on
 
 | Runner | Output | Notes |
 |---|---|---|
-| `windows-latest` | `Emberveil-<version>.exe` | Built via WiX (preinstalled on the runner). Start Menu shortcut, directory chooser. |
-| `ubuntu-latest` | `Emberveil-<version>.deb` | Needs `fakeroot` (installed as a workflow step). Debian/Ubuntu only — no `.rpm` variant yet. |
-| `macos-latest` | `Emberveil-<version>.pkg` | **Unsigned** — no Apple Developer account, so first launch shows Gatekeeper's "unidentified developer" warning; the user has to right-click → Open once. |
+| `windows-latest` | `Veil-<version>.exe` | Built via WiX (preinstalled on the runner). Start Menu shortcut, directory chooser. |
+| `ubuntu-latest` | `Veil-<version>.deb` | Needs `fakeroot` (installed as a workflow step). Debian/Ubuntu only — no `.rpm` variant yet. |
+| `macos-latest` | `Veil-<version>.pkg` | **Unsigned** — no Apple Developer account, so first launch shows Gatekeeper's "unidentified developer" warning; the user has to right-click → Open once. |
 
 Each job: checks out the release tag, `mvn -B package` (produces
-`target/Emberveil-<version>-app.jar`, a single runnable jar with all
+`target/Veil-<version>-app.jar`, a single runnable jar with all
 dependencies bundled — see the `maven-shade-plugin` execution in
 `pom.xml`), then `jpackage --type <exe|deb|pkg>` wraps that jar with a
 bundled JRE — no separate Java install required on the player's machine —
 and the "Normalize installer filename" step renames whatever `jpackage`
 produced (its own per-OS naming conventions vary, e.g. Debian's
-underscore-separated scheme) to a consistent `Emberveil-<version>.<ext>`.
+underscore-separated scheme) to a consistent `Veil-<version>.<ext>`.
 The result is uploaded as a release asset.
 
 **Beta version numbers**: `jpackage`'s Windows/macOS installers require a
@@ -73,7 +73,7 @@ clean numeric `--app-version` (no `-beta.N` suffix accepted), so the
 workflow strips the suffix for that flag specifically
 (`APP_VERSION=${full_version%%-*}`) while the uploaded filename still uses
 the full version including the suffix (`FULL_VERSION`), so e.g. a
-`v0.3.0-beta.2` release uploads `Emberveil-0.3.0-beta.2.exe` even though
+`v0.3.0-beta.2` release uploads `Veil-0.3.0-beta.2.exe` even though
 the installer's own internal version metadata just says `0.3.0`.
 
 **Pre-1.0 versions on macOS**: `jpackage --type pkg` additionally rejects a
@@ -97,16 +97,16 @@ useful for validating a jpackage change (e.g. a new platform, new
 ```powershell
 mvn -B clean package
 mkdir target\jpackage-input
-copy target\Emberveil-0.1.0-app.jar target\jpackage-input\
+copy target\Veil-0.1.0-app.jar target\jpackage-input\
 jpackage --type exe --input target\jpackage-input --dest target\dist `
-  --name Emberveil --app-version 0.1.0 --vendor SwiftFaze `
-  --main-jar Emberveil-0.1.0-app.jar --main-class com.swiftfaze.emberveil.Main `
+  --name Veil --app-version 0.1.0 --vendor SwiftFaze `
+  --main-jar Veil-0.1.0-app.jar --main-class com.swiftfaze.veil.Main `
   --win-menu --win-shortcut --win-dir-chooser
 ```
 
 Requires a JDK with `jpackage` (bundled since JDK 14) and, for `--type exe`
 specifically, the [WiX Toolset](https://wixtoolset.org/) v3 on `PATH`. Without
-WiX, use `--type app-image` instead — it produces a `target\dist\Emberveil\Emberveil.exe`
+WiX, use `--type app-image` instead — it produces a `target\dist\Veil\Veil.exe`
 launcher folder (no installer, just unzip-and-run) and needs no extra tooling.
 The same idea applies on Linux/macOS with `--type deb`/`--type pkg` swapped
 in, run on that OS — `jpackage` cannot target an OS other than the one

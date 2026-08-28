@@ -1,7 +1,7 @@
 # Player-facing wiki
 
 Player-facing game content — classes, stats, and (as they're added) tiles,
-buildings, items, etc. — lives in the [GitHub wiki](https://github.com/SwiftFaze/Emberveil/wiki),
+buildings, items, etc. — lives in the [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki),
 not in `docs/`. The split:
 
 - `docs/` — for contributors: architecture, testing, release process.
@@ -36,7 +36,7 @@ from the Java source.
 The wiki is its own git repository:
 
 ```
-git clone https://github.com/SwiftFaze/Emberveil.wiki.git
+git clone https://github.com/SwiftFaze/Veil.wiki.git
 ```
 
 Edit the relevant `.md` file, commit, and push directly to `master` — the

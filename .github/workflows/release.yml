@@ -87,7 +87,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p target/jpackage-input
-          cp target/Emberveil-*-app.jar target/jpackage-input/
+          cp target/Veil-*-app.jar target/jpackage-input/
 
       - name: Determine version
         shell: bash
@@ -121,10 +121,10 @@ jobs:
               extra_args+=(--win-menu --win-shortcut --win-dir-chooser)
               ;;
             ubuntu-latest)
-              extra_args+=(--linux-shortcut --linux-package-name emberveil)
+              extra_args+=(--linux-shortcut --linux-package-name veil)
               ;;
             macos-latest)
-              extra_args+=(--mac-package-identifier com.swiftfaze.emberveil)
+              extra_args+=(--mac-package-identifier com.swiftfaze.veil)
               # macOS pkg additionally rejects a major version of 0 ("The
               # first number in an app-version cannot be zero or negative").
               # We're still pre-1.0, so bump just this OS's internal bundle
@@ -139,25 +139,25 @@ jobs:
           jpackage --type "${{ matrix.jpackage_type }}" \
             --input target/jpackage-input \
             --dest target/dist \
-            --name Emberveil \
+            --name Veil \
             --app-version "$jpackage_version" \
             --vendor SwiftFaze \
             --main-jar "$jar_name" \
-            --main-class com.swiftfaze.emberveil.Main \
+            --main-class com.swiftfaze.veil.Main \
             "${extra_args[@]}"
 
       - name: Normalize installer filename
         shell: bash
         run: |
           src=$(ls target/dist/*.${{ matrix.jpackage_type }} | head -n1)
-          mv "$src" "target/dist/Emberveil-${FULL_VERSION}.${{ matrix.jpackage_type }}"
+          mv "$src" "target/dist/Veil-${FULL_VERSION}.${{ matrix.jpackage_type }}"
 
       - name: Upload installer as a workflow artifact (manual test runs)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.os }}
-          path: target/dist/Emberveil-${{ env.FULL_VERSION }}.${{ matrix.jpackage_type }}
+          path: target/dist/Veil-${{ env.FULL_VERSION }}.${{ matrix.jpackage_type }}
 
       - name: Upload installer to the GitHub Release
         if: >-
@@ -170,4 +170,4 @@ jobs:
             ${{ needs.release-please-stable.outputs.tag_name ||
                 needs.release-please-beta.outputs.tag_name }}
         run: |
-          gh release upload "$TAG_NAME" "target/dist/Emberveil-${FULL_VERSION}.${{ matrix.jpackage_type }}" --clobber --repo ${{ github.repository }}
+          gh release upload "$TAG_NAME" "target/dist/Veil-${FULL_VERSION}.${{ matrix.jpackage_type }}" --clobber --repo ${{ github.repository }}
