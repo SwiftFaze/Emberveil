@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0-beta](https://github.com/SwiftFaze/Emberveil/compare/v0.2.0...v0.3.0-beta) (2026-08-28)
+
+
+### Features
+
+* **ci:** add develop beta channel, fix skipped installer job ([921a6bc](https://github.com/SwiftFaze/Emberveil/commit/921a6bcc7d18ee1c657353a7cf0e89b3610771b4))
+* **ci:** build Linux and macOS installers alongside Windows ([ec1f659](https://github.com/SwiftFaze/Emberveil/commit/ec1f659eb816bf3ca8984806e1c1deb2f0d0237e))
+* **ci:** build Linux and macOS installers alongside Windows ([76e8835](https://github.com/SwiftFaze/Emberveil/commit/76e8835e6c3d8cbe8ef8bb1e6eb012faa0d7c1fc))
+* **ci:** cross-platform installers + develop beta channel ([d2b1cb7](https://github.com/SwiftFaze/Emberveil/commit/d2b1cb701ed9fc88b789f123032fef6c7f72bb75))
+
+
+### Bug Fixes
+
+* **ci:** correct beta release versioning config field ([f44d9a1](https://github.com/SwiftFaze/Emberveil/commit/f44d9a124819f8ce6f57573d57736b541e4a4324))
+* **ci:** correct beta release versioning config field ([358eed6](https://github.com/SwiftFaze/Emberveil/commit/358eed62b82397fc61f68ddb676a7e5aae6abeb4))
+* **ci:** exempt release-please branches from branch-name check ([c187629](https://github.com/SwiftFaze/Emberveil/commit/c1876294e6ebb7a968caa6c847a1b966d36dbf25))
+* **ci:** exempt release-please branches from branch-name check ([58637dd](https://github.com/SwiftFaze/Emberveil/commit/58637ddc6e13b60f314dec793701a24ca716f9f5))
+* **ci:** work around jpackage rejecting major version 0 on macOS ([31aa380](https://github.com/SwiftFaze/Emberveil/commit/31aa380173e00d3dc22405bb1909086add53bb5c))
+
 ## [0.3.0](https://github.com/SwiftFaze/Emberveil/compare/v0.2.0...v0.3.0) (2026-08-28)
 
 
