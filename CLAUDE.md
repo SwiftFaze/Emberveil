@@ -24,6 +24,10 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - `.github/workflows/ci.yml` runs `mvn verify` on every PR/push to `master`/`develop`; it's a required status check on both (branch protection).
 - Versioning and changelog generation are fully automatic via Release Please — see `docs/release.md`. Don't hand-edit `pom.xml`'s `<version>` or write `CHANGELOG.md` entries by hand; they're derived from Conventional Commits.
 - Two release channels: `master` → stable (`vX.Y.Z`), `develop` → beta prereleases (`vX.Y.Z-beta.N`, marked "Pre-release" on GitHub). Merging `develop` into `master` is what promotes accumulated beta work into the next stable release.
+- **No direct commits to `master`, ever — including for admins.** Branch protection has `enforce_admins` on, so this is enforced, not just a convention. The only two ways changes reach `master`:
+  - A PR from `develop` (a release promotion), or
+  - A PR from a `hotfix/*` branch (an urgent fix that can't wait for the next promotion — branch off `master`, fix, PR back to `master`, then bring the same fix into `develop` too so it isn't lost on the next promotion).
+  - The `master-source-check` CI job (in `.github/workflows/ci.yml`) enforces this mechanically: it fails any PR into `master` whose head branch isn't `develop`, `hotfix/*`, or Release Please's own `release-please--branches--master`.
 
 ## Architecture
 
