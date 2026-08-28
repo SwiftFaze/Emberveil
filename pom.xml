@@ -2,13 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.swiftfaze</groupId>
     <artifactId>Emberveil</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.3.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cucumber.version>7.34.6</cucumber.version>
+        <main.class>com.swiftfaze.emberveil.Main</main.class>
     </properties>
 
     <dependencyManagement>
@@ -96,6 +97,31 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Produces target/emberveil-<version>-app.jar, a single runnable jar with all
+                 dependencies bundled, which the Windows installer build (docs/release.md)
+                 feeds into jpackage. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>app</shadedClassifierName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${main.class}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
