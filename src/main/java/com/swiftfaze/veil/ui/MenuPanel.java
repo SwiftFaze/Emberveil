@@ -18,6 +18,7 @@ public class MenuPanel extends TerminalPanel {
     private final SelectableMenu menu = new SelectableMenu(ITEMS.size());
     private final JLabel[] labels = new JLabel[ITEMS.size()];
     private Runnable onInventoryConfirmed;
+    private Runnable onCancel;
 
     public MenuPanel() {
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -36,6 +37,10 @@ public class MenuPanel extends TerminalPanel {
         this.onInventoryConfirmed = onInventoryConfirmed;
     }
 
+    public void setOnCancel(Runnable onCancel) {
+        this.onCancel = onCancel;
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();
@@ -43,10 +48,12 @@ public class MenuPanel extends TerminalPanel {
         inputMap.put(Keybindings.MENU_UP, Keybindings.ACTION_MENU_UP);
         inputMap.put(Keybindings.MENU_DOWN, Keybindings.ACTION_MENU_DOWN);
         inputMap.put(Keybindings.MENU_CONFIRM, Keybindings.ACTION_MENU_CONFIRM);
+        inputMap.put(Keybindings.MENU_CANCEL, Keybindings.ACTION_MENU_CANCEL);
 
         actionMap.put(Keybindings.ACTION_MENU_UP, new MoveSelectionAction(menu::moveUp));
         actionMap.put(Keybindings.ACTION_MENU_DOWN, new MoveSelectionAction(menu::moveDown));
         actionMap.put(Keybindings.ACTION_MENU_CONFIRM, new ConfirmSelectionAction());
+        actionMap.put(Keybindings.ACTION_MENU_CANCEL, new CancelAction());
     }
 
     private void refreshHighlight() {
@@ -79,6 +86,15 @@ public class MenuPanel extends TerminalPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             confirmSelection();
+        }
+    }
+
+    private class CancelAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (onCancel != null) {
+                onCancel.run();
+            }
         }
     }
 }

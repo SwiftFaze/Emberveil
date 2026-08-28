@@ -18,6 +18,7 @@ public final class Keybindings {
     public static final KeyStroke MENU_UP = KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0);
     public static final KeyStroke MENU_DOWN = KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0);
     public static final KeyStroke MENU_CONFIRM = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+    public static final KeyStroke MENU_CANCEL = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
 
     public static final String ACTION_MOVE_UP = "move-up";
     public static final String ACTION_MOVE_DOWN = "move-down";
@@ -28,6 +29,7 @@ public final class Keybindings {
     public static final String ACTION_MENU_UP = "menu-up";
     public static final String ACTION_MENU_DOWN = "menu-down";
     public static final String ACTION_MENU_CONFIRM = "menu-confirm";
+    public static final String ACTION_MENU_CANCEL = "menu-cancel";
 
     private Keybindings() {
     }

@@ -27,6 +27,7 @@ public class Main {
         GamePanel gamePanel = new GamePanel();
 
         gamePanel.addGameListener(eastPanel);
+        eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
 
         frame.setLayout(new BorderLayout());
         frame.add(northPanel, BorderLayout.NORTH);
