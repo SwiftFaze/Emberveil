@@ -24,6 +24,28 @@ jobs:
           fi
           echo "Branch name '$branch' OK"
 
+  master-source-check:
+    if: github.event_name == 'pull_request' && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR source branch
+        run: |
+          branch="${{ github.head_ref }}"
+          if [[ "$branch" == "develop" ]]; then
+            echo "Branch '$branch' OK (develop promotion)"
+            exit 0
+          fi
+          if [[ "$branch" == hotfix/* ]]; then
+            echo "Branch '$branch' OK (hotfix)"
+            exit 0
+          fi
+          if [[ "$branch" == "release-please--branches--master" ]]; then
+            echo "Branch '$branch' OK (Release Please's own release branch)"
+            exit 0
+          fi
+          echo "::error::PRs into master are only allowed from 'develop' (a release promotion) or 'hotfix/*' (got '$branch')."
+          exit 1
+
   build-and-test:
     runs-on: ubuntu-latest
     steps:
