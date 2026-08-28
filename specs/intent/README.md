@@ -9,4 +9,5 @@ Intent is not written once and frozen: clarifying answers gathered while
 drafting the `.feature` file get appended back here, then the `.feature` file
 is regenerated from the updated intent.
 
-See `default-player-class.md` for a worked (if retroactive) example.
+Copy `TEMPLATE.md` to `<feature-slug>.md` to start a new one. See
+`default-player-class.md` for a worked (if retroactive) example filled in.
