@@ -125,6 +125,16 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Lets `mvn compile exec:java` run the game directly from
+                 compiled classes, no packaging or version needed. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <mainClass>${main.class}</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
