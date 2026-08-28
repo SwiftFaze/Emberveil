@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.1](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta...v0.3.0-beta.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* repair README.md corrupted by rename, add missing branch-name CI job ([5608d80](https://github.com/SwiftFaze/Veil/commit/5608d800cbf34270ed049cf730477ef962ce2644))
+* repair README.md corrupted by the Emberveil-&gt;Veil rename, add missing branch-name CI job to master ([1af0bd6](https://github.com/SwiftFaze/Veil/commit/1af0bd6ec479f00411359e01cfc25bfe77a7d2e6))
+
 ## [0.3.0-beta](https://github.com/SwiftFaze/Emberveil/compare/v0.2.0...v0.3.0-beta) (2026-08-28)
 
 
