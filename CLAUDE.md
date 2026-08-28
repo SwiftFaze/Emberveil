@@ -33,8 +33,8 @@ See `docs/architecture.md` for the full write-up (entry point/window assembly, t
 
 This repo follows the intent → spec → approval → implementation pipeline (see the global development workflow instructions):
 
-- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*.
-- `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`).
+- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*. Copy `specs/intent/TEMPLATE.md` to start one.
+- `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.
 - `docs/` — narrative/reference documentation (architecture, testing) kept up to date as part of each feature's definition of done, not left to be reverse-engineered from diffs.
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.
 
