@@ -1,4 +1,3 @@
-@pending
 Feature: Class/stats sandbox
   A standalone, dev-only tool lists all player classes and shows each
   one's computed stats, so class balance can be checked without playing

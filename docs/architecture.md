@@ -88,6 +88,20 @@ bindings; only the "Inventory" entry does anything on confirm today
 (toggling the same way pressing **I** does) — Help/Journal/Map/Character/
 Stats stay decorative for now.
 
+**Class/stats sandbox** (`sandbox/`): a dev-only stat inspector, not
+referenced from `Main.java` and not the packaged/jpackage build's entry
+point (`pom.xml`'s `main.class` stays `com.swiftfaze.veil.Main`). Run it
+explicitly: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox`.
+`ClassSandboxModel` wraps `PlayerClassLoader.loadAll()` and exposes class
+names plus computed `Stats` per class (via `PlayerClass.applyBaseStats`, no
+duplicated formulas); `ClassSandboxPanel` (a `TerminalPanel`) reuses the
+`SelectableMenu`/Key Bindings pattern from `MenuPanel` — Up/Down moves the
+selection and immediately refreshes the displayed attack power/defense/HP/
+mana, no separate confirm step. Editing a class's JSON and re-launching the
+sandbox picks up the change with no recompile, since `PlayerClassLoader`
+reads the resource fresh on every `ClassSandboxModel` construction — there
+is no static caching of loaded classes anywhere in this path.
+
 **`GameConst`** centralizes tunable gameplay constants (window/tile
 dimensions, map size, player start position) — check here first before
 hardcoding a magic number elsewhere. Keyboard bindings live separately in
