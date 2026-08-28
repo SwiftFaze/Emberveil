@@ -28,23 +28,37 @@ shouldn't trigger a release at all, use a non-triggering type (`chore:`,
 `docs:`, `test:`, `style:`) or `fix:`/`feat:` as appropriate — Release
 Please only reacts to types that map to a version bump.
 
-## Windows installer build
+## Installer builds
 
 Triggered only when Release Please reports a release was actually created
-(i.e. on merge of the release PR, not on every push to `master`):
+(i.e. on merge of the release PR, not on every push to `master`). The
+`build-installers` job in `.github/workflows/release.yml` runs as a matrix
+across three runners, since `jpackage` only builds for the OS it runs on
+— there's no cross-compiling a Windows installer from Linux, etc.:
 
-1. Checks out the new tag.
-2. `mvn -B package` — produces `target/Emberveil-<version>-app.jar`, a
-   single runnable jar with all dependencies bundled (see the
-   `maven-shade-plugin` execution in `pom.xml`).
-3. `jpackage --type exe` wraps that jar with a bundled JRE into
-   `EmberveilInstaller-<version>.exe` (built via WiX, preinstalled on the
-   `windows-latest` GitHub Actions runner) — a self-contained Windows
-   installer with a Start Menu shortcut, no separate Java install required
-   on the player's machine.
-4. The installer is uploaded as an asset on the GitHub Release.
+| Runner | Output | Notes |
+|---|---|---|
+| `windows-latest` | `Emberveil-<version>.exe` | Built via WiX (preinstalled on the runner). Start Menu shortcut, directory chooser. |
+| `ubuntu-latest` | `emberveil_<version>*.deb` | Needs `fakeroot` (installed as a workflow step). Debian/Ubuntu only — no `.rpm` variant yet. |
+| `macos-latest` | `Emberveil-<version>.pkg` | **Unsigned** — no Apple Developer account, so first launch shows Gatekeeper's "unidentified developer" warning; the user has to right-click → Open once. |
 
-### Building the installer locally
+Each job: checks out the release tag, `mvn -B package` (produces
+`target/Emberveil-<version>-app.jar`, a single runnable jar with all
+dependencies bundled — see the `maven-shade-plugin` execution in
+`pom.xml`), then `jpackage --type <exe|deb|pkg>` wraps that jar with a
+bundled JRE — no separate Java install required on the player's machine.
+The result is uploaded as a release asset.
+
+### Testing the installer build without cutting a release
+
+The workflow also accepts `workflow_dispatch` (Actions tab → Release →
+Run workflow, or `gh workflow run release.yml`). This runs the same
+`build-installers` matrix against the current commit and uploads each
+platform's installer as a workflow artifact instead of a release asset —
+useful for validating a jpackage change (e.g. a new platform, new
+`jpackage` flags) without waiting for or faking an actual release.
+
+### Building an installer locally
 
 ```powershell
 mvn -B clean package
@@ -60,3 +74,6 @@ Requires a JDK with `jpackage` (bundled since JDK 14) and, for `--type exe`
 specifically, the [WiX Toolset](https://wixtoolset.org/) v3 on `PATH`. Without
 WiX, use `--type app-image` instead — it produces a `target\dist\Emberveil\Emberveil.exe`
 launcher folder (no installer, just unzip-and-run) and needs no extra tooling.
+The same idea applies on Linux/macOS with `--type deb`/`--type pkg` swapped
+in, run on that OS — `jpackage` cannot target an OS other than the one
+it's running on.

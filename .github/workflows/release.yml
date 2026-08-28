@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -10,6 +11,7 @@ permissions:
 
 jobs:
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -21,14 +23,26 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  build-windows-installer:
+  build-installers:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: windows-latest
+    # Runs for a real release, or on-demand via workflow_dispatch to test the
+    # jpackage steps below (e.g. for a new platform) without cutting a release.
+    if: github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            jpackage_type: exe
+          - os: ubuntu-latest
+            jpackage_type: deb
+          - os: macos-latest
+            jpackage_type: pkg
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
 
       - uses: actions/setup-java@v4
         with:
@@ -36,34 +50,74 @@ jobs:
           java-version: '17'
           cache: maven
 
+      - name: Install Linux packaging tools
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+
       - name: Build shaded jar
+        shell: bash
         run: mvn -B -DskipTests package
 
       - name: Stage jpackage input
-        shell: pwsh
+        shell: bash
         run: |
-          New-Item -ItemType Directory -Force -Path target/jpackage-input | Out-Null
-          Copy-Item target/Emberveil-*-app.jar target/jpackage-input/
+          mkdir -p target/jpackage-input
+          cp target/Emberveil-*-app.jar target/jpackage-input/
 
-      - name: Build Windows installer
-        shell: pwsh
+      - name: Determine app version
+        shell: bash
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          $version = "${{ needs.release-please.outputs.tag_name }}".TrimStart("v")
-          $jar = Get-ChildItem target/jpackage-input/*.jar | Select-Object -First 1
-          jpackage --type exe `
-            --input target/jpackage-input `
-            --dest target/dist `
-            --name Emberveil `
-            --app-version $version `
-            --vendor SwiftFaze `
-            --main-jar $jar.Name `
-            --main-class com.swiftfaze.emberveil.Main `
-            --win-menu --win-shortcut --win-dir-chooser
+          if [ -n "$TAG_NAME" ]; then
+            echo "APP_VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+          else
+            version=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+            echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build installer
+        shell: bash
+        run: |
+          jar=$(ls target/jpackage-input/*.jar | head -n1)
+          jar_name=$(basename "$jar")
+
+          extra_args=()
+          case "${{ matrix.os }}" in
+            windows-latest)
+              extra_args+=(--win-menu --win-shortcut --win-dir-chooser)
+              ;;
+            ubuntu-latest)
+              extra_args+=(--linux-shortcut --linux-package-name emberveil)
+              ;;
+            macos-latest)
+              extra_args+=(--mac-package-identifier com.swiftfaze.emberveil)
+              ;;
+          esac
+
+          jpackage --type "${{ matrix.jpackage_type }}" \
+            --input target/jpackage-input \
+            --dest target/dist \
+            --name Emberveil \
+            --app-version "$APP_VERSION" \
+            --vendor SwiftFaze \
+            --main-jar "$jar_name" \
+            --main-class com.swiftfaze.emberveil.Main \
+            "${extra_args[@]}"
+
+      - name: Upload installer as a workflow artifact (manual test runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}
+          path: target/dist/*.${{ matrix.jpackage_type }}
 
       - name: Upload installer to the GitHub Release
+        if: needs.release-please.outputs.release_created == 'true'
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          $installer = Get-ChildItem target/dist/*.exe | Select-Object -First 1
-          gh release upload "${{ needs.release-please.outputs.tag_name }}" $installer.FullName --clobber --repo ${{ github.repository }}
+          installer=$(ls target/dist/*.${{ matrix.jpackage_type }} | head -n1)
+          gh release upload "$TAG_NAME" "$installer" --clobber --repo ${{ github.repository }}
