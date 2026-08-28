@@ -14,6 +14,10 @@ jobs:
       - name: Validate branch name
         run: |
           branch="${{ github.head_ref }}"
+          if [[ "$branch" == release-please--branches--* ]]; then
+            echo "Branch name '$branch' OK (Release Please's own branch, exempt)"
+            exit 0
+          fi
           if [[ ! "$branch" =~ ^(fix|feature|hotfix|chore|docs)/[a-zA-Z0-9._/-]+$ ]]; then
             echo "::error::Branch name '$branch' isn't allowed. Use one of: fix/, feature/, hotfix/, chore/, docs/ (docs/ only for doc-only changes), followed by a slug."
             exit 1
