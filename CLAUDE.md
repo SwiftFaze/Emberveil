@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Emberveil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString` onto a `JPanel`; there is no sprite/texture pipeline for tiles (a `grass.png` resource and a `DrawableImageEntity` interface exist but are currently unused by any scene).
+Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString` onto a `JPanel`; there is no sprite/texture pipeline for tiles (a `grass.png` resource and a `DrawableImageEntity` interface exist but are currently unused by any scene).
 
 ## Build & run
 
@@ -16,7 +16,7 @@ Emberveil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engin
 - Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
 - Run the game from source: `mvn compile exec:java` (no packaging or version number needed).
-- `mvn package` also produces `target/Emberveil-<version>-app.jar`, a runnable fat jar — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
+- `mvn package` also produces `target/Veil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
 - Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
 
 ## CI / releases
@@ -38,4 +38,4 @@ This repo follows the intent → spec → approval → implementation pipeline (
 - `docs/` — narrative/reference documentation (architecture, testing) kept up to date as part of each feature's definition of done, not left to be reverse-engineered from diffs.
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.
 
-**Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Emberveil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).
+**Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).

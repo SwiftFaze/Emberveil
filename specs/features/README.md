@@ -14,5 +14,5 @@ specific thing it covers. A single intent doc can produce more than one
 These files are copied onto the test classpath at build time (see the
 `testResources` config in `pom.xml`) and executed by `RunCucumberTest` via
 `mvn test`. Step definitions live under
-`src/test/java/com/swiftfaze/emberveil/steps/`. See `docs/testing.md` for
+`src/test/java/com/swiftfaze/veil/steps/`. See `docs/testing.md` for
 the full test-layer breakdown.

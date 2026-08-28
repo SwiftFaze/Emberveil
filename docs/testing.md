@@ -16,8 +16,8 @@ conventions so Maven can tell them apart automatically:
   each generated from the matching `/specs/intent/<slug>.md`. They are
   copied onto the test classpath at build time (`testResources` config in
   `pom.xml`) so Cucumber can discover them via `@SelectPackages("features")`.
-- Step definitions live in `src/test/java/com/swiftfaze/emberveil/steps/`.
-- `RunCucumberTest` (`src/test/java/com/swiftfaze/emberveil/RunCucumberTest.java`)
+- Step definitions live in `src/test/java/com/swiftfaze/veil/steps/`.
+- `RunCucumberTest` (`src/test/java/com/swiftfaze/veil/RunCucumberTest.java`)
   is a JUnit 5 `@Suite` that includes the Cucumber engine — because its name
   matches Surefire's `*Test.java` pattern, the whole Cucumber suite runs
   under plain `mvn test` alongside the unit tests.
