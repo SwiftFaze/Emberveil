@@ -3,24 +3,40 @@
 Versioning and changelog generation are automatic — you should not hand-edit
 the version in `pom.xml` or write `CHANGELOG.md` entries by hand.
 
+## Two channels: stable (`master`) and beta (`develop`)
+
+- **`master` → stable releases** (`vX.Y.Z`). This is what most players
+  should install.
+- **`develop` → beta prereleases** (`vX.Y.Z-beta.N`). GitHub marks these
+  releases as a "Pre-release" automatically (Release Please's
+  `prerelease: true` config). Merging `develop` into `master` is what
+  "promotes" accumulated beta work into the next real stable release.
+
+Both are handled by the same `.github/workflows/release.yml`, via two
+independent Release Please jobs (`release-please-stable`,
+`release-please-beta`) gated on which branch was pushed to, each with its
+own config/manifest (`release-please-config.json` +
+`.release-please-manifest.json` for stable, the `-beta` variants of both
+for beta) so the two version lines and changelogs don't collide.
+
 ## How a release happens
 
-1. Commits land on `master` (via PR, per branch protection) using
-   [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
-   `fix:`, `feat!:`/`BREAKING CHANGE:`, etc.) — the same style already used
-   in this repo.
-2. [Release Please](https://github.com/googleapis/release-please) (workflow:
-   `.github/workflows/release.yml`) watches `master` and keeps a standing
-   `chore(main): release x.y.z` pull request up to date, computing the next
-   version from those commits (`fix:` → patch, `feat:` → minor, a `!` or
-   `BREAKING CHANGE:` footer → major) and drafting `CHANGELOG.md` from their
-   messages.
+1. Commits land on `master` or `develop` (via PR, per branch protection)
+   using [Conventional Commits](https://www.conventionalcommits.org/)
+   (`feat:`, `fix:`, `feat!:`/`BREAKING CHANGE:`, etc.) — the same style
+   already used in this repo.
+2. [Release Please](https://github.com/googleapis/release-please) watches
+   both branches and keeps a standing `chore(<branch>): release x.y.z`
+   pull request up to date on each, computing the next version from those
+   commits (`fix:` → patch, `feat:` → minor, a `!` or `BREAKING CHANGE:`
+   footer → major) and drafting `CHANGELOG.md` from their messages.
 3. Merging that release PR is the actual release trigger: Release Please
-   tags the merge commit (`vX.Y.Z`), bumps the `<version>` in `pom.xml` to
-   match (see `release-please-config.json`'s `extra-files` entry), and
-   creates the GitHub Release with the changelog as its body.
-4. That same workflow then builds the Windows installer (see below) and
-   uploads it as an asset on the release that was just created.
+   tags the merge commit (`vX.Y.Z` on `master`, `vX.Y.Z-beta.N` on
+   `develop`), bumps the `<version>` in `pom.xml` to match (see the
+   `extra-files` entry in the relevant config file), and creates the
+   GitHub Release with the changelog as its body.
+4. That same workflow then builds the installers (see below) and uploads
+   them as assets on the release that was just created.
 
 Nothing about this requires a human to decide "what's the next version
 number" — that's entirely derived from commit messages. If a change
@@ -39,15 +55,33 @@ across three runners, since `jpackage` only builds for the OS it runs on
 | Runner | Output | Notes |
 |---|---|---|
 | `windows-latest` | `Emberveil-<version>.exe` | Built via WiX (preinstalled on the runner). Start Menu shortcut, directory chooser. |
-| `ubuntu-latest` | `emberveil_<version>*.deb` | Needs `fakeroot` (installed as a workflow step). Debian/Ubuntu only — no `.rpm` variant yet. |
+| `ubuntu-latest` | `Emberveil-<version>.deb` | Needs `fakeroot` (installed as a workflow step). Debian/Ubuntu only — no `.rpm` variant yet. |
 | `macos-latest` | `Emberveil-<version>.pkg` | **Unsigned** — no Apple Developer account, so first launch shows Gatekeeper's "unidentified developer" warning; the user has to right-click → Open once. |
 
 Each job: checks out the release tag, `mvn -B package` (produces
 `target/Emberveil-<version>-app.jar`, a single runnable jar with all
 dependencies bundled — see the `maven-shade-plugin` execution in
 `pom.xml`), then `jpackage --type <exe|deb|pkg>` wraps that jar with a
-bundled JRE — no separate Java install required on the player's machine.
+bundled JRE — no separate Java install required on the player's machine —
+and the "Normalize installer filename" step renames whatever `jpackage`
+produced (its own per-OS naming conventions vary, e.g. Debian's
+underscore-separated scheme) to a consistent `Emberveil-<version>.<ext>`.
 The result is uploaded as a release asset.
+
+**Beta version numbers**: `jpackage`'s Windows/macOS installers require a
+clean numeric `--app-version` (no `-beta.N` suffix accepted), so the
+workflow strips the suffix for that flag specifically
+(`APP_VERSION=${full_version%%-*}`) while the uploaded filename still uses
+the full version including the suffix (`FULL_VERSION`), so e.g. a
+`v0.3.0-beta.2` release uploads `Emberveil-0.3.0-beta.2.exe` even though
+the installer's own internal version metadata just says `0.3.0`.
+
+**Pre-1.0 versions on macOS**: `jpackage --type pkg` additionally rejects a
+major version of `0` ("The first number in an app-version cannot be zero
+or negative"). While the project is still `0.x.y`, the macOS job bumps
+just its own internal bundle version metadata (`0.2.0` → `1.2.0`) — the
+uploaded filename is unaffected and still shows the real version. This
+step becomes a no-op once the project reaches `1.0.0`.
 
 ### Testing the installer build without cutting a release
 

@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [master]
+    branches: [master, develop]
   workflow_dispatch:
 
 permissions:
@@ -10,8 +10,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  release-please:
-    if: github.event_name == 'push'
+  # master = stable releases (vX.Y.Z)
+  release-please-stable:
+    if: github.event_name == 'push' && github.ref_name == 'master'
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -22,12 +23,33 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: master
+
+  # develop = beta prereleases (vX.Y.Z-beta.N), promoted to a stable release
+  # once develop is merged into master.
+  release-please-beta:
+    if: github.event_name == 'push' && github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config-beta.json
+          manifest-file: .release-please-manifest-beta.json
+          target-branch: develop
 
   build-installers:
-    needs: release-please
-    # Runs for a real release, or on-demand via workflow_dispatch to test the
-    # jpackage steps below (e.g. for a new platform) without cutting a release.
-    if: github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true'
+    needs: [release-please-stable, release-please-beta]
+    # always() because a job skipped by its own `if` (the stable/beta job that
+    # didn't match this push's branch) would otherwise skip this job too.
+    if: >
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.release-please-stable.outputs.release_created == 'true' ||
+       needs.release-please-beta.outputs.release_created == 'true')
     strategy:
       fail-fast: false
       matrix:
@@ -42,7 +64,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+          ref: >-
+            ${{ needs.release-please-stable.outputs.tag_name ||
+                needs.release-please-beta.outputs.tag_name ||
+                github.sha }}
 
       - uses: actions/setup-java@v4
         with:
@@ -64,23 +89,31 @@ jobs:
           mkdir -p target/jpackage-input
           cp target/Emberveil-*-app.jar target/jpackage-input/
 
-      - name: Determine app version
+      - name: Determine version
         shell: bash
         env:
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          TAG_NAME: >-
+            ${{ needs.release-please-stable.outputs.tag_name ||
+                needs.release-please-beta.outputs.tag_name }}
         run: |
           if [ -n "$TAG_NAME" ]; then
-            echo "APP_VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+            full_version="${TAG_NAME#v}"
           else
-            version=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
-            echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+            full_version=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
           fi
+          echo "FULL_VERSION=$full_version" >> "$GITHUB_ENV"
+          # jpackage's Windows/macOS installers require a clean numeric
+          # version (no -beta.N suffix); the full version (with suffix) is
+          # used for the uploaded filename instead, further down.
+          echo "APP_VERSION=${full_version%%-*}" >> "$GITHUB_ENV"
 
       - name: Build installer
         shell: bash
         run: |
           jar=$(ls target/jpackage-input/*.jar | head -n1)
           jar_name=$(basename "$jar")
+
+          jpackage_version="$APP_VERSION"
 
           extra_args=()
           case "${{ matrix.os }}" in
@@ -92,6 +125,14 @@ jobs:
               ;;
             macos-latest)
               extra_args+=(--mac-package-identifier com.swiftfaze.emberveil)
+              # macOS pkg additionally rejects a major version of 0 ("The
+              # first number in an app-version cannot be zero or negative").
+              # We're still pre-1.0, so bump just this OS's internal bundle
+              # version metadata; the uploaded filename still uses the real
+              # FULL_VERSION.
+              if [ "${APP_VERSION%%.*}" = "0" ]; then
+                jpackage_version="1${APP_VERSION#0}"
+              fi
               ;;
           esac
 
@@ -99,25 +140,34 @@ jobs:
             --input target/jpackage-input \
             --dest target/dist \
             --name Emberveil \
-            --app-version "$APP_VERSION" \
+            --app-version "$jpackage_version" \
             --vendor SwiftFaze \
             --main-jar "$jar_name" \
             --main-class com.swiftfaze.emberveil.Main \
             "${extra_args[@]}"
+
+      - name: Normalize installer filename
+        shell: bash
+        run: |
+          src=$(ls target/dist/*.${{ matrix.jpackage_type }} | head -n1)
+          mv "$src" "target/dist/Emberveil-${FULL_VERSION}.${{ matrix.jpackage_type }}"
 
       - name: Upload installer as a workflow artifact (manual test runs)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.os }}
-          path: target/dist/*.${{ matrix.jpackage_type }}
+          path: target/dist/Emberveil-${{ env.FULL_VERSION }}.${{ matrix.jpackage_type }}
 
       - name: Upload installer to the GitHub Release
-        if: needs.release-please.outputs.release_created == 'true'
+        if: >-
+          needs.release-please-stable.outputs.release_created == 'true' ||
+          needs.release-please-beta.outputs.release_created == 'true'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          TAG_NAME: >-
+            ${{ needs.release-please-stable.outputs.tag_name ||
+                needs.release-please-beta.outputs.tag_name }}
         run: |
-          installer=$(ls target/dist/*.${{ matrix.jpackage_type }} | head -n1)
-          gh release upload "$TAG_NAME" "$installer" --clobber --repo ${{ github.repository }}
+          gh release upload "$TAG_NAME" "target/dist/Emberveil-${FULL_VERSION}.${{ matrix.jpackage_type }}" --clobber --repo ${{ github.repository }}
