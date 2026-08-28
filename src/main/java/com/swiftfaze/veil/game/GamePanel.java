@@ -4,31 +4,26 @@ import com.swiftfaze.veil.Camera;
 import com.swiftfaze.veil.DrawableAsciiEntity;
 import com.swiftfaze.veil.Positionable;
 import com.swiftfaze.veil.entities.player.Player;
-import com.swiftfaze.veil.ui.EastPanel;
+import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.world.TileTestScene2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.swiftfaze.veil.world.WorldScene;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static com.swiftfaze.veil.GameConst.*;
 
 public class GamePanel extends JPanel {
-    private static final Logger logger = LoggerFactory.getLogger(GamePanel.class);
 
     private final Player player = new Player(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y);
     private TileTestScene2 scene = new TileTestScene2(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT);
     private final Camera camera = new Camera(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
-    private List<GameListener> listeners = new ArrayList<>();
-
-    private EastPanel eastPanel;
-
+    private final List<GameListener> listeners = new ArrayList<>();
 
     public GamePanel() {
         setPreferredSize(new Dimension(GAME_WINDOW_WIDTH * TILE_WIDTH, GAME_WINDOW_HEIGHT * TILE_HEIGHT));
@@ -41,34 +36,35 @@ public class GamePanel extends JPanel {
         addEntity(scene);
         addEntity(player);
 
-        keyListen();
+        bindKeys();
     }
 
-    public void setEastPanel(EastPanel eastPanel) {
-        this.eastPanel = eastPanel;
+    private void bindKeys() {
+        InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getActionMap();
+
+        inputMap.put(Keybindings.MOVE_UP_Z, Keybindings.ACTION_MOVE_UP);
+        inputMap.put(Keybindings.MOVE_UP_ARROW, Keybindings.ACTION_MOVE_UP);
+        inputMap.put(Keybindings.MOVE_DOWN_S, Keybindings.ACTION_MOVE_DOWN);
+        inputMap.put(Keybindings.MOVE_DOWN_ARROW, Keybindings.ACTION_MOVE_DOWN);
+        inputMap.put(Keybindings.MOVE_LEFT_Q, Keybindings.ACTION_MOVE_LEFT);
+        inputMap.put(Keybindings.MOVE_LEFT_ARROW, Keybindings.ACTION_MOVE_LEFT);
+        inputMap.put(Keybindings.MOVE_RIGHT_D, Keybindings.ACTION_MOVE_RIGHT);
+        inputMap.put(Keybindings.MOVE_RIGHT_ARROW, Keybindings.ACTION_MOVE_RIGHT);
+        inputMap.put(Keybindings.TOGGLE_INVENTORY, Keybindings.ACTION_TOGGLE_INVENTORY);
+
+        actionMap.put(Keybindings.ACTION_MOVE_UP, new MoveAction(player::moveUp));
+        actionMap.put(Keybindings.ACTION_MOVE_DOWN, new MoveAction(player::moveDown));
+        actionMap.put(Keybindings.ACTION_MOVE_LEFT, new MoveAction(player::moveLeft));
+        actionMap.put(Keybindings.ACTION_MOVE_RIGHT, new MoveAction(player::moveRight));
+        actionMap.put(Keybindings.ACTION_TOGGLE_INVENTORY, new ToggleInventoryAction());
     }
 
-    private void keyListen() {
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case KeyEvent.VK_Z, KeyEvent.VK_UP -> player.moveUp(scene);
-                    case KeyEvent.VK_S, KeyEvent.VK_DOWN -> player.moveDown(scene);
-                    case KeyEvent.VK_Q, KeyEvent.VK_LEFT -> player.moveLeft(scene);
-                    case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> player.moveRight(scene);
-                    case KeyEvent.VK_I -> {
-                        if (eastPanel != null) {
-                            eastPanel.toggleInventory();
-                        }
-                    }
-                }
-                for (GameListener l : listeners) {
-                    l.updatePlayer(player);
-                }
-                repaint();
-            }
-        });
+    private void notifyPlayerUpdated() {
+        for (GameListener l : listeners) {
+            l.updatePlayer(player);
+        }
+        repaint();
     }
 
     public void addEntity(Positionable entity) {
@@ -112,7 +108,29 @@ public class GamePanel extends JPanel {
                         camera.getX(),
                         camera.getY()
                 );
+            }
+        }
+    }
 
+    private class MoveAction extends AbstractAction {
+        private final Consumer<WorldScene> move;
+
+        MoveAction(Consumer<WorldScene> move) {
+            this.move = move;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            move.accept(scene);
+            notifyPlayerUpdated();
+        }
+    }
+
+    private class ToggleInventoryAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for (GameListener l : listeners) {
+                l.toggleInventory();
             }
         }
     }

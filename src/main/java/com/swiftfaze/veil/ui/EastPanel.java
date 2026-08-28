@@ -26,16 +26,19 @@ public class EastPanel extends JPanel implements GameListener {
         playerInfoPanel = new PlayerInfoPanel();
         menuPanel = new MenuPanel();
         inventoryPanel = new InventoryPanel();
+        menuPanel.setOnInventoryConfirmed(this::toggleInventory);
 
         add(playerInfoPanel, BorderLayout.NORTH);
         add(inventoryPanel, BorderLayout.CENTER);
         add(menuPanel, BorderLayout.SOUTH);
     }
 
+    @Override
     public void toggleInventory() {
         inventoryPanel.setVisible(!inventoryPanel.isVisible());
         revalidate();
         repaint();
+        menuPanel.requestFocusInWindow();
     }
 
     public InventoryPanel getInventoryPanel() {

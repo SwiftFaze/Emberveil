@@ -1,4 +1,3 @@
-@pending
 Feature: Keyboard input and menu navigation
   Keyboard input is dispatched through one Key Bindings-based system
   (replacing the mix of raw KeyListener and Key Bindings that coexisted
@@ -7,9 +6,8 @@ Feature: Keyboard input and menu navigation
 
   Scenario: A movement key updates the player and notifies listeners
     Given a game panel with a player at position (5, 5)
-    And tile (5, 4) is walkable
     When the "move up" action fires
-    Then the player's position is (5, 4)
+    Then the game panel's player is at position (5, 4)
     And registered game listeners are notified
 
   Scenario: An unmapped key does not notify listeners

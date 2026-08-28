@@ -4,4 +4,7 @@ import com.swiftfaze.veil.entities.player.Player;
 
 public interface GameListener {
     void updatePlayer(Player player);
+
+    default void toggleInventory() {
+    }
 }

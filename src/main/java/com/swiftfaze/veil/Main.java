@@ -27,7 +27,6 @@ public class Main {
         GamePanel gamePanel = new GamePanel();
 
         gamePanel.addGameListener(eastPanel);
-        gamePanel.setEastPanel(eastPanel); // wire "I" key to EastPanel's toggle
 
         frame.setLayout(new BorderLayout());
         frame.add(northPanel, BorderLayout.NORTH);

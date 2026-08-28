@@ -7,7 +7,7 @@ onto a `JPanel`.
 **Entry point / window assembly** (`Main.java`): builds a `JFrame` with
 `NorthPanel`/`SouthPanel`/`EastPanel`/`GamePanel` in a `BorderLayout`. There
 is no game loop/ticker — the world only repaints in response to key events
-(see `GamePanel.keyListen`).
+(see `GamePanel.bindKeys`).
 
 **`GamePanel`** is the core of the simulation: it owns the `Player`, the
 active `WorldScene`, and a `Camera`, wires keyboard input directly to player
@@ -50,13 +50,35 @@ to draw non-scene entities (currently just `Player`); `WorldScene` itself
 also implements `DrawableAsciiEntity` but is rendered specially (via
 `renderWorld`), not through the generic entity loop.
 
-**UI shell** (`ui/`): `EastPanel` composes `PlayerInfoPanel` +
-`InventoryPanel` + `MenuPanel` and implements `GameListener`, which
-`GamePanel` notifies after every keypress so the side panel can refresh
-(`EastPanel.updatePlayer`). Pressing **I** toggles `InventoryPanel`
-visibility via a direct `GamePanel` → `EastPanel` reference (not the
-listener interface).
+**Keyboard input** (`input/Keybindings.java`, `GamePanel.bindKeys`): all
+keyboard input goes through Swing Key Bindings (`InputMap`/`ActionMap`,
+`WHEN_IN_FOCUSED_WINDOW`) — the same mechanism `Main.java` already used for
+F5/reset. `Keybindings` centralizes the `KeyStroke` and action-name
+constants; `GamePanel` registers one `Action` per named binding (movement,
+inventory toggle) instead of a raw `KeyListener` switch. Each `Action`
+notifies `GameListener`s and repaints itself, so there's no catch-all
+"notify after every keypress" path — an unbound key simply never invokes
+an `Action`.
 
-**`GameConst`** centralizes all tunable constants (window/tile dimensions,
-map size, player start position) — check here first before hardcoding a
-magic number elsewhere.
+**UI shell** (`ui/`): `NorthPanel`, `SouthPanel`, `MenuPanel`,
+`InventoryPanel`, and `PlayerInfoPanel` all extend `TerminalPanel`, a
+shared `JPanel` base centralizing the black background, monospaced label
+styling, and a `makeLabel` helper — each panel still sets its own
+border/layout specifics that genuinely differ (e.g. `InventoryPanel`'s and
+`PlayerInfoPanel`'s bottom-line border, `NorthPanel`'s centered title).
+`EastPanel` composes `PlayerInfoPanel` + `InventoryPanel` + `MenuPanel` and
+implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`, and
+the interface's `toggleInventory` default method is overridden to show/hide
+`InventoryPanel` — this replaced the old direct `GamePanel` → `EastPanel`
+field reference that pressing **I** used to go through. `MenuPanel` wires
+its item list to a `SelectableMenu` (current index plus wrap-around
+`moveUp`/`moveDown`) via its own focus-scoped (`WHEN_FOCUSED`) Up/Down/Enter
+bindings; only the "Inventory" entry does anything on confirm today
+(toggling the same way pressing **I** does) — Help/Journal/Map/Character/
+Stats stay decorative for now.
+
+**`GameConst`** centralizes tunable gameplay constants (window/tile
+dimensions, map size, player start position) — check here first before
+hardcoding a magic number elsewhere. Keyboard bindings live separately in
+`input/Keybindings.java`, since key mapping is a distinct, separately-
+growing concern.

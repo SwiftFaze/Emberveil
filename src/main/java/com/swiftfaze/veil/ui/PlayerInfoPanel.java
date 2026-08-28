@@ -6,16 +6,13 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 
-public class PlayerInfoPanel extends JPanel {
+public class PlayerInfoPanel extends TerminalPanel {
 
     private final JLabel nameLabel;
     private final JLabel levelLabel;
     private final JLabel positionLabel;
 
     public PlayerInfoPanel() {
-        setBackground(Color.BLACK);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setFocusable(false);
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
 
@@ -36,13 +33,5 @@ public class PlayerInfoPanel extends JPanel {
         levelLabel.setText("LV " + player.getPlayerInfo().getLevel().getCurrentLevel()
                 + " | " + player.getPlayerInfo().getLevel().getXp() + "/" + player.getPlayerInfo().getLevel().getMaxXp() + " XP");
         positionLabel.setText("Pos: (" + player.getX() + ", " + player.getY() + ")");
-    }
-
-    private JLabel makeLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
     }
 }
