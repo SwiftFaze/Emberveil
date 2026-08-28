@@ -76,6 +76,13 @@ the full version including the suffix (`FULL_VERSION`), so e.g. a
 `v0.3.0-beta.2` release uploads `Emberveil-0.3.0-beta.2.exe` even though
 the installer's own internal version metadata just says `0.3.0`.
 
+**Pre-1.0 versions on macOS**: `jpackage --type pkg` additionally rejects a
+major version of `0` ("The first number in an app-version cannot be zero
+or negative"). While the project is still `0.x.y`, the macOS job bumps
+just its own internal bundle version metadata (`0.2.0` → `1.2.0`) — the
+uploaded filename is unaffected and still shows the real version. This
+step becomes a no-op once the project reaches `1.0.0`.
+
 ### Testing the installer build without cutting a release
 
 The workflow also accepts `workflow_dispatch` (Actions tab → Release →

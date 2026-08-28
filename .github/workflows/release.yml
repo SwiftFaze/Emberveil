@@ -113,6 +113,8 @@ jobs:
           jar=$(ls target/jpackage-input/*.jar | head -n1)
           jar_name=$(basename "$jar")
 
+          jpackage_version="$APP_VERSION"
+
           extra_args=()
           case "${{ matrix.os }}" in
             windows-latest)
@@ -123,6 +125,14 @@ jobs:
               ;;
             macos-latest)
               extra_args+=(--mac-package-identifier com.swiftfaze.emberveil)
+              # macOS pkg additionally rejects a major version of 0 ("The
+              # first number in an app-version cannot be zero or negative").
+              # We're still pre-1.0, so bump just this OS's internal bundle
+              # version metadata; the uploaded filename still uses the real
+              # FULL_VERSION.
+              if [ "${APP_VERSION%%.*}" = "0" ]; then
+                jpackage_version="1${APP_VERSION#0}"
+              fi
               ;;
           esac
 
@@ -130,7 +140,7 @@ jobs:
             --input target/jpackage-input \
             --dest target/dist \
             --name Emberveil \
-            --app-version "$APP_VERSION" \
+            --app-version "$jpackage_version" \
             --vendor SwiftFaze \
             --main-jar "$jar_name" \
             --main-class com.swiftfaze.emberveil.Main \
