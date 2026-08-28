@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build-windows-installer:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build shaded jar
+        run: mvn -B -DskipTests package
+
+      - name: Stage jpackage input
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path target/jpackage-input | Out-Null
+          Copy-Item target/Emberveil-*-app.jar target/jpackage-input/
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $version = "${{ needs.release-please.outputs.tag_name }}".TrimStart("v")
+          $jar = Get-ChildItem target/jpackage-input/*.jar | Select-Object -First 1
+          jpackage --type exe `
+            --input target/jpackage-input `
+            --dest target/dist `
+            --name Emberveil `
+            --app-version $version `
+            --vendor SwiftFaze `
+            --main-jar $jar.Name `
+            --main-class com.swiftfaze.emberveil.Main `
+            --win-menu --win-shortcut --win-dir-chooser
+
+      - name: Upload installer to the GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem target/dist/*.exe | Select-Object -First 1
+          gh release upload "${{ needs.release-please.outputs.tag_name }}" $installer.FullName --clobber --repo ${{ github.repository }}
