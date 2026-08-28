@@ -1,0 +1,11 @@
+{
+  "name": "Mage",
+  "str": 6,
+  "dex": 9,
+  "con": 8,
+  "int": 16,
+  "wis": 14,
+  "luck": 7,
+  "maxHp": 70,
+  "maxMana": 100
+}

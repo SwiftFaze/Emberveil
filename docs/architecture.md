@@ -39,10 +39,21 @@ there is no floor to step up onto or fall through, so a blocked move simply
 does nothing.
 
 **Player RPG data** (`entities/player/`): `PlayerInfo` composes `Level`,
-`Stats`, and a `PlayerClass` (strategy pattern — `Warrior`/`Mage` implement
-`applyBaseStats`); derived combat stats (`getAttackPower`, `getDefense`)
-live on `Stats`. This data isn't wired into gameplay yet beyond display in
-`PlayerInfoPanel`.
+`Stats`, and a `PlayerClass`. `PlayerClass` is a plain data holder (name +
+base stat values) populated from JSON under `src/main/resources/classes/`
+(e.g. `warrior.json`, `mage.json`) by `PlayerClassLoader.load(fileName)`,
+mirroring `BuildingLoader`'s pattern — `getResourceAsStream("/classes/<file>")`,
+Gson parse, throws `PlayerClassException` on failure. `loadAll()` returns
+every known class (today via an explicit filename list — classpath resource
+directories can't be listed portably across the IDE, `mvn test`, and the
+shaded jar without an extra scanning dependency; add new class files to
+that list). `PlayerInfo` defaults new players to `warrior.json`. Only the
+six base-stat *values* are data-driven — `Stats`' fields and its derived
+`getAttackPower`/`getDefense` formulas stay plain Java. The JSON schema
+abbreviates the six attributes (`str`, `dex`, `con`, `int`, `wis`, `luck`);
+since `int` is a Java reserved word, `PlayerClass`'s `intelligence` field
+maps to it via Gson's `@SerializedName("int")`. This data isn't wired into
+gameplay yet beyond display in `PlayerInfoPanel`.
 
 **Rendering contracts**: `Positionable` (x/y) → `DrawableAsciiEntity` (adds
 glyph/color/`render`) is what `GamePanel` iterates over in `entitiesToDraw`

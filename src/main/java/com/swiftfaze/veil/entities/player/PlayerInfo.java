@@ -1,9 +1,10 @@
 package com.swiftfaze.veil.entities.player;
 
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
-import com.swiftfaze.veil.entities.player.classes.Warrior;
 
 public class PlayerInfo {
+    private static final String DEFAULT_CLASS_FILE = "warrior.json";
+
     private String firstName;
     private String lastName;
     private Level level;
@@ -15,7 +16,7 @@ public class PlayerInfo {
         this.lastName = "Hamerfell";
         this.level = new Level();
         this.stats = new Stats();
-        this.playerClass = new Warrior();
+        this.playerClass = PlayerClassLoader.load(DEFAULT_CLASS_FILE);
         this.playerClass.applyBaseStats(stats);
     }
 
