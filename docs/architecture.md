@@ -89,6 +89,27 @@ inventory-management system exists to consume it. `EastPanel` loads the
 hardcoded stub labels. This is phase 4 of the data-driven-mod-content
 initiative; see `specs/intent/data-driven-item.md`.
 
+**Quests** (`entities/quests/Quest.java`): a plain data holder (name, an
+`objective` — `{type, target, count}`, fixed to `"kill"` this slice — and
+a `rewards` list of `{type, id?, count?, calc?}` entries, `item` or `xp`)
+loaded from JSON under `mods/core/quests/*.json` via the same
+`ModLoader`/`ModRegistry` mechanism as tiles/buildings/classes/items.
+`ModLoader` loads quests after items within the same mod-load pass, since
+`rewards[].type: "item"` entries validate their `id` against the item
+registry already populated earlier in that pass; an unresolved item ID
+fails loading immediately, matching the tile/class/item unregistered-
+reference pattern. `rewards[].type: "xp"` entries parse their `calc` with
+`CalcExpressionParser` for syntactic validity only, same as items —
+nothing evaluates it to a number yet, and no combat/monster system exists
+to detect a `kill` objective being satisfied either. Minimal per-player
+quest state (`entities/player/QuestLog.java`, an unvalidated
+`Map<String, QuestLog.State>` of not-started/offered/active/complete,
+defaulting unseen quest IDs to not-started) is composed onto `PlayerInfo`
+alongside `stats`/`playerClass`, with no order validation on transitions
+and no persistence across restarts — no save/load system exists in the
+project yet. This is phase 5 of the data-driven-mod-content initiative;
+see `specs/intent/data-driven-quest.md`.
+
 **Rendering contracts**: `Positionable` (x/y) → `DrawableAsciiEntity` (adds
 glyph/color/`render`) is what `GamePanel` iterates over in `entitiesToDraw`
 to draw non-scene entities (currently just `Player`); `WorldScene` itself

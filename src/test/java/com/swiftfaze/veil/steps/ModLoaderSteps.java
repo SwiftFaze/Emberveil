@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.entities.quests.Quest;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.mods.ModRegistry;
@@ -57,6 +58,13 @@ public class ModLoaderSteps {
                                 List<ItemEffectFixture> effects, String overrides) {
     }
 
+    private record QuestRewardFixture(String type, String itemId, Integer count, String calc) {
+    }
+
+    private record QuestFixture(String id, String name, String objectiveType, String target, Integer count,
+                                 List<QuestRewardFixture> rewards, String overrides) {
+    }
+
     private static final Map<String, Integer> WARRIOR_STATS = Map.of(
             "strength", 15, "dexterity", 10, "constitution", 14, "intelligence", 6,
             "wisdom", 6, "luck", 8, "maxHp", 120, "maxMana", 20);
@@ -67,10 +75,12 @@ public class ModLoaderSteps {
     private final Map<String, List<TileFixture>> tilesByMod = new LinkedHashMap<>();
     private final Map<String, List<ClassFixture>> classesByMod = new LinkedHashMap<>();
     private final Map<String, List<ItemFixture>> itemsByMod = new LinkedHashMap<>();
+    private final Map<String, List<QuestFixture>> questsByMod = new LinkedHashMap<>();
     private String overriddenBuildingId;
     private String lastCheckedTileId;
     private String lastCheckedClassId;
     private String lastCheckedItemId;
+    private String lastCheckedQuestId;
     private String lastCheckedEntityKind;
     private boolean needsMarkerTiles;
 
@@ -352,6 +362,79 @@ public class ModLoaderSteps {
         Files.writeString(modDir.resolve("items").resolve("broken.json"), "{ not valid json");
     }
 
+    @Given("a mods directory containing the {string} mod with a quest declaring id {string}, name {string}, objective type {string} on target {string} with count {int}, an item reward of {string} count {int}, and an xp reward with calc {string}")
+    public void aModsDirectoryContainingTheModWithAQuestWithRewards(String modId, String questId, String name,
+                                                                     String objectiveType, String target, int count,
+                                                                     String itemId, int itemCount, String xpCalc) {
+        List<QuestRewardFixture> rewards = List.of(
+                new QuestRewardFixture("item", itemId, itemCount, null),
+                new QuestRewardFixture("xp", null, null, xpCalc)
+        );
+        addQuest(modId, questId, name, objectiveType, target, count, rewards, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a quest declaring id {string}, name {string}, objective type {string} on target {string} with count {int}, and no rewards")
+    public void aModsDirectoryContainingTheModWithAQuestNoRewards(String modId, String questId, String name,
+                                                                    String objectiveType, String target, int count) {
+        addQuest(modId, questId, name, objectiveType, target, count, List.of(), null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a quest declaring id {string}, objective type {string} on target {string} with count {int}, and an item reward of {string} count {int}")
+    public void aModsDirectoryContainingTheModWithAQuestNoName(String modId, String questId,
+                                                               String objectiveType, String target, int count,
+                                                               String itemId, int itemCount) {
+        List<QuestRewardFixture> rewards = List.of(
+                new QuestRewardFixture("item", itemId, itemCount, null)
+        );
+        addQuest(modId, questId, null, objectiveType, target, count, rewards, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a quest declaring id {string}, objective type {string} on target {string} with count {int}, and an xp reward with calc {string}")
+    public void aModsDirectoryContainingTheModWithAQuestXpOnly(String modId, String questId,
+                                                               String objectiveType, String target, int count,
+                                                               String xpCalc) {
+        List<QuestRewardFixture> rewards = List.of(
+                new QuestRewardFixture("xp", null, null, xpCalc)
+        );
+        addQuest(modId, questId, null, objectiveType, target, count, rewards, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a quest declaring id {string}, objective type {string} on target {string} with count {int}, and no rewards")
+    public void aModsDirectoryContainingTheModWithAQuestNoRewardsNoName(String modId, String questId,
+                                                                         String objectiveType, String target, int count) {
+        addQuest(modId, questId, null, objectiveType, target, count, List.of(), null);
+    }
+
+    @Given("the mods directory also contains the {string} mod with a quest declaring id {string}, name {string}, objective type {string} on target {string} with count {int}, an item reward of {string} count {int}, and an xp reward with calc {string}")
+    public void theModsDirectoryAlsoContainsTheModWithAQuestWithRewards(String modId, String questId, String name,
+                                                                         String objectiveType, String target, int count,
+                                                                         String itemId, int itemCount, String xpCalc) {
+        List<QuestRewardFixture> rewards = List.of(
+                new QuestRewardFixture("item", itemId, itemCount, null),
+                new QuestRewardFixture("xp", null, null, xpCalc)
+        );
+        addQuest(modId, questId, name, objectiveType, target, count, rewards, null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a quest declaring id {string} and no {string} field")
+    public void theModsDirectoryAlsoContainsModWithAQuestAndNoField(String modId, String questId, String fieldName) {
+        addQuest(modId, questId, null, "kill", "core:goblin", 5, List.of(), null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a quest declaring id {string}, name {string}, and the same objective and rewards, whose {string} field names {string}")
+    public void theModsDirectoryAlsoContainsModWithAQuestOverriding(String modId, String questId, String name,
+                                                                    String fieldName, String overriddenId) {
+        addQuest(modId, questId, name, "kill", "core:goblin", 5, List.of(), overriddenId);
+    }
+
+    @Given("a mods directory containing mod {string} with a malformed quest file")
+    public void aModsDirectoryContainingModWithAMalformedQuestFile(String modId) throws IOException {
+        Path modDir = modsRoot.resolve(modId);
+        Files.createDirectories(modDir.resolve("quests"));
+        Files.writeString(modDir.resolve("mod.json"), "{\"id\":\"" + modId + "\",\"dependsOn\":[]}");
+        Files.writeString(modDir.resolve("quests").resolve("broken.json"), "{ not valid json");
+    }
+
     @Then("a class with ID {string} is available")
     public void aClassWithIDIsAvailable(String id) {
         assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
@@ -364,6 +447,8 @@ public class ModLoaderSteps {
     public void itsNameIs(String expectedName) {
         if ("item".equals(lastCheckedEntityKind)) {
             assertEquals(expectedName, registry.getItem(lastCheckedItemId).getName());
+        } else if ("quest".equals(lastCheckedEntityKind)) {
+            assertEquals(expectedName, registry.getQuest(lastCheckedQuestId).getName());
         } else {
             assertEquals(expectedName, registry.getPlayerClass(lastCheckedClassId).getName());
         }
@@ -445,6 +530,58 @@ public class ModLoaderSteps {
         assertTrue(thrown.getMessage().contains(itemId), "expected message to name item: " + thrown.getMessage());
     }
 
+    @Then("a quest with ID {string} is available")
+    public void aQuestWithIDIsAvailable(String id) {
+        assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
+        assertNotNull(registry.getQuest(id), "expected quest '" + id + "' to be loaded");
+        lastCheckedQuestId = id;
+        lastCheckedEntityKind = "quest";
+    }
+
+    @Then("its objective is a {string} on target {string} with count {int}")
+    public void itsObjectiveIs(String type, String target, int count) {
+        Quest.Objective objective = registry.getQuest(lastCheckedQuestId).getObjective();
+        assertEquals(type, objective.type());
+        assertEquals(target, objective.target());
+        assertEquals(count, objective.count());
+    }
+
+    @Then("it has {int} rewards: an item reward of {string} count {int}, and an xp reward with calc {string}")
+    public void itHasRewards(int expectedCount, String itemRewardId, int itemRewardCount, String xpCalc) {
+        List<Quest.Reward> rewards = registry.getQuest(lastCheckedQuestId).getRewards();
+        assertEquals(expectedCount, rewards.size());
+        assertEquals("item", rewards.get(0).type());
+        assertEquals(itemRewardId, rewards.get(0).id());
+        assertEquals(itemRewardCount, rewards.get(0).count());
+        assertEquals("xp", rewards.get(1).type());
+        assertEquals(xpCalc, rewards.get(1).calc());
+    }
+
+    @Then("it has no rewards")
+    public void itHasNoRewards() {
+        assertTrue(registry.getQuest(lastCheckedQuestId).getRewards().isEmpty());
+    }
+
+    @Then("loading fails with a ModLoadException naming quest {string}, item {string}, and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingQuestItemAndFile(String questId, String itemId) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(questId), "expected message to name quest: " + thrown.getMessage());
+        assertTrue(thrown.getMessage().contains(itemId), "expected message to name item: " + thrown.getMessage());
+    }
+
+    @Then("loading fails with a ModLoadException naming quest {string} and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingQuestAndFile(String questId) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(questId), "expected message to name quest: " + thrown.getMessage());
+    }
+
+    @Then("loading fails with a ModLoadException naming quest {string}, objective type {string}, and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingQuestObjectiveTypeAndFile(String questId, String objectiveType) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(questId), "expected message to name quest: " + thrown.getMessage());
+        assertTrue(thrown.getMessage().contains(objectiveType), "expected message to name objective type: " + thrown.getMessage());
+    }
+
     private int getStatValue(Stats stats, String statName) {
         Map<String, Function<Stats, Integer>> getters = Map.of(
                 "strength", Stats::getStrength,
@@ -472,6 +609,13 @@ public class ModLoaderSteps {
                 .add(new ItemFixture(itemId, name, glyph, type, slot, baseDamageMin, baseDamageMax, effects, overrides));
     }
 
+    private void addQuest(String modId, String questId, String name, String objectiveType, String target,
+                           Integer count, List<QuestRewardFixture> rewards, String overrides) {
+        dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
+        questsByMod.computeIfAbsent(modId, k -> new ArrayList<>())
+                .add(new QuestFixture(questId, name, objectiveType, target, count, rewards, overrides));
+    }
+
     private void addBuilding(String modId, String buildingId, String overriddenId, String explicitTileId) {
         dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
         buildingsByMod.computeIfAbsent(modId, k -> new ArrayList<>())
@@ -493,6 +637,7 @@ public class ModLoaderSteps {
         allMods.addAll(tilesByMod.keySet());
         allMods.addAll(classesByMod.keySet());
         allMods.addAll(itemsByMod.keySet());
+        allMods.addAll(questsByMod.keySet());
         allMods.addAll(dependsOnByMod.keySet());
 
         if (needsMarkerTiles) {
@@ -511,6 +656,7 @@ public class ModLoaderSteps {
             writeBuildings(modDir, buildingsByMod.getOrDefault(modId, List.of()));
             writeClasses(modDir, classesByMod.getOrDefault(modId, List.of()));
             writeItems(modDir, itemsByMod.getOrDefault(modId, List.of()));
+            writeQuests(modDir, questsByMod.getOrDefault(modId, List.of()));
         }
     }
 
@@ -680,6 +826,60 @@ public class ModLoaderSteps {
         }
 
         return item.toString();
+    }
+
+    private void writeQuests(Path modDir, List<QuestFixture> fixtures) throws IOException {
+        if (fixtures.isEmpty()) {
+            return;
+        }
+        Path questsDir = modDir.resolve("quests");
+        Files.createDirectories(questsDir);
+
+        int i = 0;
+        for (QuestFixture fixture : fixtures) {
+            Files.writeString(questsDir.resolve("quest_" + (i++) + ".json"), questJson(fixture));
+        }
+    }
+
+    private String questJson(QuestFixture fixture) {
+        JsonObject quest = new JsonObject();
+        quest.addProperty("id", fixture.id());
+        quest.addProperty("name", fixture.name() != null ? fixture.name() : fixture.id());
+
+        JsonObject objective = new JsonObject();
+        objective.addProperty("type", fixture.objectiveType());
+        if (fixture.target() != null) {
+            objective.addProperty("target", fixture.target());
+        }
+        if (fixture.count() != null) {
+            objective.addProperty("count", fixture.count());
+        }
+        quest.add("objective", objective);
+
+        if (fixture.rewards() != null && !fixture.rewards().isEmpty()) {
+            JsonArray rewards = new JsonArray();
+            for (QuestRewardFixture reward : fixture.rewards()) {
+                JsonObject rewardObj = new JsonObject();
+                rewardObj.addProperty("type", reward.type());
+                if (reward.itemId() != null) {
+                    rewardObj.addProperty("id", reward.itemId());
+                }
+                if (reward.count() != null) {
+                    rewardObj.addProperty("count", reward.count());
+                }
+                if (reward.calc() != null) {
+                    rewardObj.addProperty("calc", reward.calc());
+                }
+                rewards.add(rewardObj);
+            }
+            quest.add("rewards", rewards);
+        }
+
+        if (fixture.overrides() != null) {
+            quest.addProperty("overrides", fixture.overrides());
+        }
+
+        return quest.toString();
     }
 
     private void writeStatsRegistryIfNeeded() throws IOException {
