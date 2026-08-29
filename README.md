@@ -19,5 +19,18 @@ Requires JDK 17+ and Maven.
 mvn compile exec:java
 ```
 
+## Class/stats sandbox
+
+A dev-only tool that lists every player class and shows its computed
+stats (attack power, defense, HP, mana) without needing to actually play
+the game. It's not part of the packaged installer.
+
+```
+mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox
+```
+
+Edit a class's JSON under `src/main/resources/classes/` and re-run to see
+the change reflected immediately, no recompiling needed.
+
 See `CLAUDE.md` and `docs/` for the full architecture, testing, and
 release documentation.

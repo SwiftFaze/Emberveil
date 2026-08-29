@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString` onto a `JPanel`; there is no sprite/texture pipeline for tiles (a `grass.png` resource and a `DrawableImageEntity` interface exist but are currently unused by any scene).
+Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString` onto a `JPanel`; there is no sprite/texture pipeline for tiles.
 
 ## Build & run
 
@@ -16,8 +16,10 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
 - Run the game from source: `mvn compile exec:java` (no packaging or version number needed).
+- Run the dev-only class/stats sandbox instead of the game: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox` (not part of the packaged build — see `docs/architecture.md`).
 - `mvn package` also produces `target/Veil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
 - Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
+- Mutation testing (workflow Step 6): `mvn org.pitest:pitest-maven:mutationCoverage` — report lands in `target/pit-reports/`. See `docs/testing.md`.
 
 ## CI / releases
 
@@ -31,13 +33,13 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 
 ## Architecture
 
-See `docs/architecture.md` for the full write-up (entry point/window assembly, the `GamePanel` render loop and Z-level/fog handling, the `WorldScene`/`Tile` world model, JSON building blueprints, player movement, the RPG stats/class strategy pattern, and the `DrawableAsciiEntity` rendering contracts).
+See `docs/architecture.md` for the full write-up (entry point/window assembly, the `GamePanel` render loop, the flat single-layer `WorldScene`/`Tile` world model, JSON building blueprints, player movement, Key Bindings-based input, the `TerminalPanel`/`SelectableMenu` UI shell, JSON-driven player classes/stats, the class/stats sandbox, and the `DrawableAsciiEntity` rendering contracts).
 
 ## Spec-first workflow layout
 
 This repo follows the intent → spec → approval → implementation pipeline (see the global development workflow instructions):
 
-- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*. Copy `specs/intent/TEMPLATE.md` to start one.
+- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*. Copy `specs/intent/TEMPLATE.md` to start one. Starting from an existing GitHub issue instead? Use the `spec-intent` skill (`.claude/skills/spec-intent/`) — give it the issue number and it creates/links a branch, moves the tracker item to In progress on the VEIL project board, and derives `intent.md` from the issue's description. Brainstorming a not-yet-ready idea straight into an issue (no repo file) instead? Use the `brainstorm-issue` skill (`.claude/skills/brainstorm-issue/`).
 - `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.
 - `docs/` — narrative/reference documentation (architecture, testing) kept up to date as part of each feature's definition of done, not left to be reverse-engineered from diffs.
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.

@@ -18,11 +18,11 @@
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` files, x4)
 - [x] Approved by human
-- [ ] Implemented
-- [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
-- [ ] Acceptance tests passing
-- [ ] Mutation testing passed
-- [ ] Documentation updated (`docs/`, and the wiki if player-facing)
+- [x] Implemented
+- [x] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
+- [x] Acceptance tests passing
+- [x] Mutation testing passed
+- [x] Documentation updated (`docs/`, and the wiki if player-facing)
 
 ## Problem
 
