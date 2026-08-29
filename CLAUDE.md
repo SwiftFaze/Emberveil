@@ -15,7 +15,7 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - Everything, including integration tests: `mvn verify`
 - Run a single unit test: `mvn test -Dtest=PlayerTest#movingRightIncreasesX`
 - Run a single Cucumber scenario: `mvn test -Dcucumber.filter.name="A newly created player starts as a Warrior"`
-- Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
+- Run a single integration test: `mvn verify -Dit.test=ModLoaderIT`
 - See `docs/testing.md` for the full breakdown of the three test layers (unit / acceptance / integration) and why they're separated.
 - Run the game from source: `mvn compile exec:java` (no packaging or version number needed).
 - Run the dev-only class/stats sandbox instead of the game: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox` (not part of the packaged build — see `docs/architecture.md`).

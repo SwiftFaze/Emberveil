@@ -3,16 +3,18 @@ package com.swiftfaze.veil.steps;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.swiftfaze.veil.entities.buildings.Building;
-import com.swiftfaze.veil.entities.buildings.BuildingLoader;
 import com.swiftfaze.veil.entities.player.Player;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.world.Tile;
 import com.swiftfaze.veil.world.WorldScene;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -75,7 +77,8 @@ public class WorldSingleFloorRenderingSteps {
 
     @When("building {string} is loaded")
     public void buildingIsLoaded(String fileName) {
-        building = BuildingLoader.load(fileName);
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        building = registry.getBuilding("core:" + fileName.replace(".json", ""));
     }
 
     @Then("the building has a single 2D tile layer")
@@ -86,8 +89,7 @@ public class WorldSingleFloorRenderingSteps {
     @Then("the building's width and height match the JSON's {string} and {string} fields")
     public void theBuildingsWidthAndHeightMatchTheJsonsFields(String widthField, String heightField) throws Exception {
         JsonObject json;
-        try (Reader reader = new InputStreamReader(
-                BuildingLoader.class.getResourceAsStream("/buildings/small_house_01.json"))) {
+        try (Reader reader = Files.newBufferedReader(Paths.get("mods", "core", "buildings", "small_house_01.json"))) {
             json = JsonParser.parseReader(reader).getAsJsonObject();
         }
 

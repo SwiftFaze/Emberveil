@@ -1,19 +1,27 @@
-package com.swiftfaze.veil.entities.buildings;
+package com.swiftfaze.veil.mods;
 
+import com.swiftfaze.veil.entities.buildings.Building;
 import com.swiftfaze.veil.world.Tile;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Paths;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Integration test: exercises real disk I/O + JSON parsing, unlike the unit tests.
+ * Integration test: exercises real disk I/O + JSON parsing against the
+ * repo's real mods/ directory, unlike the unit tests.
  * Runs only via {@code mvn verify} (Failsafe), not {@code mvn test}.
  */
-class BuildingLoaderIT {
+class ModLoaderIT {
 
     @Test
-    void loadsSmallHouseBlueprintFromDisk() {
-        Building building = BuildingLoader.load("small_house_01.json");
+    void loadsCoreSmallHouseBlueprintFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        Building building = registry.getBuilding("core:small_house_01");
+
+        assertNotNull(building, "core:small_house_01 should be loaded from mods/core/buildings/");
 
         Tile[][] blueprint = building.getBlueprint();
 

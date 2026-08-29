@@ -27,15 +27,17 @@ subclasses it and populates tiles in its constructor; `GamePanel` hardcodes
 of glyph/color/walkability triples — walkability and rendering are entirely
 data-driven off this enum, there's no separate collision or sprite system.
 
-**Buildings** are authored as JSON blueprints under
-`src/main/resources/buildings/` (a flat 2D array of `Tile` enum names —
-`{"name", "type", "width", "height", "tiles": [...]}`) and loaded by
-`BuildingLoader.load(fileName)` into a `Building` (a `Tile[][]` blueprint
-plus a world X/Y offset), then stamped into a scene via
-`WorldScene.placeBuilding`. Buildings are read via
-`getResourceAsStream("/buildings/<file>")`, i.e. off the classpath — this
-works identically whether run from the IDE, `mvn test`, or the packaged
-Windows installer (see `docs/release.md`).
+**Buildings** are authored as JSON blueprints under `mods/core/buildings/`
+(a flat 2D array of `Tile` enum names — `{"id", "name", "type", "width",
+"height", "tiles": [...]}`) and loaded by `ModLoader.load(modsRoot)` into a
+`ModRegistry`, from which a `Building` (a `Tile[][]` blueprint plus a world
+X/Y offset) is looked up by its namespaced `"id"` (e.g. `core:small_house_01`)
+and stamped into a scene via `WorldScene.placeBuilding`. `ModLoader` reads
+content from an external `mods/` directory (resolved relative to the JVM's
+working directory) rather than the classpath — `core` is itself just a mod
+living at `mods/core/`, loaded through the same path any third-party mod
+would use. This is phase 1 of a larger data-driven-mod-content initiative;
+see `specs/intent/mod-loader.md`.
 
 **Player movement** (`entities/player/Player.java`): each directional move
 checks whether the target tile is walkable and, if so, moves onto it —
@@ -46,7 +48,7 @@ does nothing.
 `Stats`, and a `PlayerClass`. `PlayerClass` is a plain data holder (name +
 base stat values) populated from JSON under `src/main/resources/classes/`
 (e.g. `warrior.json`, `mage.json`) by `PlayerClassLoader.load(fileName)`,
-mirroring `BuildingLoader`'s pattern — `getResourceAsStream("/classes/<file>")`,
+mirroring the classpath-resource-loading pattern `BuildingLoader` used to have — `getResourceAsStream("/classes/<file>")`,
 Gson parse, throws `PlayerClassException` on failure. `loadAll()` returns
 every known class (today via an explicit filename list — classpath resource
 directories can't be listed portably across the IDE, `mvn test`, and the
