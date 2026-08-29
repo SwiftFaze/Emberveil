@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@development-workflow.md
+
 ## Project
 
 Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). Rendering draws Unicode/ASCII glyphs with `Graphics2D.drawString` onto a `JPanel`; there is no sprite/texture pipeline for tiles.
