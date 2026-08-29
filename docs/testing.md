@@ -28,9 +28,18 @@ conventions so Maven can tell them apart automatically:
 - A `.feature` file generated ahead of its implementation (e.g. an intent
   covering several areas, spec-drafted all at once but implemented one
   area at a time) should be tagged `@pending` at the top, and excluded via
-  `RunCucumberTest`'s `not @pending` tag filter — otherwise `mvn test`
-  fails on undefined steps for scenarios that don't have an implementation
-  yet. Remove the tag from a file only once its step definitions exist.
+  `RunCucumberTest`'s tag filter — otherwise `mvn test` fails on undefined
+  steps for scenarios that don't have an implementation yet. Remove the
+  tag from a file only once its step definitions exist.
+- A `.feature` file with no Java code path to exercise at all — a
+  build-pipeline or OS-installer concern rather than application behavior
+  (e.g. `installer-mods-bundling.feature`) — is tagged `@manual-verification`
+  instead, and excluded by the same tag filter. Unlike `@pending`, this
+  exclusion is permanent: the file is the human-reviewed spec of record
+  (per root `CLAUDE.md`'s review table), but it's never meant to gain step
+  definitions, so the tag is never removed. Verification happens by
+  actually exercising the described behavior manually (e.g. building and
+  running an installer), not via `mvn test`/`mvn verify`.
 
 ## Integration tests
 
