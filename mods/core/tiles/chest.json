@@ -1,1 +1,10 @@
-{"id": "core:chest", "symbol": "C", "color": {"r": 240, "g": 219, "b": 160}, "walkable": false}
+{
+  "id": "core:chest",
+  "symbol": "C",
+  "color": {
+    "r": 240,
+    "g": 219,
+    "b": 160
+  },
+  "walkable": false
+}

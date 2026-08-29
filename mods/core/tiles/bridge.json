@@ -1,1 +1,10 @@
-{"id": "core:bridge", "symbol": "=", "color": {"r": 210, "g": 178, "b": 140}, "walkable": true}
+{
+  "id": "core:bridge",
+  "symbol": "=",
+  "color": {
+    "r": 210,
+    "g": 178,
+    "b": 140
+  },
+  "walkable": true
+}
