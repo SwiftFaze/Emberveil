@@ -38,9 +38,9 @@ conventions so Maven can tell them apart automatically:
 - Runner: Failsafe, bound to `integration-test`/`verify` — **not** run by
   plain `mvn test**. Run them with `mvn verify`.
 - Reserved for tests that need real I/O or cross-class wiring that unit
-  tests shouldn't pay for on every run (e.g. `BuildingLoaderIT`, which
-  loads an actual JSON fixture off disk instead of mocking the file read).
-- Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
+  tests shouldn't pay for on every run (e.g. `ModLoaderIT`, which loads
+  actual mod content off disk instead of mocking the file read).
+- Run a single integration test: `mvn verify -Dit.test=ModLoaderIT`
 
 ## Everything together
 

@@ -156,6 +156,7 @@
                         <param>com.swiftfaze.veil.Camera</param>
                         <param>com.swiftfaze.veil.world.*</param>
                         <param>com.swiftfaze.veil.entities.*</param>
+                        <param>com.swiftfaze.veil.mods.*</param>
                         <param>com.swiftfaze.veil.ui.SelectableMenu</param>
                         <param>com.swiftfaze.veil.ui.EastPanel</param>
                         <param>com.swiftfaze.veil.ui.MenuPanel</param>
