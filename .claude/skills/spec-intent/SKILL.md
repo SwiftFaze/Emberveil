@@ -35,7 +35,8 @@ don't silently start work on a closed issue.
   - `bug` label -> `fix/`
   - `documentation` label -> `docs/`
   - anything else (including `enhancement`, or no recognized label) ->
-    `feature/`
+    `feat/` (matches the `feat:` Conventional Commits type this repo
+    already uses for commit messages — see root `CLAUDE.md`)
   - State which prefix you picked and why in the final report — it's a
     one-word rename if the user disagrees, not worth a blocking question.
 - **Branch name:** `<prefix><slug>`.
