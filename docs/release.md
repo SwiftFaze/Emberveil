@@ -38,6 +38,19 @@ for beta) so the two version lines and changelogs don't collide.
 4. That same workflow then builds the installers (see below) and uploads
    them as assets on the release that was just created.
 
+The merge in step 3 happens automatically — no human click needed. Right
+after Release Please creates/updates the PR, the same job asks GitHub to
+auto-merge it (`gh pr merge --auto`), which waits for the branch's
+required status checks to pass and then merges it for you. This exists
+because leaving the release PR sitting open was actively harmful: every
+other PR that merged into `develop`/`master` in the meantime kept
+updating that same standing PR, and if it sat unmerged for a while before
+finally being merged, it was easy to lose track of which commits were and
+weren't actually reflected in `CHANGELOG.md` for that version. Auto-merge
+means each release goes out the moment the commit that should trigger it
+lands and CI is green, so there's no window where the release PR can go
+stale.
+
 Nothing about this requires a human to decide "what's the next version
 number" — that's entirely derived from commit messages. If a change
 shouldn't trigger a release at all, use a non-triggering type (`chore:`,
