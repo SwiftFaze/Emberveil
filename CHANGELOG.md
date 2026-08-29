@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0-beta.9](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.8...v0.3.0-beta.9) (2026-08-29)
+
+
+### Features
+
+* add close-milestone skill ([54eb5e5](https://github.com/SwiftFaze/Veil/commit/54eb5e5ef40244fc9884ec499a58c870bf0d4399))
+* bundle mods/core into jpackage installer builds ([9442dbb](https://github.com/SwiftFaze/Veil/commit/9442dbb6dce23a03f78bba0e3f34885488a80ec3))
+* bundle mods/core into jpackage installer builds ([20eb545](https://github.com/SwiftFaze/Veil/commit/20eb54592153ba7ccfe0e188a448c88b4fb93d2d)), closes [#62](https://github.com/SwiftFaze/Veil/issues/62)
+
+
+### Bug Fixes
+
+* exclude [@manual-verification](https://github.com/manual-verification) features from Cucumber execution ([e7d5ccf](https://github.com/SwiftFaze/Veil/commit/e7d5ccf88cd011debb81c737a7d56df9dea6757c))
+
 ## [0.3.0-beta.8](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.7...v0.3.0-beta.8) (2026-08-29)
 
 
