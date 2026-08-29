@@ -4,14 +4,9 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 
-public class InventoryPanel extends JPanel {
-
+public class InventoryPanel extends TerminalPanel {
 
     public InventoryPanel() {
-        setBackground(Color.BLACK);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setFocusable(false);
-
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
 
@@ -24,13 +19,4 @@ public class InventoryPanel extends JPanel {
         add(makeLabel("4. Item"));
         add(makeLabel("5. Item"));
     }
-
-    private JLabel makeLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-
 }

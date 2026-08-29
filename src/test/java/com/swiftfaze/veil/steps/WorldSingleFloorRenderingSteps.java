@@ -1,0 +1,101 @@
+package com.swiftfaze.veil.steps;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.buildings.BuildingLoader;
+import com.swiftfaze.veil.entities.player.Player;
+import com.swiftfaze.veil.world.Tile;
+import com.swiftfaze.veil.world.WorldScene;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class WorldSingleFloorRenderingSteps {
+
+    private WorldScene scene;
+    private Player player;
+    private Building building;
+
+    @Given("a world scene {int} tiles wide and {int} tiles tall")
+    public void aWorldSceneTilesWideAndTilesTall(int width, int height) {
+        scene = new WorldScene(width, height) {
+        };
+        scene.fillAll(Tile.GRASS);
+    }
+
+    @Then("looking up a tile takes only an \\(x, y) position, not a floor")
+    public void lookingUpATileTakesOnlyAnXYPositionNotAFloor() {
+        assertNotNull(scene.getTile(0, 0));
+    }
+
+    @Given("a player at position \\({int}, {int})")
+    public void aPlayerAtPosition(int x, int y) {
+        player = new Player(x, y);
+    }
+
+    @Given("tile \\({int}, {int}) is walkable")
+    public void tileIsWalkable(int x, int y) {
+        scene.fillRegion(x, y, 1, 1, Tile.GRASS);
+    }
+
+    @Given("tile \\({int}, {int}) is not walkable")
+    public void tileIsNotWalkable(int x, int y) {
+        scene.fillRegion(x, y, 1, 1, Tile.WATER);
+    }
+
+    @When("the player moves up")
+    public void thePlayerMovesUp() {
+        player.moveUp(scene);
+    }
+
+    @When("the player moves right")
+    public void thePlayerMovesRight() {
+        player.moveRight(scene);
+    }
+
+    @Then("the player's position is \\({int}, {int})")
+    public void thePlayersPositionIs(int x, int y) {
+        assertEquals(x, player.getX());
+        assertEquals(y, player.getY());
+    }
+
+    @Then("the player's position is still \\({int}, {int})")
+    public void thePlayersPositionIsStill(int x, int y) {
+        assertEquals(x, player.getX());
+        assertEquals(y, player.getY());
+    }
+
+    @When("building {string} is loaded")
+    public void buildingIsLoaded(String fileName) {
+        building = BuildingLoader.load(fileName);
+    }
+
+    @Then("the building has a single 2D tile layer")
+    public void theBuildingHasASingle2DTileLayer() {
+        assertTrue(building.getBlueprint().length > 0);
+    }
+
+    @Then("the building's width and height match the JSON's {string} and {string} fields")
+    public void theBuildingsWidthAndHeightMatchTheJsonsFields(String widthField, String heightField) throws Exception {
+        JsonObject json;
+        try (Reader reader = new InputStreamReader(
+                BuildingLoader.class.getResourceAsStream("/buildings/small_house_01.json"))) {
+            json = JsonParser.parseReader(reader).getAsJsonObject();
+        }
+
+        int declaredWidth = json.get(widthField).getAsInt();
+        int declaredHeight = json.get(heightField).getAsInt();
+
+        Tile[][] blueprint = building.getBlueprint();
+        assertEquals(declaredHeight, blueprint.length);
+        assertEquals(declaredWidth, blueprint[0].length);
+    }
+}

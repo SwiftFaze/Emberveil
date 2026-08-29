@@ -25,6 +25,12 @@ conventions so Maven can tell them apart automatically:
 - `specs/features/default-player-class.feature` +
   `steps/DefaultPlayerClassSteps.java` are a worked example proving this
   wiring end-to-end — copy their shape for the next real feature.
+- A `.feature` file generated ahead of its implementation (e.g. an intent
+  covering several areas, spec-drafted all at once but implemented one
+  area at a time) should be tagged `@pending` at the top, and excluded via
+  `RunCucumberTest`'s `not @pending` tag filter — otherwise `mvn test`
+  fails on undefined steps for scenarios that don't have an implementation
+  yet. Remove the tag from a file only once its step definitions exist.
 
 ## Integration tests
 
@@ -40,3 +46,20 @@ conventions so Maven can tell them apart automatically:
 
 `mvn verify` runs all three layers: unit tests and the Cucumber suite via
 Surefire, then integration tests via Failsafe.
+
+## Mutation testing (workflow Step 6)
+
+- Runner: PIT (`org.pitest:pitest-maven`, with `pitest-junit5-plugin` so it
+  runs through the JUnit Platform and picks up both plain unit tests and
+  Cucumber scenarios).
+- Run it: `mvn org.pitest:pitest-maven:mutationCoverage` — HTML report at
+  `target/pit-reports/index.html` (per-package/per-class breakdowns,
+  including a *line* coverage figure distinct from mutation score).
+- `<targetClasses>`/`<targetTests>` in `pom.xml` scope this to classes with
+  real unit tests — pure Swing view/wiring classes with no meaningful unit
+  coverage (`Main`, layout-only panels, `ClassSandbox`'s UI entry point)
+  are excluded rather than left to report a wall of untested mutants.
+- This is the check on the unit tests themselves (CLAUDE.md's changed-file
+  coverage constraint is easy to satisfy with weak assertions; mutation
+  score catches that) — not a substitute for acceptance tests or the
+  Step 4.5 manual playtest.
