@@ -23,11 +23,12 @@ than one that starts from the idea in the abstract.
 
 ## Step 2 — Scope the brainstorm with the user
 
-Use `AskUserQuestion` (not free-form prose) to settle, at minimum:
+Use the `grilling` skill (not free-form prose, and not a flat
+`AskUserQuestion` round) to settle, at minimum:
 
 - **What's in scope for a first version** versus what should be split
-  into a separate follow-up issue. Offer a recommended option — usually
-  the smallest coherent slice that doesn't depend on anything unbuilt.
+  into a separate follow-up issue. Recommend the smallest coherent slice
+  that doesn't depend on anything unbuilt.
 - **Priority** for each issue being filed — P0/P1/P2 (the VEIL project
   board's `Priority` field). Recommend **P2** by default: this skill
   exists for ideas the user wants to think out loud about "for later,"
@@ -35,10 +36,19 @@ Use `AskUserQuestion` (not free-form prose) to settle, at minimum:
   signals otherwise (e.g. the user frames it as blocking something, or
   it's a fix for currently-broken behavior). If the brainstorm splits
   into a primary + follow-up issue, ask about the follow-up's priority
-  separately — it's almost always P2 even when the primary isn't.
+  separately, in a later round — it's almost always P2 even when the
+  primary isn't, but it's downstream of the split decision.
 - Any other genuinely open fork in the idea (entry point, UI shape,
   who/what triggers it) that materially changes what the issue should
-  say. Don't ask about things you can just decide reasonably.
+  say. Don't ask about things you can just decide reasonably — grilling's
+  fact-finding rule applies here too: look it up in the codebase rather
+  than asking if it's answerable that way.
+
+If a question is a single, self-contained multiple-choice pick with no
+other open question hanging off it (e.g. confirming a milestone match in
+Step 4), a plain `AskUserQuestion` is still the right tool — reserve
+`grilling` for genuine ambiguity in the idea itself, which is what this
+step is about.
 
 If the answers reveal a natural split (some of the idea is buildable now,
 some depends on systems that don't exist yet or is clearly later work),
@@ -93,7 +103,45 @@ Cross-link: the primary issue's Scope references the follow-up issue
 number in "Out of scope"; if useful, the follow-up issue can note which
 primary issue it was split from.
 
-## Step 4 — Add to the project board and set priority
+## Step 4 — Assign a milestone
+
+Milestones on this repo group issues by feature arc, not by release date
+or due date (none of them carry a due date) — see e.g. "1. Mod-loader
+restructure" or "2. Terminal UI component framework". Before adding the
+issue(s) to the project board:
+
+1. List open milestones:
+   ```
+   gh api repos/SwiftFaze/Veil/milestones --jq '.[] | "\(.number)\t\(.title)\t\(.description)"'
+   ```
+2. Judge whether the issue's theme genuinely fits one of them (e.g. a new
+   settings-screen widget idea fits an existing "Terminal UI component
+   framework" milestone; a new quest-*content* idea does **not** fit
+   "Mod-loader restructure" just because it mentions quests — that
+   milestone is about the loading *pipeline*, not content built on it).
+   Don't force a fit — a one-off idea with no real match should stay
+   unmilestoned rather than get wedged into the closest-sounding one.
+3. Confirm with `AskUserQuestion`: offer the best-matching existing
+   milestone(s) as options, plus "Create a new milestone" and "Leave
+   unmilestoned", recommending whichever you judged correct in step 2.
+4. If creating new: milestones are titled `"<n>. <Title>"`, numbered
+   sequentially — take the highest existing leading ordinal and add 1.
+   Write a short **thematic** description (the goal/arc, not a list of
+   tasks — task lists go stale as scope shifts). If the idea looks big
+   enough to need several issues rather than just this one, stop and
+   suggest `/brainstorm-milestone` instead of creating a single-issue
+   milestone here. Otherwise:
+   ```
+   gh api repos/SwiftFaze/Veil/milestones -f title="<n>. <Title>" -f state="open" -f description="<theme>"
+   ```
+5. Assign the issue(s):
+   ```
+   gh issue edit <number> --repo SwiftFaze/Veil --milestone "<milestone title>"
+   ```
+   If the brainstorm split into primary + follow-up, both usually share
+   the same milestone unless the follow-up is genuinely a different arc.
+
+## Step 5 — Add to the project board and set priority
 
 Every issue created this way goes on the VEIL project board — this is a
 standing repo convention, not optional:
@@ -112,10 +160,11 @@ gh project item-edit 2 --owner SwiftFaze --url <issue-url> --field "Priority" --
 Do both for each issue created in Step 3 — the primary and any follow-up,
 using each one's own agreed priority.
 
-## Step 5 — Report back
+## Step 6 — Report back
 
-Tell the user the issue URL(s), the priority set on each, and — in one
-line each — what's in scope for the primary issue and what got split into
-the follow-up (if any). Don't propose next steps beyond what was asked —
-if this brainstorm is likely to turn into a real intent later, that's the
-user's call to make, not something to push in this skill's output.
+Tell the user the issue URL(s), the milestone (if any), the priority set
+on each, and — in one line each — what's in scope for the primary issue
+and what got split into the follow-up (if any). Don't propose next steps
+beyond what was asked — if this brainstorm is likely to turn into a real
+intent later, that's the user's call to make, not something to push in
+this skill's output.

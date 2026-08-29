@@ -265,8 +265,13 @@ stop and flag it rather than disabling the check.
 
 ## Notes for the agent
 
-- If the intent doc is missing or ambiguous, ask one clarifying question
-  rather than inventing scope.
+- If the intent doc is missing or ambiguous, use the `grilling` skill
+  (`.claude/skills/grilling/`) to ask what's unclear rather than inventing
+  scope — it batches every open question into dependency-ordered rounds
+  instead of a flat prompt, which fits this repo's iterative intent/spec
+  loops better than a one-shot `AskUserQuestion` call. Reserve
+  `AskUserQuestion` for a genuinely standalone, self-contained
+  multiple-choice pick that has no other open question hanging off it.
 - If a requested change would violate a constraint above, say so explicitly
   and propose a decomposition instead of quietly exceeding the limit.
 - Never mark a feature "done" without the acceptance tests passing against
@@ -274,3 +279,8 @@ stop and flag it rather than disabling the check.
 - Never mark a feature "done" without completing the documentation step
   (Step 7), even if the conclusion is "no doc update needed" — say so
   explicitly rather than omitting the step.
+- Never leave the linked GitHub issue open once its PR has merged (or,
+  for a `brainstorm-issue`/`brainstorm-milestone` issue with no separate
+  spec pipeline, once the work it describes is actually done). See the
+  repo-specific closing step in root `CLAUDE.md` for why this can't be
+  left to GitHub's own auto-close.

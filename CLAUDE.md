@@ -48,6 +48,8 @@ This repo follows the intent → spec → approval → implementation pipeline (
 
 **Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).
 
+**Clarifying questions in this pipeline (Steps 1-2, and the `brainstorm-issue`/`brainstorm-milestone` skills) go through the `grilling` skill** (`.claude/skills/grilling/`), not a plain `AskUserQuestion` call — it works the open questions as a dependency-ordered design tree instead of a flat list, which fits how ambiguity actually surfaces in this repo's intent/spec loops (one answer routinely reshapes what else needs asking). Keep `AskUserQuestion` for a standalone, self-contained multiple-choice pick with nothing else riding on it (e.g. confirming a milestone match).
+
 ### Repo-specific Step 4.5 — Manual playtest (Human)
 
 Inserted between the global pipeline's Step 4 (Implementation) and Step 5
@@ -68,3 +70,23 @@ before acceptance tests get wired up.
   note) so Step 7 documentation and PR review can see it.
 - No feature is "done" without this playtest, same as Steps 5-7 aren't
   optional per the global workflow's notes for the agent.
+
+### Repo-specific Step 7.5 — Close the linked issue
+
+Inserted after the global pipeline's Step 7 (Documentation), once the
+feature's PR has merged: close the GitHub issue that started this piece
+of work.
+
+- **Why this exists:** feature PRs merge into `develop`, not this repo's
+  default branch (`master`) — GitHub's "Closes #N"/"Fixes #N" auto-close
+  only fires on a merge into the *default* branch, so linked issues here
+  do **not** close themselves on merge. This is a manual step every time,
+  not a formality GitHub already handles.
+- `gh issue close <number> --repo SwiftFaze/Veil --reason completed`
+- Also applies to issues with no separate spec pipeline (filed via
+  `brainstorm-issue`/`brainstorm-milestone`) once the work they describe
+  is actually done, not just merged as a partial slice.
+- The VEIL project board's `Status` field normally follows a closed issue
+  to Done on its own (project workflow); if it doesn't, set it explicitly
+  rather than leaving a closed issue showing as still in progress on the
+  board.
