@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.7](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.6...v0.3.0-beta.7) (2026-08-29)
+
+
+### Features
+
+* add audit-project skill for GitHub project board/milestone health checks ([d76baa3](https://github.com/SwiftFaze/Veil/commit/d76baa39a0ea38c7fe7b21a0d3fbb1223f4e2744))
+* add audit-project skill for project board/milestone health checks ([f29f92c](https://github.com/SwiftFaze/Veil/commit/f29f92cff5933cec1592372ffc94e31f56dcf729))
+
 ## [0.3.0-beta.6](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.5...v0.3.0-beta.6) (2026-08-29)
 
 
