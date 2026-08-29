@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0-beta.1](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta...v0.3.0-beta.1) (2026-08-29)
+
+
+### Features
+
+* add class/stats sandbox (Area 4) ([7a8a769](https://github.com/SwiftFaze/Veil/commit/7a8a769f0954a73a1e8c2235929b95de66221d0f))
+
+
+### Bug Fixes
+
+* repair README.md corrupted by rename, add missing branch-name CI job ([5608d80](https://github.com/SwiftFaze/Veil/commit/5608d800cbf34270ed049cf730477ef962ce2644))
+* repair README.md corrupted by the Emberveil-&gt;Veil rename, add missing branch-name CI job to master ([1af0bd6](https://github.com/SwiftFaze/Veil/commit/1af0bd6ec479f00411359e01cfc25bfe77a7d2e6))
+* stop the inventory menu from permanently stealing keyboard focus ([aaea64a](https://github.com/SwiftFaze/Veil/commit/aaea64a72ea291f73b9340b8f3587d03ed59a12e))
+
 ## [0.3.0-beta](https://github.com/SwiftFaze/Emberveil/compare/v0.2.0...v0.3.0-beta) (2026-08-28)
 
 
