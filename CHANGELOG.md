@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0-beta.2](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.1...v0.3.0-beta.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* correct spec-intent skill's branch prefix from feat/ to feature/ ([b547d85](https://github.com/SwiftFaze/Veil/commit/b547d85d80be9f019c7f5983dd51bc33109e441f))
+
 ## [0.3.0-beta.1](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta...v0.3.0-beta.1) (2026-08-29)
 
 
