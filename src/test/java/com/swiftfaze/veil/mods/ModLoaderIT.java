@@ -1,6 +1,8 @@
 package com.swiftfaze.veil.mods;
 
 import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.player.Stats;
+import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.world.Tile;
 import org.junit.jupiter.api.Test;
 
@@ -40,5 +42,38 @@ class ModLoaderIT {
         assertNotNull(grass, "core:grass should be loaded from mods/core/tiles/");
         assertTrue(grass.isWalkable());
         assertEquals('⡐', grass.getSymbol());
+    }
+
+    @Test
+    void loadsCoreWarriorClassFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        PlayerClass warrior = registry.getPlayerClass("core:warrior");
+
+        assertNotNull(warrior, "core:warrior should be loaded from mods/core/classes/");
+        assertEquals("Warrior", warrior.getName());
+
+        Stats stats = statsAtLevel(warrior, 0);
+        assertEquals(15, stats.getStrength());
+        assertEquals(120, stats.getMaxHp());
+    }
+
+    @Test
+    void loadsCoreMageClassFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        PlayerClass mage = registry.getPlayerClass("core:mage");
+
+        assertNotNull(mage, "core:mage should be loaded from mods/core/classes/");
+        assertEquals("Mage", mage.getName());
+
+        Stats stats = statsAtLevel(mage, 0);
+        assertEquals(16, stats.getIntelligence());
+        assertEquals(70, stats.getMaxHp());
+        assertEquals(100, stats.getMaxMana());
+    }
+
+    private Stats statsAtLevel(PlayerClass playerClass, int level) {
+        Stats stats = new Stats();
+        playerClass.applyStatsAtLevel(stats, level);
+        return stats;
     }
 }

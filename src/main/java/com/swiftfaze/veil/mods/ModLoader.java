@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.world.Tile;
 import org.slf4j.Logger;
@@ -16,9 +17,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class ModLoader {
     private static final Logger logger = LoggerFactory.getLogger(ModLoader.class);
@@ -37,13 +40,18 @@ public final class ModLoader {
 
         Map<String, Building> buildingsById = new LinkedHashMap<>();
         Map<String, String> owningBuildingModById = new LinkedHashMap<>();
+        Set<String> validStatNames = loadStatRegistry(modsRoot);
+
+        Map<String, PlayerClass> classesById = new LinkedHashMap<>();
+        Map<String, String> owningClassModById = new LinkedHashMap<>();
         List<String> modLoadOrder = new ArrayList<>();
         for (ModManifest manifest : loadOrder) {
             modLoadOrder.add(manifest.id());
             loadBuildings(modsRoot, manifest, tilesById, buildingsById, owningBuildingModById);
+            loadClasses(modsRoot, manifest, validStatNames, classesById, owningClassModById);
         }
 
-        return new ModRegistry(buildingsById, tilesById, modLoadOrder);
+        return new ModRegistry(buildingsById, tilesById, classesById, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -229,6 +237,78 @@ public final class ModLoader {
         registry.put(id, value);
         owningModById.put(id, modId);
         logger.info("Loaded {} '{}' from mod '{}'", contentType.toLowerCase(), id, modId);
+    }
+
+    private static Set<String> loadStatRegistry(Path modsRoot) {
+        Path statsFile = modsRoot.resolve("core").resolve("stats.json");
+        if (!Files.exists(statsFile)) {
+            return Set.of();
+        }
+
+        try (Reader reader = Files.newBufferedReader(statsFile)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            if (json.has("stats")) {
+                Set<String> result = new HashSet<>();
+                for (var element : json.getAsJsonArray("stats")) {
+                    result.add(element.getAsString());
+                }
+                return Set.copyOf(result);
+            }
+            return Set.of();
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to load stat registry: " + statsFile, e);
+        }
+    }
+
+    private static void loadClasses(Path modsRoot, ModManifest manifest,
+                                     Set<String> validStatNames,
+                                     Map<String, PlayerClass> classesById,
+                                     Map<String, String> owningModById) {
+        Path classesDir = modsRoot.resolve(manifest.id()).resolve("classes");
+        if (!Files.isDirectory(classesDir)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(classesDir, "*.json")) {
+            for (Path file : files) {
+                loadClass(file, manifest.id(), validStatNames, classesById, owningModById);
+            }
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to scan classes for mod: " + manifest.id(), e);
+        }
+    }
+
+    private static void loadClass(Path file, String modId,
+                                   Set<String> validStatNames,
+                                   Map<String, PlayerClass> classesById,
+                                   Map<String, String> owningModById) {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            String id = json.get("id").getAsString();
+            String name = json.get("name").getAsString();
+
+            Map<String, PlayerClass.StatCurve> statsByName = new LinkedHashMap<>();
+            if (json.has("stats")) {
+                JsonObject statsObj = json.getAsJsonObject("stats");
+                for (String statName : statsObj.keySet()) {
+                    if (!validStatNames.contains(statName)) {
+                        throw new ModLoadException("Class '" + id + "' references unregistered stat '"
+                                + statName + "' in file: " + file);
+                    }
+                    JsonObject statObj = statsObj.getAsJsonObject(statName);
+                    int base = statObj.has("base") ? statObj.get("base").getAsInt() : 0;
+                    String growthCalc = statObj.has("growth") ? statObj.get("growth").getAsString() : null;
+                    statsByName.put(statName, new PlayerClass.StatCurve(base, growthCalc));
+                }
+            }
+
+            registerWithCollisionCheck(id, new PlayerClass(id, name, statsByName), modId,
+                    classesById, owningModById, json.has("overrides"), "PlayerClass");
+        } catch (ModLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ModLoadException("Failed to load class from file: " + file, e);
+        }
     }
 
     private record ModManifest(String id, List<String> dependsOn) {

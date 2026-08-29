@@ -1,7 +1,11 @@
 package com.swiftfaze.veil.entities.player;
 
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
 import org.junit.jupiter.api.Test;
+
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,7 +59,8 @@ class PlayerInfoTest {
         PlayerInfo playerInfo = new PlayerInfo();
         assertEquals(120, playerInfo.getStats().getMaxHp());
 
-        PlayerClass mage = PlayerClassLoader.load("mage.json");
+        ModRegistry mods = ModLoader.load(Paths.get("mods"));
+        PlayerClass mage = mods.getPlayerClass(CoreClasses.MAGE);
         playerInfo.setPlayerClass(mage);
 
         assertEquals("Mage", playerInfo.getPlayerClass().getName());
