@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.3](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.2...v0.3.0-beta.3) (2026-08-29)
+
+
+### Features
+
+* generalize BuildingLoader into an external mods/ ModLoader ([01e8f17](https://github.com/SwiftFaze/Veil/commit/01e8f170a06e4a59f267ded7c4478a6c90f1d939))
+* generalize BuildingLoader into an external mods/ ModLoader ([67387f4](https://github.com/SwiftFaze/Veil/commit/67387f48b2fed22cfdc63ce32ca80d00d26a470b))
+
 ## [0.3.0-beta.2](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.1...v0.3.0-beta.2) (2026-08-29)
 
 
