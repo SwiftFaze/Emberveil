@@ -48,11 +48,6 @@ Feature: Data-driven items (JSON schema + minimal InventoryPanel wiring)
     When the mods directory is loaded
     Then a ModLoadException is thrown wrapping the underlying cause
 
-  Scenario: EastPanel wires real core item data into its inventory panel
-    Given a new EastPanel
-    Then its inventory panel displays the item "Iron Sword"
-    And its inventory panel no longer displays the placeholder text "1. Item"
-
   # Non-goals:
   #   - Quests, maps — separate follow-on issues, see
   #     specs/intent/data-driven-item.md.

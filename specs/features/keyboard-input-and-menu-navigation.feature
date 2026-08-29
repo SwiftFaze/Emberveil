@@ -21,30 +21,6 @@ Feature: Keyboard input and menu navigation
     Then the inventory panel becomes visible
     And the toggle did not use a direct field reference to EastPanel
 
-  Scenario: Navigating a selectable menu with the arrow keys
-    Given a selectable menu with items "Inventory", "Help", "Journal" and "Inventory" selected
-    And the menu has keyboard focus
-    When the "Down" key is pressed
-    Then the selected item is "Help"
-
-  Scenario: Moving up from the first item wraps to the last item
-    Given a selectable menu with items "Inventory", "Help", "Journal" and "Inventory" selected
-    And the menu has keyboard focus
-    When the "Up" key is pressed
-    Then the selected item is "Journal"
-
-  Scenario: Moving down from the last item wraps to the first item
-    Given a selectable menu with items "Inventory", "Help", "Journal" and "Journal" selected
-    And the menu has keyboard focus
-    When the "Down" key is pressed
-    Then the selected item is "Inventory"
-
-  Scenario: Confirming a menu selection with Enter
-    Given a selectable menu with items "Inventory", "Help", "Journal" and "Inventory" selected
-    And the menu has keyboard focus
-    When the "Enter" key is pressed
-    Then the confirmed item is "Inventory"
-
   # Non-goals:
   #   - Making Help/Journal/Map/Character/Stats do anything when selected —
   #     only Inventory needs to work end-to-end; the rest stay decorative.

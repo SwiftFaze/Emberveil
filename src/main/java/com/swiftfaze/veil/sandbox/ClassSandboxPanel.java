@@ -2,8 +2,8 @@ package com.swiftfaze.veil.sandbox;
 
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.input.Keybindings;
-import com.swiftfaze.veil.ui.SelectableMenu;
 import com.swiftfaze.veil.ui.TerminalPanel;
+import com.swiftfaze.veil.ui.widget.ListWidget;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,26 +16,31 @@ public class ClassSandboxPanel extends TerminalPanel {
 
     private final ClassSandboxModel model;
     private final List<String> names;
-    private final SelectableMenu menu;
+    private final ListWidget<String> listWidget;
     private final JLabel[] labels;
     private final JLabel statsLabel;
 
     public ClassSandboxPanel(ClassSandboxModel model) {
         this.model = model;
         this.names = model.classNames();
-        this.menu = new SelectableMenu(names.size());
+        this.listWidget = new ListWidget<>(s -> s);
         this.labels = new JLabel[names.size()];
 
         setFocusable(true);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         add(makeLabel("Class Sandbox — Up/Down to select"));
+
         for (int i = 0; i < names.size(); i++) {
             labels[i] = makeLabel(names.get(i));
             add(labels[i]);
         }
+
         statsLabel = makeLabel("");
         add(statsLabel);
+
+        listWidget.setItems(names);
+        listWidget.setOnConfirm(s -> refresh());
 
         bindKeys();
         refresh();
@@ -56,32 +61,32 @@ public class ClassSandboxPanel extends TerminalPanel {
         inputMap.put(Keybindings.MENU_UP, Keybindings.ACTION_MENU_UP);
         inputMap.put(Keybindings.MENU_DOWN, Keybindings.ACTION_MENU_DOWN);
 
-        actionMap.put(Keybindings.ACTION_MENU_UP, new MoveSelectionAction(menu::moveUp));
-        actionMap.put(Keybindings.ACTION_MENU_DOWN, new MoveSelectionAction(menu::moveDown));
+        actionMap.put(Keybindings.ACTION_MENU_UP, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listWidget.moveUp();
+                refresh();
+            }
+        });
+
+        actionMap.put(Keybindings.ACTION_MENU_DOWN, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listWidget.moveDown();
+                refresh();
+            }
+        });
     }
 
     private void refresh() {
+        int selectedIndex = listWidget.getSelectedIndex();
         for (int i = 0; i < labels.length; i++) {
-            labels[i].setForeground(i == menu.selected() ? SELECTED_COLOR : Color.WHITE);
+            labels[i].setForeground(i == selectedIndex ? SELECTED_COLOR : Color.WHITE);
         }
-        Stats stats = model.computedStats(names.get(menu.selected()));
+        Stats stats = model.computedStats(names.get(selectedIndex));
         statsLabel.setText(String.format(
                 "ATK %d  DEF %d  HP %d  MP %d",
                 stats.getAttackPower(), stats.getDefense(), stats.getMaxHp(), stats.getMaxMana()
         ));
-    }
-
-    private class MoveSelectionAction extends AbstractAction {
-        private final Runnable move;
-
-        MoveSelectionAction(Runnable move) {
-            this.move = move;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            move.run();
-            refresh();
-        }
     }
 }

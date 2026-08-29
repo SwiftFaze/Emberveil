@@ -3,6 +3,7 @@ package com.swiftfaze.veil.ui;
 import com.swiftfaze.veil.entities.player.Player;
 import com.swiftfaze.veil.game.GameListener;
 import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.ui.widget.FocusManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +17,7 @@ public class EastPanel extends JPanel implements GameListener {
     private final PlayerInfoPanel playerInfoPanel;
     private final InventoryPanel inventoryPanel;
     private final MenuPanel menuPanel;
+    private final FocusManager focusManager;
     private Runnable restoreGameFocus = () -> {
     };
 
@@ -26,12 +28,17 @@ public class EastPanel extends JPanel implements GameListener {
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
         setFocusable(false);
 
+        focusManager = new FocusManager();
+
         playerInfoPanel = new PlayerInfoPanel();
         menuPanel = new MenuPanel();
         inventoryPanel = new InventoryPanel();
+        inventoryPanel.setFocusManager(focusManager);
         inventoryPanel.showItems(ModLoader.load(java.nio.file.Paths.get("mods")).getAllItems());
-        menuPanel.setOnInventoryConfirmed(this::toggleInventory);
+
+        menuPanel.setOnInventoryConfirmed(this::openInventory);
         menuPanel.setOnCancel(this::cancelMenu);
+        inventoryPanel.setOnDismiss(this::onInventoryDismissed);
 
         add(playerInfoPanel, BorderLayout.NORTH);
         add(inventoryPanel, BorderLayout.CENTER);
@@ -49,24 +56,30 @@ public class EastPanel extends JPanel implements GameListener {
 
     @Override
     public void toggleInventory() {
-        boolean opening = !inventoryPanel.isVisible();
-        inventoryPanel.setVisible(opening);
-        revalidate();
-        repaint();
-        if (opening) {
-            menuPanel.requestFocusInWindow();
+        if (inventoryPanel.isVisible()) {
+            inventoryPanel.dismiss();
+            restoreGameFocus.run();
+        } else {
+            openInventory();
+        }
+    }
+
+    private void openInventory() {
+        inventoryPanel.open();
+        inventoryPanel.requestFocusInWindow();
+        inventoryPanel.getCloseButton().requestFocusInWindow();
+    }
+
+    private void cancelMenu() {
+        if (inventoryPanel.isVisible()) {
+            inventoryPanel.dismiss();
         } else {
             restoreGameFocus.run();
         }
     }
 
-    private void cancelMenu() {
-        if (inventoryPanel.isVisible()) {
-            inventoryPanel.setVisible(false);
-            revalidate();
-            repaint();
-        }
-        restoreGameFocus.run();
+    private void onInventoryDismissed() {
+        menuPanel.requestFocusInWindow();
     }
 
     public InventoryPanel getInventoryPanel() {

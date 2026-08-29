@@ -56,37 +56,12 @@ Feature: UI panel rendering and composition
     And EastPanel is not focusable
     And EastPanel has a light-gray border
 
-  Scenario: A newly created EastPanel's inventory panel starts visible
-    Given a new EastPanel
-    Then the inventory panel is visible
-
   Scenario: Updating EastPanel with a player delegates to its player info panel
     Given a new EastPanel
     And a player named "Aria Blackwood" at level 3 with 40 XP at position (5, 8)
     When EastPanel is updated with that player
     Then its player info panel's name label reads "Aria Blackwood | Warrior"
 
-  Scenario: Cancelling the menu while the inventory is open closes it and restores game focus
-    Given a new EastPanel
-    And its inventory is visible
-    And a restore-game-focus action is registered
-    When the menu's cancel action fires
-    Then the inventory panel is now hidden
-    And the restore-game-focus action was invoked
-
-  Scenario: Cancelling the menu while the inventory is already hidden still restores game focus
-    Given a new EastPanel
-    And its inventory is hidden
-    And a restore-game-focus action is registered
-    When the menu's cancel action fires
-    Then the inventory panel is now hidden
-    And the restore-game-focus action was invoked
-
-  Scenario: Confirming the Inventory menu item toggles the inventory panel closed
-    Given a new EastPanel
-    And its inventory is visible
-    When the menu's inventory-confirmed action fires
-    Then the inventory panel is now hidden
 
   # Non-goals:
   #   - Keyboard navigation/dispatch and the inventory-toggle listener

@@ -1,0 +1,167 @@
+Feature: Terminal-style UI component framework
+  A shared component framework — a base widget contract, a keyboard
+  focus/navigation manager, and one consistent "selected" highlight style
+  — replaces each panel's hand-rolled InputMap/ActionMap wiring and ad hoc
+  highlight color. Three concrete widgets (list, button, popup/modal) are
+  built on it and proven end-to-end by rebuilding the existing in-game
+  menu and inventory screen, and by migrating ClassSandboxPanel off the
+  deleted SelectableMenu, on top of it.
+
+  Scenario: Navigating a list widget down moves the selection to the next item
+    Given a list widget with items "Inventory", "Help", "Journal" and "Inventory" selected
+    And the list widget has keyboard focus
+    When the "Down" key is pressed
+    Then the selected item is "Help"
+
+  Scenario: Moving up from the first item wraps to the last item
+    Given a list widget with items "Inventory", "Help", "Journal" and "Inventory" selected
+    And the list widget has keyboard focus
+    When the "Up" key is pressed
+    Then the selected item is "Journal"
+
+  Scenario: Moving down from the last item wraps to the first item
+    Given a list widget with items "Inventory", "Help", "Journal" and "Journal" selected
+    And the list widget has keyboard focus
+    When the "Down" key is pressed
+    Then the selected item is "Inventory"
+
+  Scenario: Confirming a list widget's selection with Enter
+    Given a list widget with items "Inventory", "Help", "Journal" and "Inventory" selected
+    And the list widget has keyboard focus
+    When the "Enter" key is pressed
+    Then the confirmed item is "Inventory"
+
+  Scenario: A list widget's items come from a pluggable data source, not a hardcoded list
+    Given a list widget backed by a data source currently containing "Iron Sword", "Plain Shield"
+    When the data source's contents change to "Iron Sword", "Plain Shield", "Health Potion"
+    And the list widget is refreshed
+    Then the list widget's items are "Iron Sword", "Plain Shield", "Health Potion"
+
+  Scenario: Confirming a button widget invokes its action
+    Given a button widget labeled "Close" with an action registered
+    And the button widget has keyboard focus
+    When the "Enter" key is pressed
+    Then the button's action was invoked
+
+  Scenario: Confirming Inventory in the rebuilt menu opens the popup and focuses its Close button
+    Given the rebuilt in-game menu and inventory screen
+    When "Inventory" is selected and confirmed
+    Then the inventory popup is open
+    And the popup's Close button has keyboard focus
+
+  Scenario: The open popup is modal — the menu behind it ignores navigation
+    Given the rebuilt in-game menu and inventory screen
+    And "Inventory" is selected and confirmed
+    When the "Down" key is pressed
+    Then the menu's selected item is still "Inventory"
+
+  Scenario: Dismissing the popup with Escape closes it and restores focus to the menu
+    Given the rebuilt in-game menu and inventory screen
+    And "Inventory" is selected and confirmed
+    When the "Escape" key is pressed
+    Then the inventory popup is closed
+    And the menu has keyboard focus
+
+  Scenario: Confirming the popup's Close button closes it and restores focus to the menu
+    Given the rebuilt in-game menu and inventory screen
+    And "Inventory" is selected and confirmed
+    When the popup's Close button is confirmed
+    Then the inventory popup is closed
+    And the menu has keyboard focus
+
+  Scenario: Cancelling the menu directly, with no popup open, still restores game focus
+    Given the rebuilt in-game menu and inventory screen
+    And a restore-game-focus action is registered
+    When the "Escape" key is pressed
+    Then the restore-game-focus action was invoked
+
+  Scenario: The rebuilt inventory popup displays real loaded item data, with no per-item selection
+    Given the rebuilt in-game menu and inventory screen
+    When "Inventory" is selected and confirmed
+    Then the inventory popup lists the item "Iron Sword"
+    And none of the inventory popup's items are highlighted as selected
+
+  Scenario: ClassSandboxPanel's initial selection is highlighted and its stats shown
+    Given a class sandbox panel is showing
+    Then the first class's label is colored "#eeb392"
+    And the stats label shows the first class's computed stats
+
+  Scenario: Moving ClassSandboxPanel's selection down highlights the next class
+    Given a class sandbox panel is showing
+    When the down-bound action fires
+    Then the previously selected class's label is white
+    And the newly selected class's label is colored "#eeb392"
+    And the stats label shows the newly selected class's computed stats
+
+  Scenario: Moving ClassSandboxPanel's selection up from the first class wraps to the last
+    Given a class sandbox panel is showing
+    When the up-bound action fires
+    Then the last class's label is colored "#eeb392"
+    And the stats label shows the last class's computed stats
+
+  # Non-goals:
+  #   - Testing the base widget contract/interface directly — it has no
+  #     independent runtime behavior; it's exercised indirectly through the
+  #     concrete list/button/popup scenarios above.
+  #   - Left-right / tab-style movement between widgets — nothing in the
+  #     real screen being rebuilt has a natural left-right layout, so
+  #     there's no concrete case to prove; only the menu<->popup
+  #     (up/down-adjacent, modal-capture) transition is exercised here.
+  #   - Disabled-widget styling — the shared style/theme constants support
+  #     it as a convention hook, but no widget in the rebuilt real screen is
+  #     ever disabled, so there's nothing concrete to prove end-to-end.
+  #   - Real keyboard navigation/selection *within* the inventory popup's
+  #     item list — it stays a static, non-interactive display; per-item
+  #     inventory interaction is milestone "6. Intro Quest & UI" (#7)'s job.
+  #   - Table widget, radio group widget, pattern-validated text fields —
+  #     tracked separately in #35.
+  #   - Any mouse/pointer handling — this game is keyboard-only by design.
+  #   - Wiring new item data or changing how items load — #26 phase 4
+  #     (data-driven-item, #51) already shipped this; the rebuilt list
+  #     widget just needs to keep rendering it.
+  #   - A deeper redesign of ClassSandboxPanel beyond the mechanical
+  #     SelectableMenu -> list-widget swap — tracked in milestone "3. Dev
+  #     sandbox framework".
+  #   - Any new panel features, layout, or visual redesign beyond what's
+  #     needed to prove the framework against this real screen — this
+  #     rebuilt screen is an explicitly disposable skeleton, expected to be
+  #     fully deleted and rebuilt once milestone "6. Intro Quest & UI" (#7)
+  #     lands.
+  #
+  # Risks:
+  #   - This feature supersedes scenarios in four existing files, which
+  #     must be removed/updated in the same change (not just added here) or
+  #     mvn verify goes red: keyboard-input-and-menu-navigation.feature (4
+  #     SelectableMenu scenarios), ui-panel-rendering-and-composition.feature
+  #     (3 MenuPanel cancel/confirm-through-EastPanel scenarios),
+  #     class-sandbox-panel-selection.feature (3 ClassSandboxPanel
+  #     scenarios, all three carried over unchanged above since the visible
+  #     behavior doesn't change, only what's underneath it), and
+  #     data-driven-item.feature (1 "EastPanel wires real core item data"
+  #     scenario). specs/features/README.md's rows for all four need
+  #     updating in the same change, not just the new row for this file.
+  #   - UiPanelRenderingAndCompositionSteps.java's inventory-item step defs
+  #     (itsInventoryPanelDisplaysTheItem,
+  #     itsInventoryPanelNoLongerDisplaysThePlaceholderText) are also used
+  #     by data-driven-item.feature's scenario, not just
+  #     ui-panel-rendering-and-composition.feature's — don't delete them
+  #     wholesale when migrating the latter; both files' migrations need to
+  #     land together.
+  #   - Modal focus capture (popup blocks the menu behind it) is a genuine
+  #     behavior change from today, where MenuPanel keeps focus the whole
+  #     time inventory is open and Enter-on-Inventory toggles it closed
+  #     again. That old toggle-via-re-selecting-Inventory path no longer
+  #     exists post-rebuild; Escape and the Close button are the only ways
+  #     to dismiss the popup now. This is intentional (see
+  #     specs/intent/ui-component-framework.md's Clarifications), not an
+  #     oversight.
+  #   - Real Swing focus-transfer (does a widget actually become the AWT
+  #     focus owner) is not simulated headlessly here, matching the
+  #     existing precedent in keyboard-input-and-menu-navigation.feature —
+  #     "keyboard focus" Given/Then steps model the framework's internal
+  #     focus-manager state directly; true cross-component focus transfer
+  #     is exercised via the manual playtest (this repo's Step 4.5).
+  #
+  # Open questions:
+  #   - None outstanding — see
+  #     specs/intent/ui-component-framework.md's Clarifications section.

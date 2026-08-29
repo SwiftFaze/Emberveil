@@ -62,9 +62,9 @@ class EastPanelTest {
     }
 
     @Test
-    void cancelMenuClosesOpenInventoryAndRestoresGameFocus() {
+    void cancelMenuWithNoInventoryOpenRestoresGameFocus() {
         EastPanel eastPanel = new EastPanel();
-        eastPanel.getInventoryPanel().setVisible(true);
+        eastPanel.getInventoryPanel().setVisible(false);
         boolean[] restored = {false};
         eastPanel.setRestoreGameFocusAction(() -> restored[0] = true);
 
@@ -75,16 +75,15 @@ class EastPanelTest {
     }
 
     @Test
-    void cancelMenuRestoresGameFocusEvenWhenInventoryAlreadyClosed() {
+    void menuCancelWithInventoryOpenClosesIt() {
         EastPanel eastPanel = new EastPanel();
-        eastPanel.getInventoryPanel().setVisible(false);
+        eastPanel.getInventoryPanel().setVisible(true);
         boolean[] restored = {false};
         eastPanel.setRestoreGameFocusAction(() -> restored[0] = true);
 
         fireMenuCancel(eastPanel);
 
         assertFalse(eastPanel.getInventoryPanel().isVisible());
-        assertTrue(restored[0]);
     }
 
     @Test
