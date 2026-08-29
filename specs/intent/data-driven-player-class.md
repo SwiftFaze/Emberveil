@@ -13,7 +13,7 @@
 - [x] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [x] Acceptance tests passing
-- [ ] Mutation testing passed
+- [x] Mutation testing passed
 - [x] Documentation updated (`docs/`, and the wiki if player-facing)
 
 ## Problem
