@@ -116,6 +116,12 @@ jobs:
         run: |
           mkdir -p target/jpackage-input
           cp target/Veil-*-app.jar target/jpackage-input/
+          # mods/ is NOT staged here: jpackage places --input content inside
+          # an app/ subfolder, but ModLoader resolves mods/ relative to the
+          # running game's working directory, which is the top-level install
+          # directory (verified against a local jpackage app-image build —
+          # app/mods/ is invisible from there). It's bundled at the top
+          # level instead via --app-content in the "Build installer" step.
 
       - name: Determine version
         shell: bash
@@ -172,6 +178,7 @@ jobs:
             --vendor SwiftFaze \
             --main-jar "$jar_name" \
             --main-class com.swiftfaze.veil.Main \
+            --app-content mods \
             "${extra_args[@]}"
 
       - name: Normalize installer filename

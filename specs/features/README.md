@@ -41,3 +41,4 @@ that change's definition of done, not separate cleanup.
 | `camera-behavior.feature` | Camera follow/scroll behavior |
 | `keyboard-input-and-menu-navigation.feature` | Key Bindings input and menu navigation |
 | `ui-panel-rendering-and-composition.feature` | UI panel rendering and composition |
+| `installer-mods-bundling.feature` | jpackage installer build bundles `mods/core` alongside the executable |
