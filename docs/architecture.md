@@ -14,7 +14,11 @@ active `WorldScene`, and a `Camera`, wires keyboard input directly to player
 movement, and drives all rendering from `paintComponent`. The world is a
 single flat layer — `paintComponent` centers the camera on the player and
 makes one `scene.renderWorld(...)` call; there is no floor/depth dimension,
-brightness falloff, or fog overlay.
+brightness falloff, or fog overlay. `Camera` (`Camera.java`) is a plain
+offset holder — `centerOn(x, y)` sets its top-left offset to the target
+position minus half the viewport, with no smoothing between calls and no
+clamping to the map's bounds, so the viewport can extend past the map edge
+when the player is near one.
 
 **World representation** (`world/WorldScene.java`): an abstract base holding
 a `Tile[width][height]` grid. The concrete scene (`TileTestScene2`)
