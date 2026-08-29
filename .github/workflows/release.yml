@@ -9,6 +9,16 @@ permissions:
   contents: write
   pull-requests: write
 
+# RELEASE_PLEASE_TOKEN (a fine-grained PAT, Contents + Pull requests:
+# read/write on this repo) is used instead of the default GITHUB_TOKEN
+# for release-please-action and the auto-merge step below. GitHub
+# suppresses further workflow-triggering events from a push/merge made
+# with GITHUB_TOKEN (to prevent recursive runs), so a GITHUB_TOKEN-merged
+# release PR never fired the follow-up push that would let
+# release-please-action notice the release commit and actually cut the
+# tag/GitHub Release — the merge landed but nothing downstream ran. A PAT
+# isn't subject to that suppression. It also avoids GitHub's fork-PR
+# workflow-approval gate catching the bot-authored release PR's checks.
 jobs:
   # master = stable releases (vX.Y.Z)
   release-please-stable:
@@ -21,13 +31,14 @@ jobs:
       - uses: googleapis/release-please-action@v5
         id: release
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           target-branch: master
       - name: Auto-merge the release PR once required checks pass
         if: steps.release.outputs.release_created != 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
         run: |
           pr_number=$(gh pr list --repo "${{ github.repository }}" \
             --head "release-please--branches--master" --base master \
@@ -51,13 +62,14 @@ jobs:
       - uses: googleapis/release-please-action@v5
         id: release
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config-beta.json
           manifest-file: .release-please-manifest-beta.json
           target-branch: develop
       - name: Auto-merge the release PR once required checks pass
         if: steps.release.outputs.release_created != 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
         run: |
           pr_number=$(gh pr list --repo "${{ github.repository }}" \
             --head "release-please--branches--develop" --base develop \
