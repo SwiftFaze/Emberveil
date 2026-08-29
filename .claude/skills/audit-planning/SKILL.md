@@ -1,5 +1,5 @@
 ---
-name: audit-project
+name: audit-planning
 description: Audit — and, with confirmation, correct — the VEIL GitHub project board and its milestones. Checks milestone naming/numbering convention and descriptions, that every open issue is labeled, sits in the milestone that actually fits it (not just any milestone), has a real description, and has a Priority set, and that milestone/issue ordering reflects actual build dependencies (a core restructure before the systems built on it). Also finds issues scattered across different milestones that share one theme and proposes consolidating them so they land in the same pass. Use for a periodic health-check or cleanup of the project board itself — not for filing new issues (that's brainstorm-issue/brainstorm-milestone).
 ---
 
