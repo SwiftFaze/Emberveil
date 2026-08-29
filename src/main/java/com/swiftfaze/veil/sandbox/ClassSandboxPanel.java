@@ -41,6 +41,14 @@ public class ClassSandboxPanel extends TerminalPanel {
         refresh();
     }
 
+    public JLabel getClassLabel(int index) {
+        return labels[index];
+    }
+
+    public JLabel getStatsLabel() {
+        return statsLabel;
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();
