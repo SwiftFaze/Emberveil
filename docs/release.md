@@ -51,6 +51,23 @@ means each release goes out the moment the commit that should trigger it
 lands and CI is green, so there's no window where the release PR can go
 stale.
 
+**Why this needs a PAT, not just `GITHUB_TOKEN`**: GitHub suppresses
+further workflow-triggering events from a push/merge made with the
+default `GITHUB_TOKEN`, to prevent recursive workflow runs. If the
+auto-merge step used `GITHUB_TOKEN`, the merge would land the release
+commit on `master`/`develop` but never fire the follow-up `push` event
+that lets `release-please-action` notice it and actually cut the tag +
+GitHub Release — the PR merges, but nothing downstream runs (this
+happened in practice; see the `RELEASE_PLEASE_TOKEN` secret and the
+comment above the `jobs:` key in `release.yml`). Both
+`release-please-action` and the auto-merge step instead use
+`RELEASE_PLEASE_TOKEN`, a fine-grained PAT scoped to this repo's
+`Contents` and `Pull requests` permissions (matching this workflow's own
+`permissions:` block, nothing broader) — a PAT-driven merge isn't subject
+to that suppression, and also isn't caught by GitHub's fork-PR
+workflow-approval gate, which the bot-authored release PR was otherwise
+triggering.
+
 Nothing about this requires a human to decide "what's the next version
 number" — that's entirely derived from commit messages. If a change
 shouldn't trigger a release at all, use a non-triggering type (`chore:`,
