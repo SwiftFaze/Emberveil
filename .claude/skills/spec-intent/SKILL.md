@@ -35,7 +35,7 @@ don't silently start work on a closed issue.
   - `bug` label -> `fix/`
   - `documentation` label -> `docs/`
   - anything else (including `enhancement`, or no recognized label) ->
-    `feat/`
+    `feature/`
   - State which prefix you picked and why in the final report — it's a
     one-word rename if the user disagrees, not worth a blocking question.
 - **Branch name:** `<prefix><slug>`.
