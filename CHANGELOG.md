@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.11](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.10...v0.3.0-beta.11) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ci:** bump build-installers JDK to 21 for jpackage --app-content ([bb91b74](https://github.com/SwiftFaze/Veil/commit/bb91b7468ddc40af63744c912cfdd56417a32c4e))
+* **ci:** bump build-installers JDK to 21 for jpackage --app-content ([3236ec4](https://github.com/SwiftFaze/Veil/commit/3236ec4f7749ea75ef9e73b0716c72456669c590))
+
 ## [0.3.0-beta.10](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.9...v0.3.0-beta.10) (2026-08-29)
 
 
