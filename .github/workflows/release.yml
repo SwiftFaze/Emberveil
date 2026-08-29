@@ -100,7 +100,11 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          # jpackage's --app-content flag (bundles mods/ alongside the
+          # executable) needs JDK 18+ (JDK-8274346); the project itself
+          # still targets bytecode 17 (pom.xml's maven.compiler.source/
+          # target), so this only bumps the JDK used to build/package.
+          java-version: '21'
           cache: maven
 
       - name: Install Linux packaging tools
