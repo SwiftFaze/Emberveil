@@ -81,6 +81,19 @@ produced (its own per-OS naming conventions vary, e.g. Debian's
 underscore-separated scheme) to a consistent `Veil-<version>.<ext>`.
 The result is uploaded as a release asset.
 
+**Bundling `mods/`**: the repo's checked-in `mods/` directory (currently
+just `mods/core`) is passed to `jpackage` via `--app-content mods`, not
+staged alongside the jar in `target/jpackage-input`. `jpackage --input`
+content ends up nested inside an `app/` subfolder of the installed
+application, but `ModLoader` resolves `mods/` relative to the running
+game's own working directory — which is the top-level install directory,
+not `app/`. `--app-content` places its target at the top level instead,
+alongside the executable, so `mods/core` ends up exactly where the game
+looks for it. Verified locally via a `--type app-image` build (no
+installer/WiX required) and a real launch of the resulting
+`Veil.exe`, which loaded every `core` tile, building, class, item, and
+quest from the bundled `mods/core`.
+
 **Beta version numbers**: `jpackage`'s Windows/macOS installers require a
 clean numeric `--app-version` (no `-beta.N` suffix accepted), so the
 workflow strips the suffix for that flag specifically
@@ -114,8 +127,14 @@ copy target\Veil-0.1.0-app.jar target\jpackage-input\
 jpackage --type exe --input target\jpackage-input --dest target\dist `
   --name Veil --app-version 0.1.0 --vendor SwiftFaze `
   --main-jar Veil-0.1.0-app.jar --main-class com.swiftfaze.veil.Main `
+  --app-content mods `
   --win-menu --win-shortcut --win-dir-chooser
 ```
+
+`--app-content mods` must run from the repo root (or with `mods` replaced
+by a path to a directory containing a `core` subfolder) — it bundles the
+checked-in `mods/core` at the top level of the installed application,
+alongside `Veil.exe`.
 
 Requires a JDK with `jpackage` (bundled since JDK 14) and, for `--type exe`
 specifically, the [WiX Toolset](https://wixtoolset.org/) v3 on `PATH`. Without
