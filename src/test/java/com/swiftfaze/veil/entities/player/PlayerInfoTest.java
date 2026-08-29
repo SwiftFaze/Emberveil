@@ -66,4 +66,11 @@ class PlayerInfoTest {
         assertEquals("Mage", playerInfo.getPlayerClass().getName());
         assertEquals(70, playerInfo.getStats().getMaxHp());
     }
+
+    @Test
+    void questLogIsNeverNull() {
+        PlayerInfo playerInfo = new PlayerInfo();
+
+        assertNotNull(playerInfo.getQuestLog());
+    }
 }

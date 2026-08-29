@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.swiftfaze.veil.entities.buildings.Building;
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.entities.quests.Quest;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.world.Tile;
 import org.slf4j.Logger;
@@ -47,15 +48,18 @@ public final class ModLoader {
         Map<String, String> owningClassModById = new LinkedHashMap<>();
         Map<String, Item> itemsById = new LinkedHashMap<>();
         Map<String, String> owningItemModById = new LinkedHashMap<>();
+        Map<String, Quest> questsById = new LinkedHashMap<>();
+        Map<String, String> owningQuestModById = new LinkedHashMap<>();
         List<String> modLoadOrder = new ArrayList<>();
         for (ModManifest manifest : loadOrder) {
             modLoadOrder.add(manifest.id());
             loadBuildings(modsRoot, manifest, tilesById, buildingsById, owningBuildingModById);
             loadClasses(modsRoot, manifest, validStatNames, classesById, owningClassModById);
             loadItems(modsRoot, manifest, validStatNames, itemsById, owningItemModById);
+            loadQuests(modsRoot, manifest, itemsById, questsById, owningQuestModById);
         }
 
-        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, modLoadOrder);
+        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, questsById, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -384,6 +388,95 @@ public final class ModLoader {
         } catch (Exception e) {
             throw new ModLoadException("Failed to load item from file: " + file, e);
         }
+    }
+
+    private static final Set<String> SUPPORTED_QUEST_OBJECTIVE_TYPES = Set.of("kill");
+
+    private static void loadQuests(Path modsRoot, ModManifest manifest,
+                                    Map<String, Item> itemsById,
+                                    Map<String, Quest> questsById,
+                                    Map<String, String> owningModById) {
+        Path questsDir = modsRoot.resolve(manifest.id()).resolve("quests");
+        if (!Files.isDirectory(questsDir)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(questsDir, "*.json")) {
+            for (Path file : files) {
+                loadQuest(file, manifest.id(), itemsById, questsById, owningModById);
+            }
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to scan quests for mod: " + manifest.id(), e);
+        }
+    }
+
+    private static void loadQuest(Path file, String modId,
+                                   Map<String, Item> itemsById,
+                                   Map<String, Quest> questsById,
+                                   Map<String, String> owningModById) {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            String id = json.get("id").getAsString();
+            String name = json.get("name").getAsString();
+            Quest.Objective objective = readQuestObjective(json.getAsJsonObject("objective"), id, file);
+            List<Quest.Reward> rewards = readQuestRewards(json, id, file, itemsById);
+
+            registerWithCollisionCheck(id, new Quest(id, name, objective, rewards), modId,
+                    questsById, owningModById, json.has("overrides"), "Quest");
+        } catch (ModLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ModLoadException("Failed to load quest from file: " + file, e);
+        }
+    }
+
+    private static Quest.Objective readQuestObjective(JsonObject objectiveObj, String questId, Path file) {
+        String type = objectiveObj.get("type").getAsString();
+        if (!SUPPORTED_QUEST_OBJECTIVE_TYPES.contains(type)) {
+            throw new ModLoadException("Quest '" + questId + "' has unsupported objective type '"
+                    + type + "' in file: " + file);
+        }
+        String target = objectiveObj.has("target") ? objectiveObj.get("target").getAsString() : null;
+        int count = objectiveObj.has("count") ? objectiveObj.get("count").getAsInt() : 0;
+        return new Quest.Objective(type, target, count);
+    }
+
+    private static List<Quest.Reward> readQuestRewards(JsonObject json, String questId, Path file,
+                                                         Map<String, Item> itemsById) {
+        List<Quest.Reward> rewards = new ArrayList<>();
+        if (!json.has("rewards")) {
+            return rewards;
+        }
+        for (var element : json.getAsJsonArray("rewards")) {
+            rewards.add(readQuestReward(element.getAsJsonObject(), questId, file, itemsById));
+        }
+        return rewards;
+    }
+
+    private static Quest.Reward readQuestReward(JsonObject rewardObj, String questId, Path file,
+                                                  Map<String, Item> itemsById) {
+        String type = rewardObj.get("type").getAsString();
+        if ("item".equals(type)) {
+            String itemId = rewardObj.get("id").getAsString();
+            int count = rewardObj.has("count") ? rewardObj.get("count").getAsInt() : 1;
+            if (!itemsById.containsKey(itemId)) {
+                throw new ModLoadException("Quest '" + questId + "' references unknown item '"
+                        + itemId + "' in file: " + file);
+            }
+            return new Quest.Reward(type, itemId, count, null);
+        }
+        if ("xp".equals(type)) {
+            String calc = rewardObj.get("calc").getAsString();
+            try {
+                CalcExpressionParser.evaluate(calc, 0);
+            } catch (IllegalArgumentException e) {
+                throw new ModLoadException("Quest '" + questId
+                        + "' has an invalid calc expression in file: " + file, e);
+            }
+            return new Quest.Reward(type, null, null, calc);
+        }
+        throw new ModLoadException("Quest '" + questId + "' has unsupported reward type '"
+                + type + "' in file: " + file);
     }
 
     private record ModManifest(String id, List<String> dependsOn) {

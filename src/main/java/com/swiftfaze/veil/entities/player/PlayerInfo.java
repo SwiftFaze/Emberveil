@@ -14,12 +14,14 @@ public class PlayerInfo {
     private Level level;
     private Stats stats;
     private PlayerClass playerClass;
+    private final QuestLog questLog;
 
     public PlayerInfo() {
         this.firstName = "Branor";
         this.lastName = "Hamerfell";
         this.level = new Level();
         this.stats = new Stats();
+        this.questLog = new QuestLog();
         ModRegistry mods = ModLoader.load(Paths.get("mods"));
         this.playerClass = mods.getPlayerClass(DEFAULT_CLASS_ID);
         this.playerClass.applyStatsAtLevel(stats, 0);
@@ -64,5 +66,9 @@ public class PlayerInfo {
     public void setPlayerClass(PlayerClass playerClass) {
         this.playerClass = playerClass;
         this.playerClass.applyStatsAtLevel(this.stats, 0);
+    }
+
+    public QuestLog getQuestLog() {
+        return questLog;
     }
 }

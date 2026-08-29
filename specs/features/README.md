@@ -33,6 +33,7 @@ that change's definition of done, not separate cleanup.
 | `class-sandbox-panel-selection.feature` | Dev-only `ClassSandbox` panel/class selection |
 | `data-driven-tile.feature` | Tile definitions loaded from JSON + registry |
 | `data-driven-item.feature` | Item definitions loaded from JSON + stat registry, minimal InventoryPanel wiring |
+| `data-driven-quest.feature` | Quest definitions loaded from JSON + item registry, minimal per-player quest-state tracking |
 | `mod-loader.feature` | External `mods/` directory loading (dependency order, overrides) |
 | `building-loader-failure-path.feature` | Mod loader failure/error path |
 | `world-single-floor-rendering.feature` | Single-floor world rendering |
