@@ -2,6 +2,7 @@ package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.player.Player;
 import com.swiftfaze.veil.game.GameListener;
+import com.swiftfaze.veil.mods.ModLoader;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,6 +29,7 @@ public class EastPanel extends JPanel implements GameListener {
         playerInfoPanel = new PlayerInfoPanel();
         menuPanel = new MenuPanel();
         inventoryPanel = new InventoryPanel();
+        inventoryPanel.showItems(ModLoader.load(java.nio.file.Paths.get("mods")).getAllItems());
         menuPanel.setOnInventoryConfirmed(this::toggleInventory);
         menuPanel.setOnCancel(this::cancelMenu);
 

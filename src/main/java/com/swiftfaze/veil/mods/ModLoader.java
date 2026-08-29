@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.world.Tile;
@@ -44,14 +45,17 @@ public final class ModLoader {
 
         Map<String, PlayerClass> classesById = new LinkedHashMap<>();
         Map<String, String> owningClassModById = new LinkedHashMap<>();
+        Map<String, Item> itemsById = new LinkedHashMap<>();
+        Map<String, String> owningItemModById = new LinkedHashMap<>();
         List<String> modLoadOrder = new ArrayList<>();
         for (ModManifest manifest : loadOrder) {
             modLoadOrder.add(manifest.id());
             loadBuildings(modsRoot, manifest, tilesById, buildingsById, owningBuildingModById);
             loadClasses(modsRoot, manifest, validStatNames, classesById, owningClassModById);
+            loadItems(modsRoot, manifest, validStatNames, itemsById, owningItemModById);
         }
 
-        return new ModRegistry(buildingsById, tilesById, classesById, modLoadOrder);
+        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -308,6 +312,77 @@ public final class ModLoader {
             throw e;
         } catch (Exception e) {
             throw new ModLoadException("Failed to load class from file: " + file, e);
+        }
+    }
+
+    private static void loadItems(Path modsRoot, ModManifest manifest,
+                                   Set<String> validStatNames,
+                                   Map<String, Item> itemsById,
+                                   Map<String, String> owningModById) {
+        Path itemsDir = modsRoot.resolve(manifest.id()).resolve("items");
+        if (!Files.isDirectory(itemsDir)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(itemsDir, "*.json")) {
+            for (Path file : files) {
+                loadItem(file, manifest.id(), validStatNames, itemsById, owningModById);
+            }
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to scan items for mod: " + manifest.id(), e);
+        }
+    }
+
+    private static void loadItem(Path file, String modId,
+                                  Set<String> validStatNames,
+                                  Map<String, Item> itemsById,
+                                  Map<String, String> owningModById) {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            String id = json.get("id").getAsString();
+            String name = json.get("name").getAsString();
+            char glyph = json.get("glyph").getAsString().charAt(0);
+            String type = json.get("type").getAsString();
+            String slot = json.get("slot").getAsString();
+
+            Item.BaseDamage baseDamage = new Item.BaseDamage(0, 0);
+            if (json.has("baseDamage")) {
+                JsonObject bd = json.getAsJsonObject("baseDamage");
+                int min = bd.has("min") ? bd.get("min").getAsInt() : 0;
+                int max = bd.has("max") ? bd.get("max").getAsInt() : 0;
+                baseDamage = new Item.BaseDamage(min, max);
+            }
+
+            List<Item.Effect> effects = new ArrayList<>();
+            if (json.has("effects")) {
+                for (var element : json.getAsJsonArray("effects")) {
+                    JsonObject effectObj = element.getAsJsonObject();
+                    String effectType = effectObj.get("type").getAsString();
+                    String stat = effectObj.get("stat").getAsString();
+                    String calc = effectObj.get("calc").getAsString();
+
+                    if (!validStatNames.contains(stat)) {
+                        throw new ModLoadException("Item '" + id + "' references unregistered stat '"
+                                + stat + "' in file: " + file);
+                    }
+
+                    try {
+                        CalcExpressionParser.evaluate(calc, 0);
+                    } catch (IllegalArgumentException e) {
+                        throw new ModLoadException("Item '" + id
+                                + "' has an invalid calc expression in file: " + file, e);
+                    }
+
+                    effects.add(new Item.Effect(effectType, stat, calc));
+                }
+            }
+
+            registerWithCollisionCheck(id, new Item(id, name, glyph, type, slot, baseDamage, effects), modId,
+                    itemsById, owningModById, json.has("overrides"), "Item");
+        } catch (ModLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ModLoadException("Failed to load item from file: " + file, e);
         }
     }
 

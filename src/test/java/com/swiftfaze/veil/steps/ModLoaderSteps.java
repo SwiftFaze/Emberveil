@@ -2,6 +2,7 @@ package com.swiftfaze.veil.steps;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.exceptions.ModLoadException;
@@ -48,6 +49,14 @@ public class ModLoaderSteps {
     private record ClassFixture(String id, String name, Map<String, StatEntry> stats, String overrides) {
     }
 
+    private record ItemEffectFixture(String type, String stat, String calc) {
+    }
+
+    private record ItemFixture(String id, String name, Character glyph, String type, String slot,
+                                Integer baseDamageMin, Integer baseDamageMax,
+                                List<ItemEffectFixture> effects, String overrides) {
+    }
+
     private static final Map<String, Integer> WARRIOR_STATS = Map.of(
             "strength", 15, "dexterity", 10, "constitution", 14, "intelligence", 6,
             "wisdom", 6, "luck", 8, "maxHp", 120, "maxMana", 20);
@@ -57,9 +66,12 @@ public class ModLoaderSteps {
     private final Map<String, List<BuildingFixture>> buildingsByMod = new LinkedHashMap<>();
     private final Map<String, List<TileFixture>> tilesByMod = new LinkedHashMap<>();
     private final Map<String, List<ClassFixture>> classesByMod = new LinkedHashMap<>();
+    private final Map<String, List<ItemFixture>> itemsByMod = new LinkedHashMap<>();
     private String overriddenBuildingId;
     private String lastCheckedTileId;
     private String lastCheckedClassId;
+    private String lastCheckedItemId;
+    private String lastCheckedEntityKind;
     private boolean needsMarkerTiles;
 
     private ModRegistry registry;
@@ -301,16 +313,60 @@ public class ModLoaderSteps {
         Files.writeString(modDir.resolve("classes").resolve("broken.json"), "{ not valid json");
     }
 
+    @Given("a mods directory containing the {string} mod with an item declaring id {string}, name {string}, glyph {string}, type {string}, slot {string}, base damage min {int} and max {int}, and a {string} effect on stat {string} with calc {string}")
+    public void aModsDirectoryContainingTheModWithAnItemDeclaringId(String modId, String itemId, String name, String glyph,
+                                                                      String type, String slot, int baseDamageMin, int baseDamageMax,
+                                                                      String effectType, String stat, String calc) {
+        List<ItemEffectFixture> effects = List.of(new ItemEffectFixture(effectType, stat, calc));
+        addItem(modId, itemId, name, glyph.charAt(0), type, slot, baseDamageMin, baseDamageMax, effects, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with an item declaring id {string}, name {string}, glyph {string}, type {string}, slot {string}, base damage min {int} and max {int}, and no effects")
+    public void aModsDirectoryContainingTheModWithAnItemDeclaringIdNoEffects(String modId, String itemId, String name, String glyph,
+                                                                              String type, String slot, int baseDamageMin, int baseDamageMax) {
+        addItem(modId, itemId, name, glyph.charAt(0), type, slot, baseDamageMin, baseDamageMax, null, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with an item declaring id {string} with a {string} effect on stat {string} with calc {string}")
+    public void aModsDirectoryContainingModWithAnItemWithEffect(String modId, String itemId, String effectType, String stat, String calc) {
+        List<ItemEffectFixture> effects = List.of(new ItemEffectFixture(effectType, stat, calc));
+        addItem(modId, itemId, null, null, null, null, null, null, effects, null);
+    }
+
+    @Given("the mods directory also contains mod {string} with an item declaring id {string} and no {string} field")
+    public void theModsDirectoryAlsoContainsModWithAnItemDeclaringIdAndNoField(String modId, String itemId, String fieldName) {
+        addItem(modId, itemId, null, null, null, null, null, null, null, null);
+    }
+
+    @Given("the mods directory also contains mod {string} with an item declaring id {string}, name {string}, and the same base damage and effects, whose {string} field names {string}")
+    public void theModsDirectoryAlsoContainsModWithAnItemOverriding(String modId, String itemId, String name, String fieldName, String overriddenId) {
+        List<ItemEffectFixture> effects = List.of(new ItemEffectFixture("stat_bonus", "strength", "level*1.5+2"));
+        addItem(modId, itemId, name, '/', "weapon", "main_hand", 4, 9, effects, overriddenId);
+    }
+
+    @Given("a mods directory containing mod {string} with a malformed item file")
+    public void aModsDirectoryContainingModWithAMalformedItemFile(String modId) throws IOException {
+        Path modDir = modsRoot.resolve(modId);
+        Files.createDirectories(modDir.resolve("items"));
+        Files.writeString(modDir.resolve("mod.json"), "{\"id\":\"" + modId + "\",\"dependsOn\":[]}");
+        Files.writeString(modDir.resolve("items").resolve("broken.json"), "{ not valid json");
+    }
+
     @Then("a class with ID {string} is available")
     public void aClassWithIDIsAvailable(String id) {
         assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
         assertNotNull(registry.getPlayerClass(id), "expected class '" + id + "' to be loaded");
         lastCheckedClassId = id;
+        lastCheckedEntityKind = "class";
     }
 
     @Then("its name is {string}")
     public void itsNameIs(String expectedName) {
-        assertEquals(expectedName, registry.getPlayerClass(lastCheckedClassId).getName());
+        if ("item".equals(lastCheckedEntityKind)) {
+            assertEquals(expectedName, registry.getItem(lastCheckedItemId).getName());
+        } else {
+            assertEquals(expectedName, registry.getPlayerClass(lastCheckedClassId).getName());
+        }
     }
 
     @Then("its base max HP is {int}")
@@ -342,6 +398,53 @@ public class ModLoaderSteps {
         assertTrue(thrown.getMessage().contains(statName), "expected message to name stat: " + thrown.getMessage());
     }
 
+    @Then("an item with ID {string} is available")
+    public void anItemWithIDIsAvailable(String id) {
+        assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
+        assertNotNull(registry.getItem(id), "expected item '" + id + "' to be loaded");
+        lastCheckedItemId = id;
+        lastCheckedEntityKind = "item";
+    }
+
+    @Then("its glyph is {string}")
+    public void itsGlyphIs(String expected) {
+        assertEquals(expected.charAt(0), registry.getItem(lastCheckedItemId).getGlyph());
+    }
+
+    @Then("its base damage is {int} to {int}")
+    public void itsBaseDamageIs(int min, int max) {
+        Item.BaseDamage baseDamage = registry.getItem(lastCheckedItemId).getBaseDamage();
+        assertEquals(min, baseDamage.min());
+        assertEquals(max, baseDamage.max());
+    }
+
+    @Then("it has one effect: a {string} on stat {string} with calc {string}")
+    public void itHasOneEffect(String type, String stat, String calc) {
+        List<Item.Effect> effects = registry.getItem(lastCheckedItemId).getEffects();
+        assertEquals(1, effects.size());
+        assertEquals(type, effects.get(0).type());
+        assertEquals(stat, effects.get(0).stat());
+        assertEquals(calc, effects.get(0).calc());
+    }
+
+    @Then("it has no effects")
+    public void itHasNoEffects() {
+        assertTrue(registry.getItem(lastCheckedItemId).getEffects().isEmpty());
+    }
+
+    @Then("loading fails with a ModLoadException naming item {string}, stat {string}, and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingItemStatAndFile(String itemId, String statName) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(itemId), "expected message to name item: " + thrown.getMessage());
+        assertTrue(thrown.getMessage().contains(statName), "expected message to name stat: " + thrown.getMessage());
+    }
+
+    @Then("loading fails with a ModLoadException naming item {string} and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingItemAndFile(String itemId) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(itemId), "expected message to name item: " + thrown.getMessage());
+    }
+
     private int getStatValue(Stats stats, String statName) {
         Map<String, Function<Stats, Integer>> getters = Map.of(
                 "strength", Stats::getStrength,
@@ -360,6 +463,13 @@ public class ModLoaderSteps {
         dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
         classesByMod.computeIfAbsent(modId, k -> new ArrayList<>())
                 .add(new ClassFixture(classId, name, stats, overrides));
+    }
+
+    private void addItem(String modId, String itemId, String name, Character glyph, String type, String slot,
+                          Integer baseDamageMin, Integer baseDamageMax, List<ItemEffectFixture> effects, String overrides) {
+        dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
+        itemsByMod.computeIfAbsent(modId, k -> new ArrayList<>())
+                .add(new ItemFixture(itemId, name, glyph, type, slot, baseDamageMin, baseDamageMax, effects, overrides));
     }
 
     private void addBuilding(String modId, String buildingId, String overriddenId, String explicitTileId) {
@@ -382,13 +492,14 @@ public class ModLoaderSteps {
         allMods.addAll(buildingsByMod.keySet());
         allMods.addAll(tilesByMod.keySet());
         allMods.addAll(classesByMod.keySet());
+        allMods.addAll(itemsByMod.keySet());
         allMods.addAll(dependsOnByMod.keySet());
 
         if (needsMarkerTiles) {
             writeMarkerTiles();
         }
 
-        if (!classesByMod.isEmpty()) {
+        if (!classesByMod.isEmpty() || !itemsByMod.isEmpty()) {
             writeStatsRegistryIfNeeded();
         }
 
@@ -399,6 +510,7 @@ public class ModLoaderSteps {
             writeTiles(modDir, tilesByMod.getOrDefault(modId, List.of()));
             writeBuildings(modDir, buildingsByMod.getOrDefault(modId, List.of()));
             writeClasses(modDir, classesByMod.getOrDefault(modId, List.of()));
+            writeItems(modDir, itemsByMod.getOrDefault(modId, List.of()));
         }
     }
 
@@ -523,6 +635,51 @@ public class ModLoaderSteps {
         }
 
         return classObj.toString();
+    }
+
+    private void writeItems(Path modDir, List<ItemFixture> fixtures) throws IOException {
+        if (fixtures.isEmpty()) {
+            return;
+        }
+        Path itemsDir = modDir.resolve("items");
+        Files.createDirectories(itemsDir);
+
+        int i = 0;
+        for (ItemFixture fixture : fixtures) {
+            Files.writeString(itemsDir.resolve("item_" + (i++) + ".json"), itemJson(fixture));
+        }
+    }
+
+    private String itemJson(ItemFixture fixture) {
+        JsonObject item = new JsonObject();
+        item.addProperty("id", fixture.id());
+        item.addProperty("name", fixture.name() != null ? fixture.name() : fixture.id());
+        item.addProperty("glyph", fixture.glyph() != null ? String.valueOf(fixture.glyph()) : "?");
+        item.addProperty("type", fixture.type() != null ? fixture.type() : "misc");
+        item.addProperty("slot", fixture.slot() != null ? fixture.slot() : "none");
+
+        JsonObject baseDamage = new JsonObject();
+        baseDamage.addProperty("min", fixture.baseDamageMin() != null ? fixture.baseDamageMin() : 0);
+        baseDamage.addProperty("max", fixture.baseDamageMax() != null ? fixture.baseDamageMax() : 0);
+        item.add("baseDamage", baseDamage);
+
+        if (fixture.effects() != null && !fixture.effects().isEmpty()) {
+            JsonArray effects = new JsonArray();
+            for (ItemEffectFixture effect : fixture.effects()) {
+                JsonObject effectObj = new JsonObject();
+                effectObj.addProperty("type", effect.type());
+                effectObj.addProperty("stat", effect.stat());
+                effectObj.addProperty("calc", effect.calc());
+                effects.add(effectObj);
+            }
+            item.add("effects", effects);
+        }
+
+        if (fixture.overrides() != null) {
+            item.addProperty("overrides", fixture.overrides());
+        }
+
+        return item.toString();
     }
 
     private void writeStatsRegistryIfNeeded() throws IOException {
