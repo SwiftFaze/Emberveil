@@ -15,8 +15,6 @@ public abstract class WorldScene implements DrawableAsciiEntity {
         this.width = width;
         this.height = height;
         this.tiles = new Tile[width][height];
-
-        fillAll(Tile.EMPTY);
     }
 
     public void fillAll(Tile type) {
@@ -113,7 +111,7 @@ public abstract class WorldScene implements DrawableAsciiEntity {
             for (int y = 0; y < height; y++) {
                 Tile type = tiles[x][y];
 
-                if (type == null || type == Tile.EMPTY)
+                if (type == null)
                     continue;
 
                 int screenX = (x - cameraX) * tileWidth;

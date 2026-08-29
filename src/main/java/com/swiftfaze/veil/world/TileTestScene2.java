@@ -10,9 +10,10 @@ public class TileTestScene2 extends WorldScene {
 
     public TileTestScene2(int width, int height) {
         super(width, height);
-        fillAll(Tile.GRASS);
 
         ModRegistry mods = ModLoader.load(Paths.get("mods"));
+        fillAll(mods.getTile(CoreTiles.GRASS));
+
         Building house2 = mods.getBuilding("core:small_house_01");
 
         house2.setWorldX(130);

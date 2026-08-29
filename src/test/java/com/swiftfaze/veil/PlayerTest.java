@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PlayerTest {
 
+    private static final Tile GRASS = new Tile("test:grass", ',', Color.GREEN, true);
+    private static final Tile WATER = new Tile("test:water", '~', Color.BLUE, false);
+
     private WorldScene sceneOf(int width, int height) {
         return new WorldScene(width, height) {
         };
@@ -23,7 +26,7 @@ class PlayerTest {
     @Test
     void movingRightIncreasesXWhenTileIsWalkable() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
         Player player = new Player(5, 5);
 
         player.moveRight(scene);
@@ -35,7 +38,7 @@ class PlayerTest {
     @Test
     void movingUpIncreasesYWhenTileIsWalkable() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
         Player player = new Player(5, 5);
 
         player.moveUp(scene);
@@ -47,8 +50,8 @@ class PlayerTest {
     @Test
     void movingIntoANonWalkableTileDoesNotMovePlayer() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
-        scene.fillRegion(6, 5, 1, 1, Tile.WATER);
+        scene.fillAll(GRASS);
+        scene.fillRegion(6, 5, 1, 1, WATER);
         Player player = new Player(5, 5);
 
         player.moveRight(scene);
@@ -60,7 +63,7 @@ class PlayerTest {
     @Test
     void movingDownIncreasesYWhenTileIsWalkable() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
         Player player = new Player(5, 5);
 
         player.moveDown(scene);
@@ -72,7 +75,7 @@ class PlayerTest {
     @Test
     void movingLeftDecreasesXWhenTileIsWalkable() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
         Player player = new Player(5, 5);
 
         player.moveLeft(scene);

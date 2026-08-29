@@ -12,6 +12,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import java.awt.Color;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WorldSingleFloorRenderingSteps {
 
+    private static final Tile GRASS = new Tile("test:grass", ',', Color.GREEN, true);
+    private static final Tile WATER = new Tile("test:water", '~', Color.BLUE, false);
+
     private WorldScene scene;
     private Player player;
     private Building building;
@@ -30,7 +34,7 @@ public class WorldSingleFloorRenderingSteps {
     public void aWorldSceneTilesWideAndTilesTall(int width, int height) {
         scene = new WorldScene(width, height) {
         };
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
     }
 
     @Then("looking up a tile takes only an \\(x, y) position, not a floor")
@@ -45,12 +49,12 @@ public class WorldSingleFloorRenderingSteps {
 
     @Given("tile \\({int}, {int}) is walkable")
     public void tileIsWalkable(int x, int y) {
-        scene.fillRegion(x, y, 1, 1, Tile.GRASS);
+        scene.fillRegion(x, y, 1, 1, GRASS);
     }
 
     @Given("tile \\({int}, {int}) is not walkable")
     public void tileIsNotWalkable(int x, int y) {
-        scene.fillRegion(x, y, 1, 1, Tile.WATER);
+        scene.fillRegion(x, y, 1, 1, WATER);
     }
 
     @When("the player moves up")

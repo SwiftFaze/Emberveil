@@ -43,8 +43,13 @@ Include:
 
 After generating/updating the spec, list anything still unclear: open
 questions, ambiguous edge cases, conflicts you noticed between the intent
-and the existing codebase. Ask them now, together, rather than one at a
-time if there are several.
+and the existing codebase. Use the `grilling` skill to ask them, not a
+flat `AskUserQuestion` round or free-form prose — this loop routinely
+surfaces several interdependent questions per pass (an edge case's answer
+can gate what the next scenario even needs to ask), which is exactly the
+frontier/rounds structure grilling is for. Anything answerable by reading
+the codebase or the intent doc itself is your job to find, not the
+user's — don't put it in the round.
 
 ## Step 4 — On receiving an answer, close the loop before continuing
 

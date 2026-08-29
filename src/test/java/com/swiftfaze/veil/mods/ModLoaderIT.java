@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration test: exercises real disk I/O + JSON parsing against the
@@ -27,7 +28,17 @@ class ModLoaderIT {
 
         assertEquals(7, blueprint.length, "fixture is 7 rows tall");
         assertEquals(7, blueprint[0].length, "fixture is 7 columns wide");
-        assertEquals(Tile.STONE, blueprint[0][0], "top-left corner is a stone wall");
-        assertEquals(Tile.DOOR, blueprint[6][3], "door sits in the middle of the south wall");
+        assertEquals(registry.getTile("core:stone"), blueprint[0][0], "top-left corner is a stone wall");
+        assertEquals(registry.getTile("core:door"), blueprint[6][3], "door sits in the middle of the south wall");
+    }
+
+    @Test
+    void loadsAllCoreTilesFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+
+        Tile grass = registry.getTile("core:grass");
+        assertNotNull(grass, "core:grass should be loaded from mods/core/tiles/");
+        assertTrue(grass.isWalkable());
+        assertEquals('⡐', grass.getSymbol());
     }
 }
