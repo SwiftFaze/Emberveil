@@ -70,14 +70,43 @@ numbered sequentially by when they were opened, not by priority.
    gh api repos/SwiftFaze/Veil/milestones --jq '.[].title'
    ```
    Take the highest existing leading ordinal and add 1.
-2. Write a short **thematic** description — the goal/arc the milestone
-   represents, not a list of its issues. Task lists go stale as scope
-   shifts; ordering and dependencies belong on the issues themselves
-   (cross-links in their bodies, per Step 4), not the milestone
-   description.
-3. Create it:
+2. Write the description in the same intent-doc shape `brainstorm-issue`
+   uses for an issue body, but pitched at the whole arc rather than one
+   piece of it:
+
    ```
-   gh api repos/SwiftFaze/Veil/milestones -f title="<n>. <Title>" -f state="open" -f description="<theme>"
+   ## Problem
+   <what's broken/missing/manual across the whole arc today, why it matters now>
+
+   ## Scope
+   **In scope:** <the capability this milestone delivers as a whole, once every issue in it lands>
+   **Out of scope:** <what's explicitly a separate, later concern>
+
+   ## Actors
+   <who triggers/uses the resulting capability>
+
+   ## Desired behavior
+   <plain-language end state once the arc is complete>
+
+   ## Constraints / non-functional notes
+   <anything beyond the repo's standard budgets, or "none beyond the usual">
+
+   ## Open questions
+   <anything genuinely undecided at the arc level>
+   ```
+
+   Stay **thematic, not enumerative**: describe the goal/arc, never a list
+   of its issues or their build order — no issue numbers, no per-issue
+   checklist. Task lists go stale as scope shifts; ordering and
+   dependencies belong on the issues themselves (cross-links in their
+   bodies, per Step 4), not the milestone description.
+3. Create it (pipe the body in rather than inlining it, since it's
+   multi-line):
+   ```
+   gh api repos/SwiftFaze/Veil/milestones -f title="<n>. <Title>" -f state="open" -f description="$(cat <<'EOF'
+   ...
+   EOF
+   )"
    ```
 
 ## Step 4 — File the issues, in dependency order
