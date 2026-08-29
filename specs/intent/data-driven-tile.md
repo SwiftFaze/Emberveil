@@ -10,7 +10,7 @@
 - [x] Spec drafted (`.feature` file)
 - [x] Approved by human
 - [x] Implemented
-- [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
+- [x] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [x] Acceptance tests passing
 - [x] Mutation testing passed
 - [x] Documentation updated (`docs/`, and the wiki if player-facing)
