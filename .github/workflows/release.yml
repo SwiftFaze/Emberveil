@@ -24,6 +24,20 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           target-branch: master
+      - name: Auto-merge the release PR once required checks pass
+        if: steps.release.outputs.release_created != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=$(gh pr list --repo "${{ github.repository }}" \
+            --head "release-please--branches--master" --base master \
+            --state open --json number --jq '.[0].number')
+          if [ -n "$pr_number" ]; then
+            gh pr merge "$pr_number" --repo "${{ github.repository }}" --auto --merge \
+              || echo "Auto-merge request failed or was already set on PR #$pr_number — not fatal, skipping."
+          else
+            echo "No open release PR found for master; nothing to auto-merge."
+          fi
 
   # develop = beta prereleases (vX.Y.Z-beta.N), promoted to a stable release
   # once develop is merged into master.
@@ -40,6 +54,20 @@ jobs:
           config-file: release-please-config-beta.json
           manifest-file: .release-please-manifest-beta.json
           target-branch: develop
+      - name: Auto-merge the release PR once required checks pass
+        if: steps.release.outputs.release_created != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=$(gh pr list --repo "${{ github.repository }}" \
+            --head "release-please--branches--develop" --base develop \
+            --state open --json number --jq '.[0].number')
+          if [ -n "$pr_number" ]; then
+            gh pr merge "$pr_number" --repo "${{ github.repository }}" --auto --merge \
+              || echo "Auto-merge request failed or was already set on PR #$pr_number — not fatal, skipping."
+          else
+            echo "No open release PR found for develop; nothing to auto-merge."
+          fi
 
   build-installers:
     needs: [release-please-stable, release-please-beta]
@@ -88,6 +116,12 @@ jobs:
         run: |
           mkdir -p target/jpackage-input
           cp target/Veil-*-app.jar target/jpackage-input/
+          # mods/ is NOT staged here: jpackage places --input content inside
+          # an app/ subfolder, but ModLoader resolves mods/ relative to the
+          # running game's working directory, which is the top-level install
+          # directory (verified against a local jpackage app-image build —
+          # app/mods/ is invisible from there). It's bundled at the top
+          # level instead via --app-content in the "Build installer" step.
 
       - name: Determine version
         shell: bash
@@ -144,6 +178,7 @@ jobs:
             --vendor SwiftFaze \
             --main-jar "$jar_name" \
             --main-class com.swiftfaze.veil.Main \
+            --app-content mods \
             "${extra_args[@]}"
 
       - name: Normalize installer filename

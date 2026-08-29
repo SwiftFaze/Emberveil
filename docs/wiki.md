@@ -33,10 +33,12 @@ from the Java source.
 
 ## Editing the wiki
 
-The wiki is its own git repository:
+The wiki is its own git repository, independent of this one. Clone it into
+`wiki/` at the root of this repo for convenience — that path is gitignored,
+so it stays local and doesn't entangle the two repos' history:
 
 ```
-git clone https://github.com/SwiftFaze/Veil.wiki.git
+git clone https://github.com/SwiftFaze/Veil.wiki.git wiki
 ```
 
 Edit the relevant `.md` file, commit, and push directly to `master` — the

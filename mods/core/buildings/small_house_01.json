@@ -1,0 +1,17 @@
+{
+  "id": "core:small_house_01",
+  "name": "small_house_01",
+  "type": "house",
+  "width": 7,
+  "height": 7,
+
+  "tiles": [
+    ["core:stone","core:stone","core:stone","core:stone","core:stone","core:stone","core:stone"],
+    ["core:stone","core:wood","core:wood","core:wood","core:wood","core:wood","core:stone"],
+    ["core:stone","core:wood","core:wood","core:wood","core:wood","core:wood","core:stone"],
+    ["core:stone","core:wood","core:wood","core:wood","core:wood","core:wood","core:stone"],
+    ["core:stone","core:wood","core:wood","core:wood","core:wood","core:wood","core:stone"],
+    ["core:stone","core:wood","core:wood","core:wood","core:wood","core:wood","core:stone"],
+    ["core:stone","core:stone","core:stone","core:door","core:stone","core:stone","core:stone"]
+  ]
+}

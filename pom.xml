@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.swiftfaze</groupId>
     <artifactId>Veil</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.0-beta.9</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -124,6 +124,54 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Lets `mvn compile exec:java` run the game directly from
+                 compiled classes, no packaging or version needed. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <mainClass>${main.class}</mainClass>
+                </configuration>
+            </plugin>
+            <!-- Step 6 (mutation testing): `mvn org.pitest:pitest-maven:mutationCoverage`.
+                 Targets the domain/logic classes that have real unit tests; Swing view
+                 classes with no meaningful unit coverage (Main, panels that are pure
+                 layout/styling, ClassSandbox's own entry point) are excluded rather than left
+                 to report a wall of untested surviving mutants. -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.17.4</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <targetClasses>
+                        <param>com.swiftfaze.veil.Camera</param>
+                        <param>com.swiftfaze.veil.world.*</param>
+                        <param>com.swiftfaze.veil.entities.*</param>
+                        <param>com.swiftfaze.veil.mods.*</param>
+                        <param>com.swiftfaze.veil.ui.SelectableMenu</param>
+                        <param>com.swiftfaze.veil.ui.EastPanel</param>
+                        <param>com.swiftfaze.veil.ui.InventoryPanel</param>
+                        <param>com.swiftfaze.veil.ui.MenuPanel</param>
+                        <param>com.swiftfaze.veil.input.Keybindings</param>
+                        <param>com.swiftfaze.veil.sandbox.ClassSandboxModel</param>
+                        <param>com.swiftfaze.veil.sandbox.ClassSandboxPanel</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>com.swiftfaze.veil.*</param>
+                    </targetTests>
+                    <outputFormats>
+                        <param>HTML</param>
+                    </outputFormats>
+                </configuration>
             </plugin>
         </plugins>
     </build>

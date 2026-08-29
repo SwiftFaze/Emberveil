@@ -1,0 +1,67 @@
+package com.swiftfaze.veil.mods;
+
+import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.items.Item;
+import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.entities.quests.Quest;
+import com.swiftfaze.veil.world.Tile;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ModRegistry {
+    private final Map<String, Building> buildingsById = new LinkedHashMap<>();
+    private final Map<String, Tile> tilesById = new LinkedHashMap<>();
+    private final Map<String, PlayerClass> classesById = new LinkedHashMap<>();
+    private final Map<String, Item> itemsById = new LinkedHashMap<>();
+    private final Map<String, Quest> questsById = new LinkedHashMap<>();
+    private final List<String> modLoadOrder;
+
+    ModRegistry(Map<String, Building> buildingsById, Map<String, Tile> tilesById,
+                Map<String, PlayerClass> classesById, Map<String, Item> itemsById,
+                Map<String, Quest> questsById, List<String> modLoadOrder) {
+        this.buildingsById.putAll(buildingsById);
+        this.tilesById.putAll(tilesById);
+        this.classesById.putAll(classesById);
+        this.itemsById.putAll(itemsById);
+        this.questsById.putAll(questsById);
+        this.modLoadOrder = List.copyOf(modLoadOrder);
+    }
+
+    public Building getBuilding(String id) {
+        return buildingsById.get(id);
+    }
+
+    public Tile getTile(String id) {
+        return tilesById.get(id);
+    }
+
+    public PlayerClass getPlayerClass(String id) {
+        return classesById.get(id);
+    }
+
+    public List<PlayerClass> getAllPlayerClasses() {
+        return List.copyOf(classesById.values());
+    }
+
+    public Item getItem(String id) {
+        return itemsById.get(id);
+    }
+
+    public List<Item> getAllItems() {
+        return List.copyOf(itemsById.values());
+    }
+
+    public Quest getQuest(String id) {
+        return questsById.get(id);
+    }
+
+    public List<Quest> getAllQuests() {
+        return List.copyOf(questsById.values());
+    }
+
+    public List<String> getModLoadOrder() {
+        return modLoadOrder;
+    }
+}

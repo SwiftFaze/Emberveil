@@ -1,22 +1,30 @@
 package com.swiftfaze.veil.entities.player;
 
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
-import com.swiftfaze.veil.entities.player.classes.Warrior;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
+
+import java.nio.file.Paths;
 
 public class PlayerInfo {
+    private static final String DEFAULT_CLASS_ID = CoreClasses.WARRIOR;
+
     private String firstName;
     private String lastName;
     private Level level;
     private Stats stats;
     private PlayerClass playerClass;
+    private final QuestLog questLog;
 
     public PlayerInfo() {
         this.firstName = "Branor";
         this.lastName = "Hamerfell";
         this.level = new Level();
         this.stats = new Stats();
-        this.playerClass = new Warrior();
-        this.playerClass.applyBaseStats(stats);
+        this.questLog = new QuestLog();
+        ModRegistry mods = ModLoader.load(Paths.get("mods"));
+        this.playerClass = mods.getPlayerClass(DEFAULT_CLASS_ID);
+        this.playerClass.applyStatsAtLevel(stats, 0);
     }
 
     public String getFirstName() {
@@ -57,6 +65,10 @@ public class PlayerInfo {
 
     public void setPlayerClass(PlayerClass playerClass) {
         this.playerClass = playerClass;
-        this.playerClass.applyBaseStats(this.stats);
+        this.playerClass.applyStatsAtLevel(this.stats, 0);
+    }
+
+    public QuestLog getQuestLog() {
+        return questLog;
     }
 }

@@ -38,6 +38,19 @@ for beta) so the two version lines and changelogs don't collide.
 4. That same workflow then builds the installers (see below) and uploads
    them as assets on the release that was just created.
 
+The merge in step 3 happens automatically — no human click needed. Right
+after Release Please creates/updates the PR, the same job asks GitHub to
+auto-merge it (`gh pr merge --auto`), which waits for the branch's
+required status checks to pass and then merges it for you. This exists
+because leaving the release PR sitting open was actively harmful: every
+other PR that merged into `develop`/`master` in the meantime kept
+updating that same standing PR, and if it sat unmerged for a while before
+finally being merged, it was easy to lose track of which commits were and
+weren't actually reflected in `CHANGELOG.md` for that version. Auto-merge
+means each release goes out the moment the commit that should trigger it
+lands and CI is green, so there's no window where the release PR can go
+stale.
+
 Nothing about this requires a human to decide "what's the next version
 number" — that's entirely derived from commit messages. If a change
 shouldn't trigger a release at all, use a non-triggering type (`chore:`,
@@ -67,6 +80,19 @@ and the "Normalize installer filename" step renames whatever `jpackage`
 produced (its own per-OS naming conventions vary, e.g. Debian's
 underscore-separated scheme) to a consistent `Veil-<version>.<ext>`.
 The result is uploaded as a release asset.
+
+**Bundling `mods/`**: the repo's checked-in `mods/` directory (currently
+just `mods/core`) is passed to `jpackage` via `--app-content mods`, not
+staged alongside the jar in `target/jpackage-input`. `jpackage --input`
+content ends up nested inside an `app/` subfolder of the installed
+application, but `ModLoader` resolves `mods/` relative to the running
+game's own working directory — which is the top-level install directory,
+not `app/`. `--app-content` places its target at the top level instead,
+alongside the executable, so `mods/core` ends up exactly where the game
+looks for it. Verified locally via a `--type app-image` build (no
+installer/WiX required) and a real launch of the resulting
+`Veil.exe`, which loaded every `core` tile, building, class, item, and
+quest from the bundled `mods/core`.
 
 **Beta version numbers**: `jpackage`'s Windows/macOS installers require a
 clean numeric `--app-version` (no `-beta.N` suffix accepted), so the
@@ -101,8 +127,14 @@ copy target\Veil-0.1.0-app.jar target\jpackage-input\
 jpackage --type exe --input target\jpackage-input --dest target\dist `
   --name Veil --app-version 0.1.0 --vendor SwiftFaze `
   --main-jar Veil-0.1.0-app.jar --main-class com.swiftfaze.veil.Main `
+  --app-content mods `
   --win-menu --win-shortcut --win-dir-chooser
 ```
+
+`--app-content mods` must run from the repo root (or with `mods` replaced
+by a path to a directory containing a `core` subfolder) — it bundles the
+checked-in `mods/core` at the top level of the installed application,
+alongside `Veil.exe`.
 
 Requires a JDK with `jpackage` (bundled since JDK 14) and, for `--type exe`
 specifically, the [WiX Toolset](https://wixtoolset.org/) v3 on `PATH`. Without

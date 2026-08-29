@@ -25,6 +25,21 @@ conventions so Maven can tell them apart automatically:
 - `specs/features/default-player-class.feature` +
   `steps/DefaultPlayerClassSteps.java` are a worked example proving this
   wiring end-to-end — copy their shape for the next real feature.
+- A `.feature` file generated ahead of its implementation (e.g. an intent
+  covering several areas, spec-drafted all at once but implemented one
+  area at a time) should be tagged `@pending` at the top, and excluded via
+  `RunCucumberTest`'s tag filter — otherwise `mvn test` fails on undefined
+  steps for scenarios that don't have an implementation yet. Remove the
+  tag from a file only once its step definitions exist.
+- A `.feature` file with no Java code path to exercise at all — a
+  build-pipeline or OS-installer concern rather than application behavior
+  (e.g. `installer-mods-bundling.feature`) — is tagged `@manual-verification`
+  instead, and excluded by the same tag filter. Unlike `@pending`, this
+  exclusion is permanent: the file is the human-reviewed spec of record
+  (per root `CLAUDE.md`'s review table), but it's never meant to gain step
+  definitions, so the tag is never removed. Verification happens by
+  actually exercising the described behavior manually (e.g. building and
+  running an installer), not via `mvn test`/`mvn verify`.
 
 ## Integration tests
 
@@ -32,11 +47,28 @@ conventions so Maven can tell them apart automatically:
 - Runner: Failsafe, bound to `integration-test`/`verify` — **not** run by
   plain `mvn test**. Run them with `mvn verify`.
 - Reserved for tests that need real I/O or cross-class wiring that unit
-  tests shouldn't pay for on every run (e.g. `BuildingLoaderIT`, which
-  loads an actual JSON fixture off disk instead of mocking the file read).
-- Run a single integration test: `mvn verify -Dit.test=BuildingLoaderIT`
+  tests shouldn't pay for on every run (e.g. `ModLoaderIT`, which loads
+  actual mod content off disk instead of mocking the file read).
+- Run a single integration test: `mvn verify -Dit.test=ModLoaderIT`
 
 ## Everything together
 
 `mvn verify` runs all three layers: unit tests and the Cucumber suite via
 Surefire, then integration tests via Failsafe.
+
+## Mutation testing (workflow Step 6)
+
+- Runner: PIT (`org.pitest:pitest-maven`, with `pitest-junit5-plugin` so it
+  runs through the JUnit Platform and picks up both plain unit tests and
+  Cucumber scenarios).
+- Run it: `mvn org.pitest:pitest-maven:mutationCoverage` — HTML report at
+  `target/pit-reports/index.html` (per-package/per-class breakdowns,
+  including a *line* coverage figure distinct from mutation score).
+- `<targetClasses>`/`<targetTests>` in `pom.xml` scope this to classes with
+  real unit tests — pure Swing view/wiring classes with no meaningful unit
+  coverage (`Main`, layout-only panels, `ClassSandbox`'s UI entry point)
+  are excluded rather than left to report a wall of untested mutants.
+- This is the check on the unit tests themselves (CLAUDE.md's changed-file
+  coverage constraint is easy to satisfy with weak assertions; mutation
+  score catches that) — not a substitute for acceptance tests or the
+  Step 4.5 manual playtest.
