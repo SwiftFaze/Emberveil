@@ -1,6 +1,6 @@
 ---
 name: brainstorm-milestone
-description: Plan a big feature out loud, split it into a sequence of GitHub issues, and file them together under one new numbered milestone — the multi-issue sibling of brainstorm-issue. Use when the user wants to plan a feature arc big enough to need several issues (like the mod-loader restructure), not a single one-off idea.
+description: Plan a big feature out loud, split it into a sequence of GitHub issues, and file them together under one new numbered milestone, skipping specs/intent/ entirely — the multi-issue sibling of brainstorm-issue. Use when the user wants to plan a feature arc big enough to need several issues, not spec it through the full intent -> .feature -> approval pipeline.
 ---
 
 This is `brainstorm-issue` scaled up to a whole feature arc: same
@@ -10,9 +10,7 @@ the user wants that pipeline instead), but the destination is a
 **milestone plus its issues**, not a single issue. Reach for
 `brainstorm-issue` instead when the idea is a single self-contained
 task — this skill is for when decomposition itself is part of the work: a
-feature arc that naturally breaks into several dependent pieces, the way
-the mod-loader restructure broke into loader → tiles → classes → items →
-quests → maps.
+feature arc that naturally breaks into several dependent pieces.
 
 ## Step 1 — Ground the brainstorm in what actually exists
 
