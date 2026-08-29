@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.4](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.3...v0.3.0-beta.4) (2026-08-29)
+
+
+### Features
+
+* data-drive Tile via JSON definitions + registry ([20d76fc](https://github.com/SwiftFaze/Veil/commit/20d76fc9d70acc82cfd12655088844543392e6be))
+* data-drive Tile via JSON definitions + registry ([b2dc66e](https://github.com/SwiftFaze/Veil/commit/b2dc66ec2ca62b78b017b06afa32fdd3ba4b24cf))
+
 ## [0.3.0-beta.3](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.2...v0.3.0-beta.3) (2026-08-29)
 
 
