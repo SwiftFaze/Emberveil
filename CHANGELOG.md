@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.8](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.7...v0.3.0-beta.8) (2026-08-29)
+
+
+### Features
+
+* add data-driven quest schema + minimal quest-state tracking ([6a95ea1](https://github.com/SwiftFaze/Veil/commit/6a95ea12091338077ac3485031742a5b107d5b10))
+* add data-driven quest schema + minimal quest-state tracking ([30d70fd](https://github.com/SwiftFaze/Veil/commit/30d70fd777ea36f4f7212620e5ee5179bc48bb85)), closes [#52](https://github.com/SwiftFaze/Veil/issues/52)
+
 ## [0.3.0-beta.7](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.6...v0.3.0-beta.7) (2026-08-29)
 
 
