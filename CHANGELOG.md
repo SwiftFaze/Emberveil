@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.6](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.5...v0.3.0-beta.6) (2026-08-29)
+
+
+### Features
+
+* data-drive items via JSON schema, wire into InventoryPanel ([4532263](https://github.com/SwiftFaze/Veil/commit/4532263f686bd81608478c7fa9b745a46ef1020c))
+* data-drive items via JSON schema, wire into InventoryPanel ([#51](https://github.com/SwiftFaze/Veil/issues/51)) ([e436470](https://github.com/SwiftFaze/Veil/commit/e436470cf702d18b87adb042fdc3251d4f587016))
+
 ## [0.3.0-beta.5](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.4...v0.3.0-beta.5) (2026-08-29)
 
 
