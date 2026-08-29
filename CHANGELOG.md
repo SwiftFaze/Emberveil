@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.10](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.9...v0.3.0-beta.10) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ci:** exempt develop from the branch-name check ([1e583d0](https://github.com/SwiftFaze/Veil/commit/1e583d0ad8a70662ee954dc2968a259eefc916ea))
+* **ci:** exempt develop from the branch-name check ([444d450](https://github.com/SwiftFaze/Veil/commit/444d45006645ac23e6dd07152d6b55cbe1db92ee))
+
 ## [0.3.0-beta.9](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.8...v0.3.0-beta.9) (2026-08-29)
 
 
