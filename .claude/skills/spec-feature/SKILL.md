@@ -39,6 +39,12 @@ Include:
 - A trailing comment block listing **Non-goals**, **Risks**, and **Open
   questions** — anything still ambiguous, for the human reviewer
 
+If this is a newly created `<slug>.feature` (not a regeneration of an
+existing one), add a row for it to the `## Index` table in
+`specs/features/README.md`, with a one-line description of what it
+covers. Do this once, when the file is first created — not on every
+regeneration during the Steps 3-4 clarification loop.
+
 ## Step 3 — Ask remaining questions, doubts, or problems
 
 After generating/updating the spec, list anything still unclear: open

@@ -106,6 +106,11 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       in `docs/` explaining it — don't just leave it discoverable only by
       reading the diff.
     - If the change is a library, update the CHANGELOG.
+    - If implementation adds, removes, or renames a `specs/features/*.feature`
+      file (e.g. a superseded spec being replaced), update its row in the
+      `## Index` table in `specs/features/README.md` in the same change —
+      don't leave a dangling or missing entry for the human reviewer to
+      catch.
     - If nothing user-facing or architecturally significant changed (e.g. a
       bugfix with no behavior/contract change), state explicitly that no doc
       update was needed rather than skipping the step silently.
