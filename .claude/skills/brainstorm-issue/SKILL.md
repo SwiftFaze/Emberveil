@@ -4,8 +4,8 @@ description: Brainstorm a feature idea with the user and capture it directly as 
 ---
 
 This is the *pre-intent* version of Step 1 in the repo's spec-first
-workflow (see root `CLAUDE.md` / the global development-workflow
-instructions): same shape of thinking, but the destination is a GitHub
+workflow (see root `CLAUDE.md` / `.claude/workflow.md`): same shape of
+thinking, but the destination is a GitHub
 issue, not `specs/intent/<slug>.md`. Never write to `specs/intent/` or
 `specs/features/` in this skill — if the user wants that, they'll ask for
 `/spec-feature` instead (or say so mid-brainstorm; if they do, stop and
