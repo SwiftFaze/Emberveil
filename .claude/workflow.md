@@ -39,33 +39,36 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       model involved.
 4. **Implementation** — once the spec is approved, hand off to Claude
    Haiku 4.5 to implement the feature and write unit tests.
-    - **A `/fork` always runs on the parent session's model — a model
-      override is ignored.** This means "inherit full context" and "run on
-      Haiku 4.5" are not both achievable when the parent session isn't
-      already on Haiku. Confirmed against the tool's actual behavior
-      2026-08-29; this corrects earlier guidance here that assumed a fork
-      could be switched to a different model.
-    - **Default to `/fork`, not a named Task subagent, for this handoff,
-      accepting that it runs on the parent session's model instead of
-      Haiku 4.5.** A fork inherits the full conversation history —
-      including every file already read during the Spec step — so the
-      implementer starts with the context it needs at zero re-read cost.
-      This is usually the better trade: re-deriving context from scratch
-      typically costs more than the difference in per-token price.
-    - **Use a fresh agent pinned to Haiku 4.5 instead of a fork only when
-      true Haiku-cost savings matter enough to justify losing inherited
-      context** — e.g. a large, well-isolated area of a multi-part change.
-      In that case, the orchestrator must paste the actually-relevant file
-      excerpts (not just file paths or module names) directly into the
-      subagent's task prompt, and explicitly instruct it not to re-explore
-      the codebase beyond what's provided unless something is missing or
-      doesn't match. A subagent given only a path or ticket reference will
-      re-read files from scratch, which is the exact problem this section
-      exists to prevent.
-    - **Also use a named subagent instead of a fork when true isolation is
-      needed** — e.g. multiple tickets being implemented in parallel across
-      separate worktrees, where forks aren't the right tool. The same
-      excerpt-pasting rule above applies.
+    - **Default to a fresh agent pinned to Haiku 4.5, not `/fork`, for
+      this handoff — the goal is minimum token spend, and Haiku's
+      per-token cost plus a tight, self-contained prompt beats a fork's
+      "free" inherited context running on the pricier parent model.**
+      The orchestrator (the Sonnet 5 session running Steps 1-3) must do
+      the exploration once and compress it directly into the handoff
+      prompt: an explicit list of every file path it needs (with line
+      numbers), the actual code being referenced (not just its name), and
+      the exact reasoning/decisions already made (e.g. "don't redefine
+      step X, it already exists at Y and collides") — everything the
+      agent would otherwise have to rediscover by reading files.
+    - **Tell the agent explicitly not to scan or explore the codebase
+      beyond the files listed.** If something it needs turns out to be
+      missing, wrong, or insufficient, it should stop and report exactly
+      what's missing rather than grepping/globbing around for it — the
+      orchestrator can then supply the missing piece and resume it. A
+      prompt with a complete file list plus this instruction is what
+      makes the cheaper model actually cheaper; without it, the agent
+      falls back to exploring the codebase itself.
+    - **Fall back to `/fork` (accepting it runs on the parent's model,
+      not Haiku) only when the context genuinely can't be compressed into
+      a prompt economically** — e.g. the relevant material is too
+      sprawling, exploratory, or spread across too many files/decisions
+      to excerpt without the prompt-writing itself costing nearly as much
+      as just forking. This should be the exception, not the default.
+    - **A fresh Haiku agent is also the right choice, not just the cheap
+      one, whenever true isolation is needed** — e.g. multiple tickets
+      being implemented in parallel across separate worktrees, where a
+      fork's shared-context model isn't appropriate anyway. Same
+      excerpt-pasting rule applies.
     - Keep every function within the complexity budget below. These are
       enforced by CI, not by your judgment alone.
     - See "Context & session management" below for checkpoint guidance —
@@ -73,8 +76,9 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
     - See "Model selection" below — this step uses Claude Haiku 4.5.
 5. **Acceptance tests** — wire the approved `.feature` file to the project's
    test runner so it's executable, not just documentation.
-    - Continue in the same fork used for Step 4, or open a new `/fork` from
-      the point right after implementation if a fresh context is preferred.
+    - Continue in the same fresh Haiku agent from Step 4 rather than
+      starting over — see "Context handoff rule" below for when isolation
+      (a new agent, or the `/fork` fallback) is actually warranted instead.
       Either way, this step needs to know exactly what was implemented —
       don't hand it off as a bare ticket reference to a blank-context
       subagent, or it will re-explore the diff to figure out what changed.
@@ -88,10 +92,11 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
 7. **Documentation** — update the codebase docs affected by this change
    before marking the feature done. This is not optional cleanup, it's part
    of the definition of done:
-    - Continue in the fork from Steps 4-5 rather than a blank-context
-      subagent. This step needs to know precisely what changed to write an
-      accurate doc update — handing it a ticket reference alone forces it
-      to re-derive that from the diff, the same cost problem Step 4 had.
+    - Continue in the same fresh Haiku agent from Steps 4-5 rather than a
+      blank-context subagent (see "Context handoff rule" below). This step
+      needs to know precisely what changed to write an accurate doc update
+      — handing it a ticket reference alone forces it to re-derive that
+      from the diff, the same cost problem Step 4 had.
     - If the change adds/changes a public API endpoint, method, or
       configuration property, update the relevant reference doc (OpenAPI
       description, `docs/architecture.md`, public API doc, or Javadoc for a
@@ -177,9 +182,7 @@ before touching any other file — it's the fastest way to reconstruct
 exactly where the previous session left off without re-exploring the
 whole codebase.
 
-### Signs a checkpoint is overdue (don't wait for these — they mean you're
-
-already late)
+### Signs a checkpoint is overdue (don't wait for these — they mean you're already late)
 
 - Repeating a fix already tried earlier in the same session
 - Referencing a file structure that's since changed
@@ -188,15 +191,14 @@ already late)
 
 ## Context handoff rule
 
-Before delegating work in Steps 4, 5, or 7 to a cheaper model, ask: does
-this need true isolation (parallel work, separate worktree), or is it a
-sequential handoff where inherited context is pure upside? Default to
-staying in the same `/fork` across Steps 4→5→7 for a single ticket's
-implementation, test-wiring, and documentation — they all need to know
-what the previous step actually did. Reserve named subagents for cases
-that actually need isolation, and when you do use one, treat "what
-context does it need" as something you must construct explicitly — it
-inherits nothing automatically.
+Steps 4, 5, and 7 are a single continuous handoff, not three separate
+delegations: stay in the same fresh Haiku agent across 4→5→7 for one
+ticket rather than re-briefing a new one at each step (see Step 4 above
+for the full default-vs-`/fork` reasoning). The one question worth asking
+before any of the three is whether this specific piece of work needs true
+isolation — parallel work in a separate worktree — since that's the one
+case where a fresh, separately-briefed agent (or `/fork`) is actually the
+right call instead of continuing the existing one.
 
 ## Model selection
 
@@ -210,18 +212,27 @@ cost predictable and avoids under-provisioning judgment-heavy steps.
   cheapest one. Bump to Claude Opus 5 for specs touching auth, payments,
   data integrity, or public APIs — the same class of feature Step 3
   won't let skip human approval.
+- **Extended thinking for Steps 1-2** — a separate lever from model choice.
+  Use it for the judgment-heavy parts of these steps: resolving scope
+  boundaries, deciding what's in/out per the intent doc, designing
+  scenarios that actually catch bugs (e.g. an asymmetric fixture to catch
+  an x/y transposition, not a symmetric one that would pass either way).
+  Trigger it with "think hard" / "think harder" in the prompt, or a
+  session-wide thinking setting. Skip it for the mechanical parts of these
+  steps (reading files, running `gh` commands) — no ambiguity to reason
+  through, so it's just added latency.
 - **Step 3 (Human approval)** — no model. This is a human decision gate,
   not agent work.
-- **Steps 4-5 (Implementation, Acceptance tests)** — Claude Haiku 4.5 is
-  the target model, but a `/fork` cannot actually be switched to it (see
-  Step 4 above) — a fork always runs on the parent session's model. Use
-  Haiku 4.5 only via a fresh, non-fork agent with manually-provided
-  context; default to a same-model `/fork` otherwise.
+- **Steps 4-5 (Implementation, Acceptance tests)** — Claude Haiku 4.5, via
+  a fresh, non-fork agent with a self-contained, excerpt-rich prompt — see
+  Step 4 above and "Context handoff rule" above for the full default vs.
+  `/fork` reasoning.
 - **Step 6 (Mutation testing)** — no model. This step is tooling
   (running the mutation test suite), not agent judgment.
 - **Step 7 (Documentation)** — Claude Haiku 4.5, continuing in the same
-  fork as Steps 4-5, since it only needs to describe what already
-  changed rather than make new judgment calls.
+  fresh Haiku agent as Steps 4-5 (see "Context handoff rule" above),
+  since it only needs to describe what already changed rather than make
+  new judgment calls.
 
 If the model lineup changes, update the names here rather than reverting
 to vague relative terms — a stale name is easier to spot and fix than a
