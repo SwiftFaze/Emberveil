@@ -1,6 +1,7 @@
 package com.swiftfaze.veil.mods;
 
 import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.world.Tile;
@@ -69,6 +70,19 @@ class ModLoaderIT {
         assertEquals(16, stats.getIntelligence());
         assertEquals(70, stats.getMaxHp());
         assertEquals(100, stats.getMaxMana());
+    }
+
+    @Test
+    void loadsCoreIronSwordFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        Item ironSword = registry.getItem("core:iron_sword");
+
+        assertNotNull(ironSword, "core:iron_sword should be loaded from mods/core/items/");
+        assertEquals("Iron Sword", ironSword.getName());
+        assertEquals(4, ironSword.getBaseDamage().min());
+        assertEquals(9, ironSword.getBaseDamage().max());
+        assertEquals(1, ironSword.getEffects().size());
+        assertEquals("strength", ironSword.getEffects().get(0).stat());
     }
 
     private Stats statsAtLevel(PlayerClass playerClass, int level) {

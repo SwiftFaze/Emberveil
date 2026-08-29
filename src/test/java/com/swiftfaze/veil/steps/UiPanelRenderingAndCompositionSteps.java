@@ -277,4 +277,26 @@ public class UiPanelRenderingAndCompositionSteps {
         Action confirmAction = eastPanel.getMenuPanel().getActionMap().get(Keybindings.ACTION_MENU_CONFIRM);
         confirmAction.actionPerformed(new ActionEvent(eastPanel, ActionEvent.ACTION_PERFORMED, Keybindings.ACTION_MENU_CONFIRM));
     }
+
+    @Then("its inventory panel displays the item {string}")
+    public void itsInventoryPanelDisplaysTheItem(String itemName) {
+        boolean found = false;
+        for (Component c : eastPanel.getInventoryPanel().getComponents()) {
+            if (c instanceof JLabel label && label.getText() != null && label.getText().contains(itemName)) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue(found, "expected inventory panel to display item: " + itemName);
+    }
+
+    @Then("its inventory panel no longer displays the placeholder text {string}")
+    public void itsInventoryPanelNoLongerDisplaysThePlaceholderText(String placeholderText) {
+        for (Component c : eastPanel.getInventoryPanel().getComponents()) {
+            if (c instanceof JLabel label) {
+                assertFalse(placeholderText.equals(label.getText()),
+                        "expected inventory panel not to display placeholder: " + placeholderText);
+            }
+        }
+    }
 }

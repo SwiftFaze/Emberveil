@@ -73,6 +73,22 @@ eight registered stats are `strength`, `dexterity`, `constitution`,
 `intelligence`, `wisdom`, `luck`, `maxHp`, `maxMana`. This data isn't wired
 into gameplay yet beyond display in `PlayerInfoPanel`.
 
+**Items** (`entities/items/Item.java`): a plain data holder (name, glyph,
+type, slot, base damage min/max, and an `effects` list of `{type, stat,
+calc}` entries) loaded from JSON under `mods/core/items/*.json` via the
+same `ModLoader`/`ModRegistry` mechanism as tiles/buildings/classes. Only
+`stat_bonus` is a supported effect type so far. `effects[].stat` is
+validated at load time against the same stat registry
+(`mods/core/stats.json`) classes use, and `effects[].calc` is parsed with
+`CalcExpressionParser` for syntactic validity — but, unlike `PlayerClass`,
+nothing evaluates an item's `calc` to a number yet, since no equip/
+inventory-management system exists to consume it. `EastPanel` loads the
+`ModRegistry` itself (same self-contained pattern as `PlayerInfo`/
+`TileTestScene2`) and pushes `ModRegistry.getAllItems()`'s result into
+`InventoryPanel` via `showItems(List<Item>)`, replacing its previous
+hardcoded stub labels. This is phase 4 of the data-driven-mod-content
+initiative; see `specs/intent/data-driven-item.md`.
+
 **Rendering contracts**: `Positionable` (x/y) → `DrawableAsciiEntity` (adds
 glyph/color/`render`) is what `GamePanel` iterates over in `entitiesToDraw`
 to draw non-scene entities (currently just `Player`); `WorldScene` itself
@@ -99,7 +115,10 @@ border/layout specifics that genuinely differ (e.g. `InventoryPanel`'s and
 implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`, and
 the interface's `toggleInventory` default method is overridden to show/hide
 `InventoryPanel` — this replaced the old direct `GamePanel` → `EastPanel`
-field reference that pressing **I** used to go through. `MenuPanel` wires
+field reference that pressing **I** used to go through. `InventoryPanel`
+itself is populated externally (`showItems(List<Item>)`, called from
+`EastPanel`'s constructor) rather than loading mod content itself, mirroring
+`PlayerInfoPanel`'s `updatePlayer`-style external push. `MenuPanel` wires
 its item list to a `SelectableMenu` (current index plus wrap-around
 `moveUp`/`moveDown`) via its own focus-scoped (`WHEN_FOCUSED`) Up/Down/Enter
 bindings; only the "Inventory" entry does anything on confirm today

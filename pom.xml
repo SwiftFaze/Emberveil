@@ -159,6 +159,7 @@
                         <param>com.swiftfaze.veil.mods.*</param>
                         <param>com.swiftfaze.veil.ui.SelectableMenu</param>
                         <param>com.swiftfaze.veil.ui.EastPanel</param>
+                        <param>com.swiftfaze.veil.ui.InventoryPanel</param>
                         <param>com.swiftfaze.veil.ui.MenuPanel</param>
                         <param>com.swiftfaze.veil.input.Keybindings</param>
                         <param>com.swiftfaze.veil.sandbox.ClassSandboxModel</param>

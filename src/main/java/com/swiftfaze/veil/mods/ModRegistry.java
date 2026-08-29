@@ -1,6 +1,7 @@
 package com.swiftfaze.veil.mods;
 
 import com.swiftfaze.veil.entities.buildings.Building;
+import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.world.Tile;
 
@@ -12,13 +13,16 @@ public class ModRegistry {
     private final Map<String, Building> buildingsById = new LinkedHashMap<>();
     private final Map<String, Tile> tilesById = new LinkedHashMap<>();
     private final Map<String, PlayerClass> classesById = new LinkedHashMap<>();
+    private final Map<String, Item> itemsById = new LinkedHashMap<>();
     private final List<String> modLoadOrder;
 
     ModRegistry(Map<String, Building> buildingsById, Map<String, Tile> tilesById,
-                Map<String, PlayerClass> classesById, List<String> modLoadOrder) {
+                Map<String, PlayerClass> classesById, Map<String, Item> itemsById,
+                List<String> modLoadOrder) {
         this.buildingsById.putAll(buildingsById);
         this.tilesById.putAll(tilesById);
         this.classesById.putAll(classesById);
+        this.itemsById.putAll(itemsById);
         this.modLoadOrder = List.copyOf(modLoadOrder);
     }
 
@@ -36,6 +40,14 @@ public class ModRegistry {
 
     public List<PlayerClass> getAllPlayerClasses() {
         return List.copyOf(classesById.values());
+    }
+
+    public Item getItem(String id) {
+        return itemsById.get(id);
+    }
+
+    public List<Item> getAllItems() {
+        return List.copyOf(itemsById.values());
     }
 
     public List<String> getModLoadOrder() {
