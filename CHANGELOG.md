@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0-beta.5](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.4...v0.3.0-beta.5) (2026-08-29)
+
+
+### Features
+
+* data-drive PlayerClass via JSON stat-growth curves ([e635b0c](https://github.com/SwiftFaze/Veil/commit/e635b0c5bcaf524b93eba8525c439f14c8900117))
+* data-drive PlayerClass via JSON stat-growth curves ([#50](https://github.com/SwiftFaze/Veil/issues/50)) ([c012baa](https://github.com/SwiftFaze/Veil/commit/c012baad0bb9d626f6805dc70578fc19496f333c))
+
 ## [0.3.0-beta.4](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.3...v0.3.0-beta.4) (2026-08-29)
 
 
