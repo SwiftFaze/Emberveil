@@ -14,6 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 class WorldSceneTest {
 
+    private static final Tile WALL = new Tile("test:wall", '#', Color.GRAY, false);
+    private static final Tile GRASS = new Tile("test:grass", ',', Color.GREEN, true);
+    private static final Tile STONE = new Tile("test:stone", '%', Color.DARK_GRAY, false);
+    private static final Tile WOOD = new Tile("test:wood", '+', Color.ORANGE, true);
+    private static final Tile DOOR = new Tile("test:door", '/', Color.YELLOW, true);
+    private static final Tile WATER = new Tile("test:water", '~', Color.BLUE, false);
+
     private WorldScene sceneOf(int width, int height) {
         return new WorldScene(width, height) {
         };
@@ -23,15 +30,15 @@ class WorldSceneTest {
     void createBorderFillsAllFourEdgesButNotTheInterior() {
         WorldScene scene = sceneOf(5, 5);
 
-        scene.createBorder(5, 5, Tile.WALL);
+        scene.createBorder(5, 5, WALL);
 
-        assertEquals(Tile.WALL, scene.getTile(0, 0));
-        assertEquals(Tile.WALL, scene.getTile(4, 0));
-        assertEquals(Tile.WALL, scene.getTile(0, 4));
-        assertEquals(Tile.WALL, scene.getTile(4, 4));
-        assertEquals(Tile.WALL, scene.getTile(2, 0));
-        assertEquals(Tile.WALL, scene.getTile(0, 2));
-        assertEquals(Tile.EMPTY, scene.getTile(2, 2));
+        assertEquals(WALL, scene.getTile(0, 0));
+        assertEquals(WALL, scene.getTile(4, 0));
+        assertEquals(WALL, scene.getTile(0, 4));
+        assertEquals(WALL, scene.getTile(4, 4));
+        assertEquals(WALL, scene.getTile(2, 0));
+        assertEquals(WALL, scene.getTile(0, 2));
+        assertNull(scene.getTile(2, 2));
     }
 
     @Test
@@ -55,9 +62,9 @@ class WorldSceneTest {
     @Test
     void getTileReturnsActualTileInBounds() {
         WorldScene scene = sceneOf(5, 5);
-        scene.fillRegion(2, 2, 1, 1, Tile.STONE);
+        scene.fillRegion(2, 2, 1, 1, STONE);
 
-        assertEquals(Tile.STONE, scene.getTile(2, 2));
+        assertEquals(STONE, scene.getTile(2, 2));
     }
 
     @Test
@@ -81,7 +88,7 @@ class WorldSceneTest {
     @Test
     void renderDrawsNonEmptyTilesWithoutThrowing() {
         WorldScene scene = sceneOf(5, 5);
-        scene.fillRegion(1, 1, 1, 1, Tile.GRASS);
+        scene.fillRegion(1, 1, 1, 1, GRASS);
         Graphics2D g2d = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB).createGraphics();
 
         assertDoesNotThrow(() -> scene.render(g2d, 15, 15, 0, 0));
@@ -99,11 +106,11 @@ class WorldSceneTest {
     void fillAllSetsEveryTileToTheGivenType() {
         WorldScene scene = sceneOf(4, 3);
 
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
 
         for (int x = 0; x < 4; x++) {
             for (int y = 0; y < 3; y++) {
-                assertEquals(Tile.GRASS, scene.getTile(x, y));
+                assertEquals(GRASS, scene.getTile(x, y));
             }
         }
     }
@@ -112,8 +119,8 @@ class WorldSceneTest {
     void placeBuildingStampsBlueprintAtWorldOffsetWithoutTransposingAxes() {
         WorldScene scene = sceneOf(10, 10);
         Tile[][] blueprint = {
-                {Tile.WALL, Tile.WOOD},
-                {Tile.STONE, Tile.DOOR}
+                {WALL, WOOD},
+                {STONE, DOOR}
         };
         Building building = new Building(blueprint);
         building.setWorldX(3);
@@ -121,35 +128,35 @@ class WorldSceneTest {
 
         scene.placeBuilding(building);
 
-        assertEquals(Tile.WALL, scene.getTile(3, 4));
-        assertEquals(Tile.WOOD, scene.getTile(4, 4));
-        assertEquals(Tile.STONE, scene.getTile(3, 5));
-        assertEquals(Tile.DOOR, scene.getTile(4, 5));
+        assertEquals(WALL, scene.getTile(3, 4));
+        assertEquals(WOOD, scene.getTile(4, 4));
+        assertEquals(STONE, scene.getTile(3, 5));
+        assertEquals(DOOR, scene.getTile(4, 5));
     }
 
     @Test
     void placeBuildingOverwritesTilesAlreadyInTheScene() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillRegion(6, 6, 1, 1, Tile.WATER);
-        Building building = new Building(new Tile[][]{{Tile.WALL}});
+        scene.fillRegion(6, 6, 1, 1, WATER);
+        Building building = new Building(new Tile[][]{{WALL}});
         building.setWorldX(6);
         building.setWorldY(6);
 
         scene.placeBuilding(building);
 
-        assertEquals(Tile.WALL, scene.getTile(6, 6));
+        assertEquals(WALL, scene.getTile(6, 6));
     }
 
     @Test
     void placeBuildingWithEmptyBlueprintLeavesTheSceneUnchanged() {
         WorldScene scene = sceneOf(10, 10);
-        scene.fillAll(Tile.GRASS);
+        scene.fillAll(GRASS);
         Building building = new Building(new Tile[0][0]);
         building.setWorldX(2);
         building.setWorldY(2);
 
         assertDoesNotThrow(() -> scene.placeBuilding(building));
 
-        assertEquals(Tile.GRASS, scene.getTile(2, 2));
+        assertEquals(GRASS, scene.getTile(2, 2));
     }
 }

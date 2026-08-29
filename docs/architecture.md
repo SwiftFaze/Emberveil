@@ -23,12 +23,19 @@ when the player is near one.
 **World representation** (`world/WorldScene.java`): an abstract base holding
 a `Tile[width][height]` grid. The concrete scene (`TileTestScene2`)
 subclasses it and populates tiles in its constructor; `GamePanel` hardcodes
-`TileTestScene2` as the active scene. `Tile` (`world/Tile.java`) is an enum
-of glyph/color/walkability triples — walkability and rendering are entirely
-data-driven off this enum, there's no separate collision or sprite system.
+`TileTestScene2` as the active scene. `Tile` (`world/Tile.java`) is a plain
+glyph/color/walkability data class — no longer an enum — with instances
+loaded from JSON (`mods/core/tiles/*.json`) via `ModLoader` into a
+`ModRegistry`, keyed by namespaced ID (`core:grass`, etc.). `CoreTiles`
+(`world/CoreTiles.java`) exposes those IDs as String constants for
+production call sites (`registry.getTile(CoreTiles.GRASS)`) so they keep
+some compile-time safety without `Tile` itself being an enum. Walkability
+and rendering are entirely data-driven off these tile definitions, there's
+no separate collision or sprite system. This is phase 2 of the
+data-driven-mod-content initiative; see `specs/intent/data-driven-tile.md`.
 
 **Buildings** are authored as JSON blueprints under `mods/core/buildings/`
-(a flat 2D array of `Tile` enum names — `{"id", "name", "type", "width",
+(a flat 2D array of namespaced tile IDs — `{"id", "name", "type", "width",
 "height", "tiles": [...]}`) and loaded by `ModLoader.load(modsRoot)` into a
 `ModRegistry`, from which a `Building` (a `Tile[][]` blueprint plus a world
 X/Y offset) is looked up by its namespaced `"id"` (e.g. `core:small_house_01`)
@@ -36,8 +43,11 @@ and stamped into a scene via `WorldScene.placeBuilding`. `ModLoader` reads
 content from an external `mods/` directory (resolved relative to the JVM's
 working directory) rather than the classpath — `core` is itself just a mod
 living at `mods/core/`, loaded through the same path any third-party mod
-would use. This is phase 1 of a larger data-driven-mod-content initiative;
-see `specs/intent/mod-loader.md`.
+would use. `ModLoader` makes two full passes over mods in dependency order:
+first to load all tiles from `tiles/*.json` into a registry, then to load
+all buildings from `buildings/*.json` with tile references resolved against
+the tile registry. This is phase 2 of a larger data-driven-mod-content
+initiative; see `specs/intent/mod-loader.md` and `specs/intent/data-driven-tile.md`.
 
 **Player movement** (`entities/player/Player.java`): each directional move
 checks whether the target tile is walkable and, if so, moves onto it —

@@ -9,6 +9,7 @@ import com.swiftfaze.veil.world.Tile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.DirectoryStream;
@@ -26,19 +27,23 @@ public final class ModLoader {
     }
 
     public static ModRegistry load(Path modsRoot) {
-        List<ModManifest> manifests = readManifests(modsRoot);
-        List<ModManifest> loadOrder = orderByDependencies(manifests);
+        List<ModManifest> loadOrder = orderByDependencies(readManifests(modsRoot));
 
-        Map<String, Building> buildingsById = new LinkedHashMap<>();
-        Map<String, String> owningModById = new LinkedHashMap<>();
-        List<String> modLoadOrder = new ArrayList<>();
-
+        Map<String, Tile> tilesById = new LinkedHashMap<>();
+        Map<String, String> owningTileModById = new LinkedHashMap<>();
         for (ModManifest manifest : loadOrder) {
-            modLoadOrder.add(manifest.id());
-            loadBuildings(modsRoot, manifest, buildingsById, owningModById);
+            loadTiles(modsRoot, manifest, tilesById, owningTileModById);
         }
 
-        return new ModRegistry(buildingsById, modLoadOrder);
+        Map<String, Building> buildingsById = new LinkedHashMap<>();
+        Map<String, String> owningBuildingModById = new LinkedHashMap<>();
+        List<String> modLoadOrder = new ArrayList<>();
+        for (ModManifest manifest : loadOrder) {
+            modLoadOrder.add(manifest.id());
+            loadBuildings(modsRoot, manifest, tilesById, buildingsById, owningBuildingModById);
+        }
+
+        return new ModRegistry(buildingsById, tilesById, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -51,10 +56,9 @@ public final class ModLoader {
         try (DirectoryStream<Path> modDirs = Files.newDirectoryStream(modsRoot, Files::isDirectory)) {
             for (Path modDir : modDirs) {
                 Path manifestFile = modDir.resolve("mod.json");
-                if (!Files.exists(manifestFile)) {
-                    continue;
+                if (Files.exists(manifestFile)) {
+                    manifests.add(readManifest(manifestFile));
                 }
-                manifests.add(readManifest(manifestFile));
             }
         } catch (IOException e) {
             throw new ModLoadException("Failed to scan mods directory: " + modsRoot, e);
@@ -110,7 +114,48 @@ public final class ModLoader {
         return ordered;
     }
 
+    private static void loadTiles(Path modsRoot, ModManifest manifest,
+                                   Map<String, Tile> tilesById,
+                                   Map<String, String> owningModById) {
+        Path tilesDir = modsRoot.resolve(manifest.id()).resolve("tiles");
+        if (!Files.isDirectory(tilesDir)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(tilesDir, "*.json")) {
+            for (Path file : files) {
+                loadTile(file, manifest.id(), tilesById, owningModById);
+            }
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to scan tiles for mod: " + manifest.id(), e);
+        }
+    }
+
+    private static void loadTile(Path file, String modId,
+                                  Map<String, Tile> tilesById,
+                                  Map<String, String> owningModById) {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            String id = json.get("id").getAsString();
+            char symbol = json.get("symbol").getAsString().charAt(0);
+            Color color = readColor(json.getAsJsonObject("color"));
+            boolean walkable = json.get("walkable").getAsBoolean();
+
+            registerWithCollisionCheck(id, new Tile(id, symbol, color, walkable), modId,
+                    tilesById, owningModById, json.has("overrides"), "Tile");
+        } catch (ModLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ModLoadException("Failed to load tile from file: " + file, e);
+        }
+    }
+
+    private static Color readColor(JsonObject color) {
+        return new Color(color.get("r").getAsInt(), color.get("g").getAsInt(), color.get("b").getAsInt());
+    }
+
     private static void loadBuildings(Path modsRoot, ModManifest manifest,
+                                       Map<String, Tile> tilesById,
                                        Map<String, Building> buildingsById,
                                        Map<String, String> owningModById) {
         Path buildingsDir = modsRoot.resolve(manifest.id()).resolve("buildings");
@@ -120,7 +165,7 @@ public final class ModLoader {
 
         try (DirectoryStream<Path> files = Files.newDirectoryStream(buildingsDir, "*.json")) {
             for (Path file : files) {
-                loadBuilding(file, manifest.id(), buildingsById, owningModById);
+                loadBuilding(file, manifest.id(), tilesById, buildingsById, owningModById);
             }
         } catch (IOException e) {
             throw new ModLoadException("Failed to scan buildings for mod: " + manifest.id(), e);
@@ -128,44 +173,62 @@ public final class ModLoader {
     }
 
     private static void loadBuilding(Path file, String modId,
+                                      Map<String, Tile> tilesById,
                                       Map<String, Building> buildingsById,
                                       Map<String, String> owningModById) {
         try (Reader reader = Files.newBufferedReader(file)) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             String id = json.get("id").getAsString();
-            boolean overrides = json.has("overrides");
+            Tile[][] blueprint = readBlueprint(json.getAsJsonArray("tiles"), tilesById, id);
 
-            if (buildingsById.containsKey(id) && !overrides) {
-                throw new ModLoadException("Building ID '" + id + "' from mod '" + modId
-                        + "' collides with existing content from mod '" + owningModById.get(id)
-                        + "'; add an \"overrides\" field to confirm this is intentional.");
-            }
-
-            if (buildingsById.containsKey(id)) {
-                logger.info("Mod '{}' overrides building '{}' previously provided by mod '{}'",
-                        modId, id, owningModById.get(id));
-            }
-
-            JsonArray rows = json.getAsJsonArray("tiles");
-            int height = rows.size();
-            int width = rows.get(0).getAsJsonArray().size();
-            Tile[][] blueprint = new Tile[height][width];
-
-            for (int y = 0; y < height; y++) {
-                JsonArray row = rows.get(y).getAsJsonArray();
-                for (int x = 0; x < width; x++) {
-                    blueprint[y][x] = Tile.valueOf(row.get(x).getAsString());
-                }
-            }
-
-            buildingsById.put(id, new Building(blueprint));
-            owningModById.put(id, modId);
-            logger.info("Loaded building '{}' from mod '{}'", id, modId);
+            registerWithCollisionCheck(id, new Building(blueprint), modId,
+                    buildingsById, owningModById, json.has("overrides"), "Building");
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
             throw new ModLoadException("Failed to load building from file: " + file, e);
         }
+    }
+
+    private static Tile[][] readBlueprint(JsonArray rows, Map<String, Tile> tilesById, String buildingId) {
+        int height = rows.size();
+        int width = rows.get(0).getAsJsonArray().size();
+        Tile[][] blueprint = new Tile[height][width];
+
+        for (int y = 0; y < height; y++) {
+            JsonArray row = rows.get(y).getAsJsonArray();
+            for (int x = 0; x < width; x++) {
+                String tileId = row.get(x).getAsString();
+                Tile tile = tilesById.get(tileId);
+                if (tile == null) {
+                    throw new ModLoadException("Building '" + buildingId
+                            + "' references unknown tile ID: " + tileId);
+                }
+                blueprint[y][x] = tile;
+            }
+        }
+
+        return blueprint;
+    }
+
+    private static <T> void registerWithCollisionCheck(String id, T value, String modId,
+                                                         Map<String, T> registry,
+                                                         Map<String, String> owningModById,
+                                                         boolean overrides, String contentType) {
+        if (registry.containsKey(id) && !overrides) {
+            throw new ModLoadException(contentType + " ID '" + id + "' from mod '" + modId
+                    + "' collides with existing content from mod '" + owningModById.get(id)
+                    + "'; add an \"overrides\" field to confirm this is intentional.");
+        }
+
+        if (registry.containsKey(id)) {
+            logger.info("Mod '{}' overrides {} '{}' previously provided by mod '{}'",
+                    modId, contentType.toLowerCase(), id, owningModById.get(id));
+        }
+
+        registry.put(id, value);
+        owningModById.put(id, modId);
+        logger.info("Loaded {} '{}' from mod '{}'", contentType.toLowerCase(), id, modId);
     }
 
     private record ModManifest(String id, List<String> dependsOn) {
