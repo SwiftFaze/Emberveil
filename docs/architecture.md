@@ -56,20 +56,22 @@ does nothing.
 
 **Player RPG data** (`entities/player/`): `PlayerInfo` composes `Level`,
 `Stats`, and a `PlayerClass`. `PlayerClass` is a plain data holder (name +
-base stat values) populated from JSON under `src/main/resources/classes/`
-(e.g. `warrior.json`, `mage.json`) by `PlayerClassLoader.load(fileName)`,
-mirroring the classpath-resource-loading pattern `BuildingLoader` used to have — `getResourceAsStream("/classes/<file>")`,
-Gson parse, throws `PlayerClassException` on failure. `loadAll()` returns
-every known class (today via an explicit filename list — classpath resource
-directories can't be listed portably across the IDE, `mvn test`, and the
-shaded jar without an extra scanning dependency; add new class files to
-that list). `PlayerInfo` defaults new players to `warrior.json`. Only the
-six base-stat *values* are data-driven — `Stats`' fields and its derived
-`getAttackPower`/`getDefense` formulas stay plain Java. The JSON schema
-abbreviates the six attributes (`str`, `dex`, `con`, `int`, `wis`, `luck`);
-since `int` is a Java reserved word, `PlayerClass`'s `intelligence` field
-maps to it via Gson's `@SerializedName("int")`. This data isn't wired into
-gameplay yet beyond display in `PlayerInfoPanel`.
+base stat values + optional per-level growth curves) loaded from JSON via
+the mod system (`mods/core/classes/warrior.json`, `mage.json`, etc.), using
+the same `ModLoader` and `ModRegistry` as tiles and buildings — see "World
+representation" above. `CoreClasses` exposes class IDs as String constants
+(`core:warrior`, `core:mage`) for production call sites. Class growth is
+defined via `calc` expressions (plain arithmetic: `+ - * /`, parentheses,
+the `level` variable, and numeric literals — no embedded scripting), validated
+at load time against a stat registry (`mods/core/stats.json`), and exposed
+via `PlayerClass.applyStatsAtLevel(stats, level)` to compute stat values at
+any level (currently level 0 only in gameplay, since no level-up trigger
+exists yet). `PlayerInfo` defaults new players to `core:warrior`. Only the
+eight base-stat *values* and growth curves are data-driven — `Stats`' fields
+and its derived `getAttackPower`/`getDefense` formulas stay plain Java. The
+eight registered stats are `strength`, `dexterity`, `constitution`,
+`intelligence`, `wisdom`, `luck`, `maxHp`, `maxMana`. This data isn't wired
+into gameplay yet beyond display in `PlayerInfoPanel`.
 
 **Rendering contracts**: `Positionable` (x/y) → `DrawableAsciiEntity` (adds
 glyph/color/`render`) is what `GamePanel` iterates over in `entitiesToDraw`

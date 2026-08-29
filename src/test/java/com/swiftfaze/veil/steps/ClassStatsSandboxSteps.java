@@ -1,27 +1,52 @@
 package com.swiftfaze.veil.steps;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.swiftfaze.veil.entities.player.PlayerClassLoader;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.sandbox.ClassSandboxModel;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ClassStatsSandboxSteps {
 
-    private static final Gson GSON = new Gson();
-
+    private Path modsRoot;
     private ClassSandboxModel model;
-    private PlayerClass editedClass;
     private Stats selectedStats;
+
+    @Before
+    public void createModsRoot() throws IOException {
+        modsRoot = Files.createTempDirectory("veil-sandbox-test");
+    }
+
+    @After
+    public void deleteModsRoot() throws IOException {
+        try (Stream<Path> paths = Files.walk(modsRoot)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+    }
 
     @Given("the class sandbox is running")
     public void theClassSandboxIsRunning() {
@@ -60,23 +85,68 @@ public class ClassStatsSandboxSteps {
         assertEquals(expected, selectedStats.getMaxMana());
     }
 
-    /**
-     * Simulates an on-disk JSON edit via a Gson round-trip (load the real
-     * resource, override one field, re-deserialize) rather than mutating
-     * the actual resource file, so the test suite has no filesystem
-     * side effects.
-     */
     @Given("the {string} class JSON has been edited to set max HP to {int}")
-    public void theClassJsonHasBeenEditedToSetMaxHpTo(String classFileBaseName, int newMaxHp) {
-        PlayerClass original = PlayerClassLoader.load(classFileBaseName + ".json");
-        JsonObject json = GSON.toJsonTree(original).getAsJsonObject();
-        json.addProperty("maxHp", newMaxHp);
-        editedClass = GSON.fromJson(json, PlayerClass.class);
+    public void theClassJsonHasBeenEditedToSetMaxHpTo(String className, int newMaxHp) throws IOException {
+        writeFixtures(className, newMaxHp);
     }
 
     @When("the class sandbox is started fresh and {string} is selected")
     public void theClassSandboxIsStartedFreshAndIsSelected(String className) {
-        ClassSandboxModel freshModel = new ClassSandboxModel(List.of(editedClass));
-        selectedStats = freshModel.computedStats(className);
+        ModRegistry mods = ModLoader.load(modsRoot);
+        model = new ClassSandboxModel(mods.getAllPlayerClasses());
+        selectedStats = model.computedStats(className);
+    }
+
+    private void writeFixtures(String className, int newMaxHp) throws IOException {
+        Path coreDir = modsRoot.resolve("core");
+        Files.createDirectories(coreDir.resolve("classes"));
+
+        writeManifest(coreDir);
+        writeStatsRegistry(coreDir);
+
+        JsonObject classJson = new JsonObject();
+        classJson.addProperty("id", "core:mage");
+        classJson.addProperty("name", "Mage");
+
+        JsonObject stats = new JsonObject();
+        addStat(stats, "strength", 6);
+        addStat(stats, "dexterity", 9);
+        addStat(stats, "constitution", 8);
+        addStat(stats, "intelligence", 16);
+        addStat(stats, "wisdom", 14);
+        addStat(stats, "luck", 7);
+        addStat(stats, "maxHp", newMaxHp);
+        addStat(stats, "maxMana", 100);
+
+        classJson.add("stats", stats);
+        Files.writeString(coreDir.resolve("classes").resolve("mage.json"), classJson.toString());
+    }
+
+    private void writeManifest(Path coreDir) throws IOException {
+        JsonObject manifest = new JsonObject();
+        manifest.addProperty("id", "core");
+        manifest.add("dependsOn", new JsonArray());
+        Files.writeString(coreDir.resolve("mod.json"), manifest.toString());
+    }
+
+    private void writeStatsRegistry(Path coreDir) throws IOException {
+        JsonObject stats = new JsonObject();
+        JsonArray statNames = new JsonArray();
+        statNames.add("strength");
+        statNames.add("dexterity");
+        statNames.add("constitution");
+        statNames.add("intelligence");
+        statNames.add("wisdom");
+        statNames.add("luck");
+        statNames.add("maxHp");
+        statNames.add("maxMana");
+        stats.add("stats", statNames);
+        Files.writeString(coreDir.resolve("stats.json"), stats.toString());
+    }
+
+    private void addStat(JsonObject stats, String name, int base) {
+        JsonObject stat = new JsonObject();
+        stat.addProperty("base", base);
+        stats.add(name, stat);
     }
 }

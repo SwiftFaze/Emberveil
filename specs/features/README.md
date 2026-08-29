@@ -16,3 +16,26 @@ These files are copied onto the test classpath at build time (see the
 `mvn test`. Step definitions live under
 `src/test/java/com/swiftfaze/veil/steps/`. See `docs/testing.md` for
 the full test-layer breakdown.
+
+## Index
+
+Concept-based naming (above) means related behavior is spread across
+several files instead of one per Java class — this table is the browsable
+map of what's covered where. **Whoever adds, removes, or renames a
+`.feature` file updates this table in the same change** — it's part of
+that change's definition of done, not separate cleanup.
+
+| File | Covers |
+|---|---|
+| `default-player-class.feature` | New player defaults to the Warrior class |
+| `data-driven-player-class.feature` | Data-driven PlayerClass loaded from `mods/core/classes/*.json` with per-level stat growth |
+| `class-stats-sandbox.feature` | Dev-only `ClassSandbox` stat display |
+| `class-sandbox-panel-selection.feature` | Dev-only `ClassSandbox` panel/class selection |
+| `data-driven-tile.feature` | Tile definitions loaded from JSON + registry |
+| `mod-loader.feature` | External `mods/` directory loading (dependency order, overrides) |
+| `building-loader-failure-path.feature` | Mod loader failure/error path |
+| `world-single-floor-rendering.feature` | Single-floor world rendering |
+| `world-scene-population-and-building-placement.feature` | World scene population and building placement |
+| `camera-behavior.feature` | Camera follow/scroll behavior |
+| `keyboard-input-and-menu-navigation.feature` | Key Bindings input and menu navigation |
+| `ui-panel-rendering-and-composition.feature` | UI panel rendering and composition |

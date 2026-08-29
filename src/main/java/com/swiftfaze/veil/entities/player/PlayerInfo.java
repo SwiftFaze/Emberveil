@@ -1,9 +1,13 @@
 package com.swiftfaze.veil.entities.player;
 
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
+
+import java.nio.file.Paths;
 
 public class PlayerInfo {
-    private static final String DEFAULT_CLASS_FILE = "warrior.json";
+    private static final String DEFAULT_CLASS_ID = CoreClasses.WARRIOR;
 
     private String firstName;
     private String lastName;
@@ -16,8 +20,9 @@ public class PlayerInfo {
         this.lastName = "Hamerfell";
         this.level = new Level();
         this.stats = new Stats();
-        this.playerClass = PlayerClassLoader.load(DEFAULT_CLASS_FILE);
-        this.playerClass.applyBaseStats(stats);
+        ModRegistry mods = ModLoader.load(Paths.get("mods"));
+        this.playerClass = mods.getPlayerClass(DEFAULT_CLASS_ID);
+        this.playerClass.applyStatsAtLevel(stats, 0);
     }
 
     public String getFirstName() {
@@ -58,6 +63,6 @@ public class PlayerInfo {
 
     public void setPlayerClass(PlayerClass playerClass) {
         this.playerClass = playerClass;
-        this.playerClass.applyBaseStats(this.stats);
+        this.playerClass.applyStatsAtLevel(this.stats, 0);
     }
 }

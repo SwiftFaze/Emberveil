@@ -2,6 +2,8 @@ package com.swiftfaze.veil.steps;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.swiftfaze.veil.entities.player.Stats;
+import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.mods.ModRegistry;
@@ -24,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,12 +42,24 @@ public class ModLoaderSteps {
     private record TileFixture(String id, char symbol, int r, int g, int b, boolean walkable, String overrides) {
     }
 
+    private record StatEntry(Integer base, String growthCalc) {
+    }
+
+    private record ClassFixture(String id, String name, Map<String, StatEntry> stats, String overrides) {
+    }
+
+    private static final Map<String, Integer> WARRIOR_STATS = Map.of(
+            "strength", 15, "dexterity", 10, "constitution", 14, "intelligence", 6,
+            "wisdom", 6, "luck", 8, "maxHp", 120, "maxMana", 20);
+
     private Path modsRoot;
     private final Map<String, List<String>> dependsOnByMod = new LinkedHashMap<>();
     private final Map<String, List<BuildingFixture>> buildingsByMod = new LinkedHashMap<>();
     private final Map<String, List<TileFixture>> tilesByMod = new LinkedHashMap<>();
+    private final Map<String, List<ClassFixture>> classesByMod = new LinkedHashMap<>();
     private String overriddenBuildingId;
     private String lastCheckedTileId;
+    private String lastCheckedClassId;
     private boolean needsMarkerTiles;
 
     private ModRegistry registry;
@@ -216,6 +231,137 @@ public class ModLoaderSteps {
         assertNotNull(thrown.getCause(), "expected the ModLoadException to wrap an underlying cause");
     }
 
+    @Given("a mods directory containing the {string} mod with a class declaring id {string}, name {string}, base strength {int}, dexterity {int}, constitution {int}, intelligence {int}, wisdom {int}, luck {int}, max HP {int}, and max mana {int}")
+    public void aModsDirectoryContainingTheModWithAClassDeclaringId(String modId, String classId, String name,
+                                                                   int strength, int dexterity, int constitution,
+                                                                   int intelligence, int wisdom, int luck,
+                                                                   int maxHp, int maxMana) {
+        Map<String, StatEntry> stats = Map.of(
+                "strength", new StatEntry(strength, null),
+                "dexterity", new StatEntry(dexterity, null),
+                "constitution", new StatEntry(constitution, null),
+                "intelligence", new StatEntry(intelligence, null),
+                "wisdom", new StatEntry(wisdom, null),
+                "luck", new StatEntry(luck, null),
+                "maxHp", new StatEntry(maxHp, null),
+                "maxMana", new StatEntry(maxMana, null)
+        );
+        addClass(modId, classId, name, stats, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a class declaring id {string} with base {word} {int} and a {word} growth calc of {string}")
+    public void aModsDirectoryContainingModWithAClassWithBaseAndGrowthCalc(String modId, String classId,
+                                                                            String stat1Name, int base, String stat2Name, String growthCalc) {
+        Map<String, StatEntry> stats = new LinkedHashMap<>();
+        stats.put(stat1Name, new StatEntry(base, growthCalc));
+        addClass(modId, classId, classId, stats, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a class declaring id {string} with base {word} {int} and no growth calc for {word}")
+    public void aModsDirectoryContainingModWithAClassWithBaseAndNoGrowthCalc(String modId, String classId,
+                                                                             String stat1Name, int base, String stat2Name) {
+        Map<String, StatEntry> stats = new LinkedHashMap<>();
+        stats.put(stat1Name, new StatEntry(base, null));
+        addClass(modId, classId, classId, stats, null);
+    }
+
+    @Given("a mods directory containing the {string} mod with a class declaring id {string} with a growth calc for stat {string} of {string}")
+    public void aModsDirectoryContainingModWithAClassWithGrowthCalc(String modId, String classId, String statName, String growthCalc) {
+        Map<String, StatEntry> stats = new LinkedHashMap<>();
+        stats.put(statName, new StatEntry(null, growthCalc));
+        addClass(modId, classId, classId, stats, null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a class declaring id {string} and no {string} field")
+    public void theModsDirectoryAlsoContainsModWithAClassDeclaringIdAndNoField(String modId, String classId, String fieldName) {
+        Map<String, StatEntry> stats = new LinkedHashMap<>();
+        for (String statName : WARRIOR_STATS.keySet()) {
+            Integer base = WARRIOR_STATS.get(statName);
+            stats.put(statName, new StatEntry(base, null));
+        }
+        addClass(modId, classId, classId, stats, null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a class declaring id {string}, name {string}, and the same base stats, whose {string} field names {string}")
+    public void theModsDirectoryAlsoContainsModWithAClassOverriding(String modId, String classId, String name,
+                                                                    String fieldName, String overriddenId) {
+        Map<String, StatEntry> stats = new LinkedHashMap<>();
+        for (String statName : WARRIOR_STATS.keySet()) {
+            Integer base = WARRIOR_STATS.get(statName);
+            stats.put(statName, new StatEntry(base, null));
+        }
+        addClass(modId, classId, name, stats, overriddenId);
+    }
+
+    @Given("a mods directory containing mod {string} with a malformed class file")
+    public void aModsDirectoryContainingModWithAMalformedClassFile(String modId) throws IOException {
+        Path modDir = modsRoot.resolve(modId);
+        Files.createDirectories(modDir.resolve("classes"));
+        Files.writeString(modDir.resolve("mod.json"), "{\"id\":\"" + modId + "\",\"dependsOn\":[]}");
+        Files.writeString(modDir.resolve("classes").resolve("broken.json"), "{ not valid json");
+    }
+
+    @Then("a class with ID {string} is available")
+    public void aClassWithIDIsAvailable(String id) {
+        assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
+        assertNotNull(registry.getPlayerClass(id), "expected class '" + id + "' to be loaded");
+        lastCheckedClassId = id;
+    }
+
+    @Then("its name is {string}")
+    public void itsNameIs(String expectedName) {
+        assertEquals(expectedName, registry.getPlayerClass(lastCheckedClassId).getName());
+    }
+
+    @Then("its base max HP is {int}")
+    public void itsBaseMaxHpIs(int expected) {
+        Stats stats = new Stats();
+        registry.getPlayerClass(lastCheckedClassId).applyStatsAtLevel(stats, 0);
+        assertEquals(expected, stats.getMaxHp());
+    }
+
+    @Then("its base max mana is {int}")
+    public void itsBaseMaxManaIs(int expected) {
+        Stats stats = new Stats();
+        registry.getPlayerClass(lastCheckedClassId).applyStatsAtLevel(stats, 0);
+        assertEquals(expected, stats.getMaxMana());
+    }
+
+    @Then("the class {string}'s {word} at level {int} is {int}")
+    public void theClasssStatAtLevelIs(String classId, String statName, int level, int expected) {
+        Stats stats = new Stats();
+        registry.getPlayerClass(classId).applyStatsAtLevel(stats, level);
+        int actual = getStatValue(stats, statName);
+        assertEquals(expected, actual);
+    }
+
+    @Then("loading fails with a ModLoadException naming class {string}, stat {string}, and the file it came from")
+    public void loadingFailsWithAModLoadExceptionNamingClassStatAndFile(String classId, String statName) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(classId), "expected message to name class: " + thrown.getMessage());
+        assertTrue(thrown.getMessage().contains(statName), "expected message to name stat: " + thrown.getMessage());
+    }
+
+    private int getStatValue(Stats stats, String statName) {
+        Map<String, Function<Stats, Integer>> getters = Map.of(
+                "strength", Stats::getStrength,
+                "dexterity", Stats::getDexterity,
+                "constitution", Stats::getConstitution,
+                "intelligence", Stats::getIntelligence,
+                "wisdom", Stats::getWisdom,
+                "luck", Stats::getLuck,
+                "maxHp", Stats::getMaxHp,
+                "maxMana", Stats::getMaxMana
+        );
+        return getters.get(statName).apply(stats);
+    }
+
+    private void addClass(String modId, String classId, String name, Map<String, StatEntry> stats, String overrides) {
+        dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
+        classesByMod.computeIfAbsent(modId, k -> new ArrayList<>())
+                .add(new ClassFixture(classId, name, stats, overrides));
+    }
+
     private void addBuilding(String modId, String buildingId, String overriddenId, String explicitTileId) {
         dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
         buildingsByMod.computeIfAbsent(modId, k -> new ArrayList<>())
@@ -235,10 +381,15 @@ public class ModLoaderSteps {
         Set<String> allMods = new LinkedHashSet<>();
         allMods.addAll(buildingsByMod.keySet());
         allMods.addAll(tilesByMod.keySet());
+        allMods.addAll(classesByMod.keySet());
         allMods.addAll(dependsOnByMod.keySet());
 
         if (needsMarkerTiles) {
             writeMarkerTiles();
+        }
+
+        if (!classesByMod.isEmpty()) {
+            writeStatsRegistryIfNeeded();
         }
 
         for (String modId : allMods) {
@@ -247,6 +398,7 @@ public class ModLoaderSteps {
             writeManifest(modDir, modId);
             writeTiles(modDir, tilesByMod.getOrDefault(modId, List.of()));
             writeBuildings(modDir, buildingsByMod.getOrDefault(modId, List.of()));
+            writeClasses(modDir, classesByMod.getOrDefault(modId, List.of()));
         }
     }
 
@@ -332,5 +484,63 @@ public class ModLoaderSteps {
 
             Files.writeString(buildingsDir.resolve("building_" + (i++) + ".json"), building.toString());
         }
+    }
+
+    private void writeClasses(Path modDir, List<ClassFixture> fixtures) throws IOException {
+        if (fixtures.isEmpty()) {
+            return;
+        }
+        Path classesDir = modDir.resolve("classes");
+        Files.createDirectories(classesDir);
+
+        int i = 0;
+        for (ClassFixture fixture : fixtures) {
+            String json = classJson(fixture);
+            Files.writeString(classesDir.resolve("class_" + (i++) + ".json"), json);
+        }
+    }
+
+    private String classJson(ClassFixture fixture) {
+        JsonObject classObj = new JsonObject();
+        classObj.addProperty("id", fixture.id());
+        classObj.addProperty("name", fixture.name());
+
+        JsonObject stats = new JsonObject();
+        for (Map.Entry<String, StatEntry> entry : fixture.stats().entrySet()) {
+            JsonObject stat = new JsonObject();
+            if (entry.getValue().base() != null) {
+                stat.addProperty("base", entry.getValue().base());
+            }
+            if (entry.getValue().growthCalc() != null) {
+                stat.addProperty("growth", entry.getValue().growthCalc());
+            }
+            stats.add(entry.getKey(), stat);
+        }
+        classObj.add("stats", stats);
+
+        if (fixture.overrides() != null) {
+            classObj.addProperty("overrides", fixture.overrides());
+        }
+
+        return classObj.toString();
+    }
+
+    private void writeStatsRegistryIfNeeded() throws IOException {
+        Path coreDir = modsRoot.resolve("core");
+        Files.createDirectories(coreDir);
+
+        JsonObject registry = new JsonObject();
+        JsonArray statNames = new JsonArray();
+        statNames.add("strength");
+        statNames.add("dexterity");
+        statNames.add("constitution");
+        statNames.add("intelligence");
+        statNames.add("wisdom");
+        statNames.add("luck");
+        statNames.add("maxHp");
+        statNames.add("maxMana");
+        registry.add("stats", statNames);
+
+        Files.writeString(coreDir.resolve("stats.json"), registry.toString());
     }
 }
