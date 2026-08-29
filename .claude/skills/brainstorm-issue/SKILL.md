@@ -28,6 +28,14 @@ Use `AskUserQuestion` (not free-form prose) to settle, at minimum:
 - **What's in scope for a first version** versus what should be split
   into a separate follow-up issue. Offer a recommended option — usually
   the smallest coherent slice that doesn't depend on anything unbuilt.
+- **Priority** for each issue being filed — P0/P1/P2 (the VEIL project
+  board's `Priority` field). Recommend **P2** by default: this skill
+  exists for ideas the user wants to think out loud about "for later,"
+  not urgent work, so P2 is the sane default unless the brainstorm itself
+  signals otherwise (e.g. the user frames it as blocking something, or
+  it's a fix for currently-broken behavior). If the brainstorm splits
+  into a primary + follow-up issue, ask about the follow-up's priority
+  separately — it's almost always P2 even when the primary isn't.
 - Any other genuinely open fork in the idea (entry point, UI shape,
   who/what triggers it) that materially changes what the issue should
   say. Don't ask about things you can just decide reasonably.
@@ -85,7 +93,7 @@ Cross-link: the primary issue's Scope references the follow-up issue
 number in "Out of scope"; if useful, the follow-up issue can note which
 primary issue it was split from.
 
-## Step 4 — Add to the project board
+## Step 4 — Add to the project board and set priority
 
 Every issue created this way goes on the VEIL project board — this is a
 standing repo convention, not optional:
@@ -94,12 +102,20 @@ standing repo convention, not optional:
 gh project item-add 2 --owner SwiftFaze --url <issue-url>
 ```
 
-Do this for each issue created in Step 3.
+Then set the `Priority` field to whatever was settled in Step 2 (exact
+option names are `P0`, `P1`, `P2`):
+
+```
+gh project item-edit 2 --owner SwiftFaze --url <issue-url> --field "Priority" --value "<P0|P1|P2>"
+```
+
+Do both for each issue created in Step 3 — the primary and any follow-up,
+using each one's own agreed priority.
 
 ## Step 5 — Report back
 
-Tell the user the issue URL(s) and, in one line each, what's in scope for
-the primary issue and what got split into the follow-up (if any). Don't
-propose next steps beyond what was asked — if this brainstorm is likely
-to turn into a real intent later, that's the user's call to make, not
-something to push in this skill's output.
+Tell the user the issue URL(s), the priority set on each, and — in one
+line each — what's in scope for the primary issue and what got split into
+the follow-up (if any). Don't propose next steps beyond what was asked —
+if this brainstorm is likely to turn into a real intent later, that's the
+user's call to make, not something to push in this skill's output.
