@@ -76,6 +76,12 @@ Feature: Terminal-style UI component framework
     When the "Down" key is pressed
     Then the inventory popup's selected item is no longer the first item
 
+  Scenario: Up at the inventory popup's first item does not wrap to the last item
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When the "Up" key is pressed
+    Then the inventory popup's first item is highlighted as selected
+
   Scenario: The inventory popup is layered above the game view and sidebar, not inside them
     Given the game window's layered content area
     Then the inventory popup's layer is above the game and sidebar content's layer

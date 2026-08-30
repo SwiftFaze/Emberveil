@@ -40,4 +40,24 @@ class ListWidgetTest {
         widget.moveDown();
         assertEquals(0, widget.getSelectedIndex());
     }
+
+    @Test
+    void moveUpFromTheFirstItemStaysThereWhenWrapAroundIsDisabled() {
+        ListWidget<String> widget = new ListWidget<>(s -> s);
+        widget.setItems(List.of("A", "B", "C"));
+        widget.setWrapAround(false);
+        widget.moveUp();
+        assertEquals(0, widget.getSelectedIndex());
+    }
+
+    @Test
+    void moveDownFromTheLastItemStaysThereWhenWrapAroundIsDisabled() {
+        ListWidget<String> widget = new ListWidget<>(s -> s);
+        widget.setItems(List.of("A", "B", "C"));
+        widget.setWrapAround(false);
+        widget.moveDown();
+        widget.moveDown();
+        widget.moveDown();
+        assertEquals(2, widget.getSelectedIndex());
+    }
 }

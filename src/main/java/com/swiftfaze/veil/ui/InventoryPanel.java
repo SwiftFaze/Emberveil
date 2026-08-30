@@ -25,6 +25,7 @@ public class InventoryPanel extends PopupWidget {
         addContent(titleLabel);
 
         itemList = new ListWidget<>(Item::getName);
+        itemList.setWrapAround(false);
 
         JScrollPane scrollPane = new JScrollPane(itemList);
         scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);

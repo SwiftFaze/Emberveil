@@ -14,6 +14,7 @@ public class ListWidget<T> extends Widget {
     private final List<T> items = new ArrayList<>();
     private final Function<T, String> itemRenderer;
     private int selectedIndex = 0;
+    private boolean wrapAround = true;
     private Consumer<T> onConfirm = t -> {
     };
     private final List<JLabel> labels = new ArrayList<>();
@@ -35,6 +36,10 @@ public class ListWidget<T> extends Widget {
         this.onConfirm = onConfirm;
     }
 
+    public void setWrapAround(boolean wrapAround) {
+        this.wrapAround = wrapAround;
+    }
+
     public T getSelectedItem() {
         return items.isEmpty() ? null : items.get(selectedIndex);
     }
@@ -44,17 +49,23 @@ public class ListWidget<T> extends Widget {
     }
 
     public void moveUp() {
-        if (!items.isEmpty()) {
-            selectedIndex = (selectedIndex - 1 + items.size()) % items.size();
-            refreshHighlight();
+        if (items.isEmpty()) {
+            return;
         }
+        selectedIndex = wrapAround
+                ? (selectedIndex - 1 + items.size()) % items.size()
+                : Math.max(0, selectedIndex - 1);
+        refreshHighlight();
     }
 
     public void moveDown() {
-        if (!items.isEmpty()) {
-            selectedIndex = (selectedIndex + 1) % items.size();
-            refreshHighlight();
+        if (items.isEmpty()) {
+            return;
         }
+        selectedIndex = wrapAround
+                ? (selectedIndex + 1) % items.size()
+                : Math.min(items.size() - 1, selectedIndex + 1);
+        refreshHighlight();
     }
 
     private void bindKeys() {

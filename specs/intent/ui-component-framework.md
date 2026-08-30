@@ -327,3 +327,14 @@ resolved in a grilling session; see Clarifications below.
   Affects: Desired behavior, Scope (the "stays a static, non-interactive
   display" framing for the item list no longer holds — see the
   ui-component-framework.feature Non-goals update).
+
+- Q: (Surfaced right after Up/Down navigation landed) `ListWidget.moveUp`/
+  `moveDown` wrap around at the ends (index N-1 -> 0 and back), which is
+  the base widget's tested default and correct for the standalone list
+  widget scenarios and `ClassSandboxPanel`. Should the inventory popup's
+  item list wrap too, or stop at the ends?
+  A: Stop at the ends — `ListWidget` gained a `wrapAround` flag (default
+  `true`, so the base widget/`ClassSandboxPanel` scenarios are unaffected)
+  that `InventoryPanel` sets `false` on its own item list only.
+  Affects: Desired behavior (inventory-list-specific, not a framework-wide
+  change).
