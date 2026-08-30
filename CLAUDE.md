@@ -39,16 +39,14 @@ See `docs/architecture.md` for the full write-up (entry point/window assembly, t
 
 ## Spec-first workflow layout
 
-This repo follows the intent → spec → approval → implementation pipeline (see the global development workflow instructions):
+This repo follows the intent → spec → approval → implementation pipeline (see `.claude/workflow.md` for the step-by-step mechanics — this section only covers repo-specific file locations and extensions):
 
-- `/specs/intent/<feature-slug>.md` — human-written intent docs, source of truth for *why*. Copy `specs/intent/TEMPLATE.md` to start one. Starting from an existing GitHub issue instead? Use the `spec-intent` skill (`.claude/skills/spec-intent/`) — give it the issue number and it creates/links a branch, moves the tracker item to In progress on the VEIL project board, and derives `intent.md` from the issue's description. Brainstorming a not-yet-ready idea straight into an issue (no repo file) instead? Use the `brainstorm-issue` skill (`.claude/skills/brainstorm-issue/`).
-- `/specs/features/<feature-slug>.feature` — Gherkin specs generated from the matching intent doc, executed by Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.
+- `/specs/intent/<feature-slug>.md` — copy `specs/intent/TEMPLATE.md` to start one by hand, use the `spec-intent` skill to derive one from an existing GitHub issue, or `brainstorm-issue` for an idea that isn't ready to be an intent doc yet.
+- `/specs/features/<feature-slug>.feature` — wired to Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.
 - `docs/` — narrative/reference documentation (architecture, testing) kept up to date as part of each feature's definition of done, not left to be reverse-engineered from diffs.
 - `specs/intent/default-player-class.md` + `specs/features/default-player-class.feature` are a worked example proving the intent → spec → Cucumber pipeline runs end-to-end; use their shape as the template for the next real feature rather than editing them.
 
 **Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).
-
-**Clarifying questions in this pipeline (Steps 1-2, and the `brainstorm-issue`/`brainstorm-milestone` skills) go through the `grilling` skill** (`.claude/skills/grilling/`), not a plain `AskUserQuestion` call — it works the open questions as a dependency-ordered design tree instead of a flat list, which fits how ambiguity actually surfaces in this repo's intent/spec loops (one answer routinely reshapes what else needs asking). Keep `AskUserQuestion` for a standalone, self-contained multiple-choice pick with nothing else riding on it (e.g. confirming a milestone match).
 
 ### Repo-specific Step 4.5 — Manual playtest (Human)
 

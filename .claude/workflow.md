@@ -274,9 +274,11 @@ stop and flag it rather than disabling the check.
   (`.claude/skills/grilling/`) to ask what's unclear rather than inventing
   scope — it batches every open question into dependency-ordered rounds
   instead of a flat prompt, which fits this repo's iterative intent/spec
-  loops better than a one-shot `AskUserQuestion` call. Reserve
-  `AskUserQuestion` for a genuinely standalone, self-contained
-  multiple-choice pick that has no other open question hanging off it.
+  loops better than a one-shot `AskUserQuestion` call. This applies to
+  Steps 1-2 and to the `brainstorm-issue`/`brainstorm-milestone` skills
+  too. Reserve `AskUserQuestion` for a genuinely standalone, self-contained
+  multiple-choice pick that has no other open question hanging off it
+  (e.g. confirming a milestone match).
 - If a requested change would violate a constraint above, say so explicitly
   and propose a decomposition instead of quietly exceeding the limit.
 - Never mark a feature "done" without the acceptance tests passing against
