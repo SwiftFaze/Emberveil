@@ -197,6 +197,11 @@ public class UiComponentFrameworkSteps {
         assertFalse(eastPanel.getInventoryPanel().isVisible());
     }
 
+    @Then("the restore-game-focus action was invoked")
+    public void theRestoreGameFocusActionWasInvoked() {
+        assertTrue(restoreGameFocusInvoked);
+    }
+
     @Then("the menu has keyboard focus")
     public void theMenuHasKeyboardFocus() {
         assertNotNull(eastPanel.getMenuPanel());

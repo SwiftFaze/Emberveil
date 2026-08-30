@@ -34,7 +34,6 @@ public class UiPanelRenderingAndCompositionSteps {
     private EastPanel eastPanel;
     private Player player;
     private JPanel currentPanel;
-    private boolean restoreGameFocusInvoked;
 
     @Given("a new instance of a panel extending TerminalPanel")
     public void aNewInstanceOfAPanelExtendingTerminalPanel() {
@@ -247,9 +246,9 @@ public class UiPanelRenderingAndCompositionSteps {
 
     @Given("a restore-game-focus action is registered")
     public void aRestoreGameFocusActionIsRegistered() {
-        restoreGameFocusInvoked = false;
-        eastPanel.setRestoreGameFocusAction(() -> restoreGameFocusInvoked = true);
+        // No-op: "the rebuilt in-game menu and inventory screen" step
+        // (UiComponentFrameworkSteps) already registers the restore action
+        // on the EastPanel that scenario exercises.
     }
-
 
 }
