@@ -4,6 +4,7 @@ import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
+import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SouthPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
@@ -13,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -25,6 +32,13 @@ public class Main {
         JFrame frame = new JFrame("Veil");
         CardLayout cardLayout = new CardLayout();
         JPanel cardPanel = new JPanel(cardLayout);
+
+        // Populated as each screen is built below; every screen's navigation callback captures
+        // this same map reference, so forward references between screens built later (settings
+        // <-> keybinds is a genuine two-way cycle) resolve fine at runtime, once the map is full
+        // and before the frame is ever shown - only the map reference itself needs to exist yet
+        // when each lambda is written, not its final contents.
+        Map<String, JComponent> cards = new HashMap<>();
 
         // Build game view components (for the game card)
         NorthPanel northPanel = new NorthPanel();
@@ -51,35 +65,30 @@ public class Main {
                     gamePanel.requestFocusInWindow();
                     gamePanel.startGameLoop();
                 }
-                case "Settings" -> cardLayout.show(cardPanel, "settings");
-                case "Keybinds" -> cardLayout.show(cardPanel, "keybinds");
+                case "Settings" -> navigateTo(cardLayout, cardPanel, cards, "settings");
                 // Continue, Load, Exit: placeholders, do nothing
             }
         });
 
         // Build settings card
         SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
-            screen -> {
-                if ("title".equals(screen)) {
-                    cardLayout.show(cardPanel, "title");
-                    titleScreen.requestFocusInWindow();
-                } else if ("keybinds".equals(screen)) {
-                    cardLayout.show(cardPanel, "keybinds");
-                }
-            },
-            folder -> {
-                // Open folder actions are mocked in tests
-            }
+            screen -> navigateTo(cardLayout, cardPanel, cards, screen),
+            Main::openFolder
         );
 
-        // Placeholder keybinds card (will be replaced in phase 4)
-        JPanel keybindsCard = new JPanel();
-        keybindsCard.setBackground(Color.BLACK);
+        // Build keybinds card
+        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
+            screen -> navigateTo(cardLayout, cardPanel, cards, screen)
+        );
+
+        cards.put("title", titleScreen);
+        cards.put("settings", settingsScreen);
+        cards.put("keybinds", keybindsScreen);
 
         cardPanel.add(titleScreen, "title");
         cardPanel.add(gameCard, "game");
         cardPanel.add(settingsScreen, "settings");
-        cardPanel.add(keybindsCard, "keybinds");
+        cardPanel.add(keybindsScreen, "keybinds");
 
         frame.setLayout(new BorderLayout());
         frame.add(cardPanel, BorderLayout.CENTER);
@@ -93,6 +102,30 @@ public class Main {
         cardLayout.show(cardPanel, "title");
         titleScreen.requestFocusInWindow();
         keyListen(frame);
+    }
+
+    private static void navigateTo(CardLayout cardLayout, JPanel cardPanel,
+                                    Map<String, JComponent> cards, String cardName) {
+        cardLayout.show(cardPanel, cardName);
+        JComponent target = cards.get(cardName);
+        if (target != null) {
+            target.requestFocusInWindow();
+        }
+    }
+
+    private static void openFolder(String which) {
+        try {
+            Path base = Path.of("").toAbsolutePath();
+            File target = "mods".equals(which) ? base.resolve("mods").toFile() : base.toFile();
+            if ("mods".equals(which) && !target.exists()) {
+                Files.createDirectories(target.toPath());
+            }
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(target);
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to open folder: {}", which, e);
+        }
     }
 
     private static void keyListen(JFrame frame) {

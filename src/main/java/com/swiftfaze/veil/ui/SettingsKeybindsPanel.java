@@ -1,25 +1,30 @@
 package com.swiftfaze.veil.ui;
 
-import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 public class SettingsKeybindsPanel extends JPanel {
-    private final List<String> actions;
-    private int selectedIndex = 0;
-    private final Consumer<String> onBack;
-    private final Map<String, String> keyBindings;
+    private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
+    private static final List<String> FOOTER_ACTIONS = List.of("Apply", "Cancel", "Go back");
 
+    private final List<String> actions;
+    private final Map<String, String> keyBindings;
+    private final Consumer<String> onBack;
+    private final JPanel actionsPanel;
+    private final JPanel footerPanel;
+
+    private int selectedIndex = 0;
     private boolean footerFocused = false;
     private int footerIndex = 0;
     private boolean popupOpen = false;
-    private static final List<String> FOOTER_ACTIONS = List.of("Apply", "Cancel", "Go back");
 
     public SettingsKeybindsPanel(Consumer<String> onBack) {
         this.onBack = onBack;
@@ -28,10 +33,37 @@ public class SettingsKeybindsPanel extends JPanel {
 
         setBackground(Color.BLACK);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setFocusable(false);
+        setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2),
+                BorderFactory.createEmptyBorder(20, 40, 20, 40)));
+        setFocusable(true);
+
+        JLabel header = new JLabel("Keybinds");
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font(Font.MONOSPACED, Font.BOLD, 24));
+        header.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        actionsPanel = new JPanel();
+        actionsPanel.setBackground(Color.BLACK);
+        actionsPanel.setLayout(new BoxLayout(actionsPanel, BoxLayout.Y_AXIS));
+        actionsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        footerPanel = new JPanel();
+        footerPanel.setBackground(Color.BLACK);
+        footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.X_AXIS));
+        footerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+
+        add(Box.createVerticalGlue());
+        add(header);
+        add(Box.createVerticalStrut(20));
+        add(actionsPanel);
+        add(footerPanel);
+        add(Box.createVerticalGlue());
 
         initializeBindings();
         refresh();
+        addKeyListener(new KeybindsKeyListener());
     }
 
     private void initializeBindings() {
@@ -51,29 +83,38 @@ public class SettingsKeybindsPanel extends JPanel {
 
     public void moveUp() {
         if (footerFocused) {
-            if (footerIndex > 0) {
-                footerIndex--;
-                refresh();
-            }
-        } else {
-            if (selectedIndex > 0) {
-                selectedIndex--;
-                refresh();
-            }
+            footerFocused = false;
+            selectedIndex = actions.size() - 1;
+        } else if (selectedIndex > 0) {
+            selectedIndex--;
         }
+        refresh();
     }
 
     public void moveDown() {
         if (footerFocused) {
-            if (footerIndex < FOOTER_ACTIONS.size() - 1) {
-                footerIndex++;
-                refresh();
-            }
+            return;
+        }
+        if (selectedIndex < actions.size() - 1) {
+            selectedIndex++;
         } else {
-            if (selectedIndex < actions.size() - 1) {
-                selectedIndex++;
-                refresh();
-            }
+            footerFocused = true;
+            footerIndex = 0;
+        }
+        refresh();
+    }
+
+    public void moveFooterLeft() {
+        if (footerFocused && footerIndex > 0) {
+            footerIndex--;
+            refresh();
+        }
+    }
+
+    public void moveFooterRight() {
+        if (footerFocused && footerIndex < FOOTER_ACTIONS.size() - 1) {
+            footerIndex++;
+            refresh();
         }
     }
 
@@ -82,6 +123,7 @@ public class SettingsKeybindsPanel extends JPanel {
             onBack.accept("settings");
         } else {
             popupOpen = true;
+            refresh();
         }
     }
 
@@ -110,6 +152,7 @@ public class SettingsKeybindsPanel extends JPanel {
     public void highlightFooterAction(String action) {
         footerFocused = true;
         footerIndex = FOOTER_ACTIONS.indexOf(action);
+        refresh();
     }
 
     public void pressKey(String key) {
@@ -119,21 +162,62 @@ public class SettingsKeybindsPanel extends JPanel {
     }
 
     private void refresh() {
-        removeAll();
+        actionsPanel.removeAll();
         for (int i = 0; i < actions.size(); i++) {
             String action = actions.get(i);
             String key = keyBindings.getOrDefault(action, "");
             JLabel label = new JLabel(action + ": " + key);
-            label.setForeground(i == selectedIndex ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
-            label.setBackground(i == selectedIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
+            label.setFont(ROW_FONT);
+            label.setAlignmentX(Component.CENTER_ALIGNMENT);
+            label.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+            boolean highlighted = !footerFocused && i == selectedIndex;
+            label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
+            label.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
             label.setOpaque(true);
-            add(label);
+            actionsPanel.add(label);
         }
+
+        footerPanel.removeAll();
+        for (int i = 0; i < FOOTER_ACTIONS.size(); i++) {
+            JLabel label = new JLabel(FOOTER_ACTIONS.get(i));
+            label.setFont(ROW_FONT);
+            label.setBorder(BorderFactory.createEmptyBorder(2, 12, 2, 12));
+            boolean highlighted = footerFocused && i == footerIndex;
+            label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
+            label.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
+            label.setOpaque(true);
+            footerPanel.add(label);
+            if (i < FOOTER_ACTIONS.size() - 1) {
+                footerPanel.add(Box.createHorizontalStrut(20));
+            }
+        }
+
         revalidate();
         repaint();
     }
 
     public List<String> getAllActions() {
         return actions;
+    }
+
+    private class KeybindsKeyListener extends KeyAdapter {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (popupOpen) {
+                pressKey(KeyEvent.getKeyText(e.getKeyCode()));
+                return;
+            }
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP -> moveUp();
+                case KeyEvent.VK_DOWN -> moveDown();
+                case KeyEvent.VK_LEFT -> moveFooterLeft();
+                case KeyEvent.VK_RIGHT -> moveFooterRight();
+                case KeyEvent.VK_ENTER -> confirm();
+                case KeyEvent.VK_ESCAPE -> back();
+                default -> {
+                    // No other keys are meaningful outside the popup.
+                }
+            }
+        }
     }
 }

@@ -1,16 +1,15 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ListWidget;
-import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -26,23 +25,56 @@ public class TitleScreenPanel extends JPanel {
         this.onMenuSelect = onMenuSelect;
         setBackground(Color.BLACK);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setFocusable(false);
+        setFocusable(true);
 
         // Title
         titleLabel = new JLabel("VEIL");
         titleLabel.setFont(loadTitleFont());
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        add(Box.createVerticalStrut(20));
-        add(titleLabel);
-        add(Box.createVerticalStrut(40));
 
         // Menu
         List<String> menuItems = List.of("Continue", "New", "Load", "Settings", "Exit");
         menuWidget = new ListWidget<>(s -> s);
         menuWidget.setItems(menuItems);
         menuWidget.setOnConfirm(this::handleMenuSelect);
+        menuWidget.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        add(Box.createVerticalGlue());
+        add(titleLabel);
+        add(Box.createVerticalStrut(40));
         add(menuWidget);
+        add(Box.createVerticalGlue());
+
+        bindKeys();
+    }
+
+    private void bindKeys() {
+        InputMap inputMap = getInputMap(WHEN_FOCUSED);
+        ActionMap actionMap = getActionMap();
+
+        inputMap.put(Keybindings.MENU_UP, "title-up");
+        inputMap.put(Keybindings.MENU_DOWN, "title-down");
+        inputMap.put(Keybindings.MENU_CONFIRM, "title-confirm");
+
+        actionMap.put("title-up", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moveUp();
+            }
+        });
+        actionMap.put("title-down", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moveDown();
+            }
+        });
+        actionMap.put("title-confirm", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                confirm();
+            }
+        });
     }
 
     private Font loadTitleFont() {

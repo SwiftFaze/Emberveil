@@ -1,9 +1,14 @@
 package com.swiftfaze.veil.ui.widget;
 
-import javax.swing.JLabel;
+import com.swiftfaze.veil.input.Keybindings;
+
+import javax.swing.*;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 
 public class SliderWidget extends Widget {
+    private static final int BAR_LENGTH = 10;
+
     private final int min;
     private final int max;
     private final int step;
@@ -17,13 +22,20 @@ public class SliderWidget extends Widget {
         this.value = Math.max(min, Math.min(max, initialValue));
 
         setLayout(new BorderLayout());
-        display = new JLabel(String.valueOf(value));
+        display = new JLabel(renderBar());
         display.setForeground(WidgetTheme.NORMAL_TEXT);
+        display.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
         add(display, BorderLayout.CENTER);
+
+        bindKeys();
     }
 
     public int getValue() {
         return value;
+    }
+
+    public String getDisplayText() {
+        return renderBar();
     }
 
     public void moveRight() {
@@ -42,7 +54,38 @@ public class SliderWidget extends Widget {
         }
     }
 
+    private void bindKeys() {
+        InputMap inputMap = getInputMap(WHEN_FOCUSED);
+        ActionMap actionMap = getActionMap();
+
+        inputMap.put(Keybindings.MENU_LEFT, "slider-left");
+        inputMap.put(Keybindings.MENU_RIGHT, "slider-right");
+
+        actionMap.put("slider-left", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moveLeft();
+            }
+        });
+        actionMap.put("slider-right", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moveRight();
+            }
+        });
+    }
+
     private void updateDisplay() {
-        display.setText(String.valueOf(value));
+        display.setText(renderBar());
+    }
+
+    private String renderBar() {
+        int range = max - min;
+        int filled = range == 0 ? BAR_LENGTH : (value - min) * BAR_LENGTH / range;
+        StringBuilder bar = new StringBuilder();
+        for (int i = 0; i < BAR_LENGTH; i++) {
+            bar.append(i < filled ? '=' : '-');
+        }
+        return "[" + bar + "] " + value;
     }
 }
