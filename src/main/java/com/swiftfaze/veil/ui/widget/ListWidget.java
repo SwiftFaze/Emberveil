@@ -114,5 +114,8 @@ public class ListWidget<T> extends Widget {
                     i == selectedIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT
             );
         }
+        if (selectedIndex < labels.size()) {
+            scrollRectToVisible(labels.get(selectedIndex).getBounds());
+        }
     }
 }

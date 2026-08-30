@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class InventoryPanel extends PopupWidget {
 
@@ -22,10 +21,20 @@ public class InventoryPanel extends PopupWidget {
         JLabel titleLabel = new JLabel("Inventory");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         addContent(titleLabel);
 
         itemList = new ListWidget<>(Item::getName);
-        addContent(itemList);
+
+        JScrollPane scrollPane = new JScrollPane(itemList);
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setPreferredSize(new Dimension(400, 280));
+        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        addContent(scrollPane);
     }
 
     public void showItems(List<Item> items) {
