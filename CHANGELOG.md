@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0-beta.2](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.1...v0.5.0-beta.2) (2026-08-30)
+
+
+### Features
+
+* add uncle-bob-craft skill and wire it into Step 4 self-check ([034fd34](https://github.com/SwiftFaze/Veil/commit/034fd348402a27ef8bd18c788fe58d3341ebe8a0))
+
 ## [0.5.0-beta.1](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta...v0.5.0-beta.1) (2026-08-30)
 
 
