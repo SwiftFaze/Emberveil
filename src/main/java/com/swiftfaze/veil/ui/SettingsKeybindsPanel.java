@@ -16,6 +16,11 @@ public class SettingsKeybindsPanel extends JPanel {
     private final Consumer<String> onBack;
     private final Map<String, String> keyBindings;
 
+    private boolean footerFocused = false;
+    private int footerIndex = 0;
+    private boolean popupOpen = false;
+    private static final List<String> FOOTER_ACTIONS = List.of("Apply", "Cancel", "Go back");
+
     public SettingsKeybindsPanel(Consumer<String> onBack) {
         this.onBack = onBack;
         this.actions = List.of("Move up", "Move down", "Move left", "Move right", "Toggle inventory");
@@ -45,21 +50,39 @@ public class SettingsKeybindsPanel extends JPanel {
     }
 
     public void moveUp() {
-        if (selectedIndex > 0) {
-            selectedIndex--;
-            refresh();
+        if (footerFocused) {
+            if (footerIndex > 0) {
+                footerIndex--;
+                refresh();
+            }
+        } else {
+            if (selectedIndex > 0) {
+                selectedIndex--;
+                refresh();
+            }
         }
     }
 
     public void moveDown() {
-        if (selectedIndex < actions.size() - 1) {
-            selectedIndex++;
-            refresh();
+        if (footerFocused) {
+            if (footerIndex < FOOTER_ACTIONS.size() - 1) {
+                footerIndex++;
+                refresh();
+            }
+        } else {
+            if (selectedIndex < actions.size() - 1) {
+                selectedIndex++;
+                refresh();
+            }
         }
     }
 
     public void confirm() {
-        // Open press-any-key popup (mocked in tests)
+        if (footerFocused) {
+            onBack.accept("settings");
+        } else {
+            popupOpen = true;
+        }
     }
 
     public void back() {
@@ -72,7 +95,27 @@ public class SettingsKeybindsPanel extends JPanel {
 
     public void updateKeyForAction(String action, String key) {
         keyBindings.put(action, key);
+        popupOpen = false;
         refresh();
+    }
+
+    public boolean isPopupOpen() {
+        return popupOpen;
+    }
+
+    public String getHighlightedFooterAction() {
+        return FOOTER_ACTIONS.get(footerIndex);
+    }
+
+    public void highlightFooterAction(String action) {
+        footerFocused = true;
+        footerIndex = FOOTER_ACTIONS.indexOf(action);
+    }
+
+    public void pressKey(String key) {
+        if (popupOpen) {
+            updateKeyForAction(getHighlightedActionName(), key);
+        }
     }
 
     private void refresh() {

@@ -170,14 +170,18 @@ loop. `SettingsScreenPanel` is a navigable, back-able list of nine settings
 items: Brightness and Volume (both sliders), Fullscreen (radio toggle:
 Windowed/Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds
 (opens the dedicated keybinds page), and placeholder action items (Open Game
-Folder, Open Mod Folder, About, Reset to Defaults). Left/Right adjusts sliders
-and radio selections; Up/Down navigates the menu; Enter triggers actions;
-Escape returns to the title screen. `SettingsKeybindsPanel` lists every
-rebindable action (Move up/down/left/right, Toggle inventory) with its current
-key, allowing navigation and confirmation—actual rebinding is visual only (no
-persistent state). Both settings panels use reflection to access
-`RadioGroupWidget`'s private fields to cycle selected options when Left/Right
-are pressed. F5 still resets the entire game (back to the title screen).
+Folder, Open Mod Folder, About, Reset to Defaults). Left/Right calls
+`moveLeft()`/`moveRight()` on sliders or radio groups, which updates the
+highlighted option; Up/Down navigates the menu; Enter triggers actions;
+Escape returns to the title screen. Settings rows display their current value
+via `getHighlightedOption()` for radio groups, so Left/Right changes are
+reflected immediately. `SettingsKeybindsPanel` lists every rebindable action
+(Move up/down/left/right, Toggle inventory) with its current key, allows
+navigation between actions and a footer (Apply/Cancel/Go back), opens a
+"press any key" popup on Enter to capture an arbitrary key as a new binding,
+and supports left/right footer navigation; actual rebinding is visual only
+(no persistent state). F5 still resets the entire game (back to the title
+screen).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable

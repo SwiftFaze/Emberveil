@@ -102,6 +102,12 @@ public class UiComponentFrameworkSteps {
 
     @When("the {string} key is pressed")
     public void theKeyIsPressed(String key) {
+        // Route arbitrary keys to keybinds popup if it's open
+        if (keybindsPanel != null && keybindsPanel.isPopupOpen()) {
+            keybindsPanel.pressKey(key);
+            return;
+        }
+
         switch (key) {
             case "Up" -> fireUpKey();
             case "Down" -> fireDownKey();
@@ -115,7 +121,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireUpKey() {
-        if (settingsScreenPanel != null) {
+        if (keybindsPanel != null) {
+            keybindsPanel.moveUp();
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveUp();
         } else if (titleScreenPanel != null) {
             titleScreenPanel.moveUp();
@@ -131,7 +139,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireDownKey() {
-        if (settingsScreenPanel != null) {
+        if (keybindsPanel != null) {
+            keybindsPanel.moveDown();
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveDown();
         } else if (titleScreenPanel != null) {
             titleScreenPanel.moveDown();
@@ -179,7 +189,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireEnterKey() {
-        if (settingsScreenPanel != null) {
+        if (keybindsPanel != null) {
+            keybindsPanel.confirm();
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.confirm();
         } else if (titleScreenPanel != null) {
             titleScreenPanel.confirm();
@@ -223,7 +235,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireEscapeKey() {
-        if (settingsScreenPanel != null) {
+        if (keybindsPanel != null) {
+            keybindsPanel.back();
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.back();
         } else if (eastPanel != null) {
             if (eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
@@ -920,13 +934,16 @@ public class UiComponentFrameworkSteps {
 
     @Then("the press-any-key popup is shown")
     public void thePressAnyKeyPopupIsShown() {
-        // Popup is mocked in tests
-        assertTrue(true);
+        assertTrue(keybindsPanel.isPopupOpen());
     }
 
     @Then("the press-any-key popup is closed")
     public void thePressAnyKeyPopupIsClosed() {
-        // Popup is mocked in tests
-        assertTrue(true);
+        assertFalse(keybindsPanel.isPopupOpen());
+    }
+
+    @Given("{string} is highlighted in the footer")
+    public void itemIsHighlightedInFooter(String action) {
+        keybindsPanel.highlightFooterAction(action);
     }
 }

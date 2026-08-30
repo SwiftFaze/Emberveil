@@ -6,7 +6,6 @@ import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,7 +31,7 @@ public class SettingsScreenPanel extends JPanel {
             if (widget instanceof SliderWidget slider) {
                 return String.valueOf(slider.getValue());
             } else if (widget instanceof RadioGroupWidget<?> radio) {
-                return String.valueOf(radio.getSelectedOption());
+                return String.valueOf(radio.getHighlightedOption());
             }
             return "";
         }
@@ -41,7 +40,7 @@ public class SettingsScreenPanel extends JPanel {
             if (widget instanceof SliderWidget slider) {
                 return String.valueOf(slider.getValue());
             } else if (widget instanceof RadioGroupWidget<?> radio) {
-                return String.valueOf(radio.getSelectedOption());
+                return String.valueOf(radio.getHighlightedOption());
             }
             return "";
         }
@@ -105,51 +104,20 @@ public class SettingsScreenPanel extends JPanel {
         SettingsRow row = rows.get(selectedIndex);
         if (row.widget instanceof SliderWidget slider) {
             slider.moveLeft();
-            refresh();
         } else if (row.widget instanceof RadioGroupWidget<?> radio) {
-            // For radio groups, cycle to the previous selected option
-            int nextIdx = getNextSelectedIndex(radio, false);
-            radio.selectOption(nextIdx);
-            refresh();
+            radio.moveLeft();
         }
-    }
-
-    private int getNextSelectedIndex(RadioGroupWidget<?> radio, boolean forward) {
-        try {
-            Field selectedIdxField = RadioGroupWidget.class.getDeclaredField("selectedIndex");
-            selectedIdxField.setAccessible(true);
-            int currentIdx = selectedIdxField.getInt(radio);
-
-            Field optionsField = RadioGroupWidget.class.getDeclaredField("options");
-            optionsField.setAccessible(true);
-            List<?> options = (List<?>) optionsField.get(radio);
-
-            if (options.isEmpty()) return 0;
-
-            int nextIdx;
-            if (forward) {
-                nextIdx = (currentIdx + 1) % options.size();
-            } else {
-                nextIdx = (currentIdx - 1 + options.size()) % options.size();
-            }
-            return nextIdx;
-        } catch (Exception e) {
-            // Fallback if reflection fails
-            return 0;
-        }
+        refresh();
     }
 
     public void moveRight() {
         SettingsRow row = rows.get(selectedIndex);
         if (row.widget instanceof SliderWidget slider) {
             slider.moveRight();
-            refresh();
         } else if (row.widget instanceof RadioGroupWidget<?> radio) {
-            // For radio groups, cycle to the next selected option
-            int nextIdx = getNextSelectedIndex(radio, true);
-            radio.selectOption(nextIdx);
-            refresh();
+            radio.moveRight();
         }
+        refresh();
     }
 
     public void confirm() {
@@ -191,7 +159,7 @@ public class SettingsScreenPanel extends JPanel {
     public String getRadioValue(String itemName) {
         for (SettingsRow row : rows) {
             if (row.name.equals(itemName) && row.widget instanceof RadioGroupWidget<?> radio) {
-                return String.valueOf(radio.getSelectedOption());
+                return String.valueOf(radio.getHighlightedOption());
             }
         }
         return "";
