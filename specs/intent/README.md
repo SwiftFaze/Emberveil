@@ -36,3 +36,4 @@ Index table.
 | `data-driven-quest.md` | [#52](https://github.com/SwiftFaze/Veil/issues/52), phase 5 of [#26](https://github.com/SwiftFaze/Veil/issues/26) |
 | `installer-mods-bundling.md` | [#62](https://github.com/SwiftFaze/Veil/issues/62) (follow-up to [#48](https://github.com/SwiftFaze/Veil/issues/48)) |
 | `ui-component-framework.md` | [#36](https://github.com/SwiftFaze/Veil/issues/36) (table/radio/form-fields split into [#35](https://github.com/SwiftFaze/Veil/issues/35); couples with [#26](https://github.com/SwiftFaze/Veil/issues/26) phase 4) |
+| `ui-widget-library.md` | [#35](https://github.com/SwiftFaze/Veil/issues/35) (split out of [#36](https://github.com/SwiftFaze/Veil/issues/36); builds on its framework) |

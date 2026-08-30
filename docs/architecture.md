@@ -142,35 +142,46 @@ directly.
 A small reusable widget framework lives in `ui/widget/`: `Widget` (base
 `JPanel` — black background, focusable), `FocusManager` (a modal-open
 flag a popup's content can consult), `WidgetTheme` (shared
-selected/normal/background colors), `ListWidget<T>` (a keyboard-navigable,
+selected/normal/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
 optionally non-wrapping list over a pluggable data source, with
 `onConfirm`/`onSelectionChange` callbacks and auto-scroll-into-view of the
-selected row), `ButtonWidget` (an Enter-confirmable label), `PopupWidget`
-(a dismissible overlay with a Close button; `open()`/`dismiss()` manage
-visibility and focus, Escape or the Close button dismiss it, and
-`onUp()`/`onDown()` hooks — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`,
-so they fire no matter which popup child has real Swing focus — let a
-subclass wire keyboard navigation to its own content), `FillLayout` (a
-`LayoutManager` stretching every child to the parent's full bounds, for
-`JLayeredPane` overlays), and `TerminalScrollBarUI` (a flat black-track/
-solid-thumb `BasicScrollBarUI` replacing the platform look-and-feel's
-default scrollbar chrome).
+selected row), `ButtonWidget` (an Enter-confirmable label), `TableWidget<T>`
+(a keyboard-navigable row/column table with row-level confirm), `RadioGroupWidget<T>`
+(a single-select radio group, vertical by default or horizontal on demand),
+`PatternFieldWidget` (a text-input field validating its content against a
+caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
+Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
+Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
+— bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
+popup child has real Swing focus — let a subclass wire keyboard navigation to
+its own content), `FillLayout` (a `LayoutManager` stretching every child to the
+parent's full bounds, for `JLayeredPane` overlays), and `TerminalScrollBarUI`
+(a flat black-track/solid-thumb `BasicScrollBarUI` replacing the platform
+look-and-feel's default scrollbar chrome).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable
 via a `JScrollPane` styled with `TerminalScrollBarUI`, non-wrapping) and a
-details pane on the right (name/type/slot/damage range/per-effect stat
-bonuses, refreshed live off the list's `onSelectionChange` hook), divided
-by a 2px light-gray line matching the rest of the UI's border style. It's
+details pane on the right (name/type/slot/damage range/effects table,
+refreshed live off the list's `onSelectionChange` hook), divided by a 2px
+light-gray line matching the rest of the UI's border style. The effects are
+rendered as a `TableWidget<Item.Effect>` with two columns (stat and value),
+row-highlighted when selected. Navigation can be switched between the item
+list and the effects table via Left/Right keys; Up/Down then navigate within
+the current pane. Pressing D (Drop) from any pane opens a nested
+`DropConfirmationPopup` (a full-screen `PopupWidget` containing a horizontal
+`RadioGroupWidget<String>` asking "Drop item?", defaulting to "No" highlighted),
+which closes on any selection or Escape without actually removing items. It's
 populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
 constructor) rather than loading mod content itself, mirroring
 `PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
 inside `EastPanel`'s own layout, the popup is promoted to window level:
-`ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a
-`JLayeredPane` with a `mainArea` panel (`GamePanel` + `EastPanel`) at
-`DEFAULT_LAYER` and the popup at `POPUP_LAYER` above it, both stretched to
-match via `FillLayout` — so opening it covers the whole game view and
-sidebar, not just a slice of the sidebar. `Main.java` wires that layered
+`ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a `JLayeredPane`
+with a `mainArea` panel (`GamePanel` + `EastPanel`) at `DEFAULT_LAYER`, the
+inventory popup at `POPUP_LAYER` above it, and the drop-confirmation popup at
+`DRAG_LAYER` (even higher), all stretched to match via `FillLayout` — so
+opening the inventory covers the whole game view and sidebar, and the
+drop-confirmation popup covers that in turn. `Main.java` wires that layered
 pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
 `EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by

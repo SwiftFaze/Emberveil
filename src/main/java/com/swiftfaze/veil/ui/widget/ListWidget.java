@@ -3,6 +3,7 @@ package com.swiftfaze.veil.ui.widget;
 import com.swiftfaze.veil.input.Keybindings;
 
 import javax.swing.*;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,11 +114,19 @@ public class ListWidget<T> extends Widget {
 
         for (T item : items) {
             JLabel label = new JLabel(itemRenderer.apply(item));
-            label.setForeground(WidgetTheme.NORMAL_TEXT);
+            label.setOpaque(true);
             label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
             label.setAlignmentX(LEFT_ALIGNMENT);
+            label.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
             labels.add(label);
             add(label);
+        }
+
+        // Stretch each row to the widget's full width so the selected-row highlight fills the
+        // whole row, not just the space behind its text - computed after every label has its
+        // final text/border, since an empty label's preferred size would be wrong.
+        for (JLabel label : labels) {
+            label.setMaximumSize(new Dimension(Integer.MAX_VALUE, label.getPreferredSize().height));
         }
 
         refreshHighlight();
@@ -127,9 +136,7 @@ public class ListWidget<T> extends Widget {
 
     private void refreshHighlight() {
         for (int i = 0; i < labels.size(); i++) {
-            labels.get(i).setForeground(
-                    i == selectedIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT
-            );
+            WidgetTheme.applySelection(labels.get(i), i == selectedIndex);
         }
         if (selectedIndex < labels.size()) {
             scrollRectToVisible(labels.get(selectedIndex).getBounds());

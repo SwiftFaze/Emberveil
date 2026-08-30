@@ -1,21 +1,41 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.items.Item;
+import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
+import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.TerminalScrollBarUI;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.List;
 
 public class InventoryPanel extends PopupWidget {
+
+    private record FieldRow(String field, String value) {
+    }
+
+    /**
+     * Which region of the popup currently owns Up/Down (real Swing focus always stays on the
+     * inherited Close button — see PopupWidget). The details pane (FIELDS, then EFFECTS) is one
+     * continuous region: Down falls off the end of one table into the start of the next, Up does
+     * the reverse, and Left from either always exits straight back to ITEM_LIST.
+     */
+    private enum Focus { ITEM_LIST, FIELDS, EFFECTS }
 
     private static final int BODY_HEIGHT = 280;
 
     private final ListWidget<Item> itemList;
     private final JPanel detailsPanel;
+    private final JScrollPane detailsScrollPane;
+    private final TableWidget<FieldRow> fieldsTable;
+    private final JLabel effectsLabel;
+    private final TableWidget<Item.Effect> effectsTable;
+    private final DropConfirmationPopup dropConfirmationPopup;
+    private Focus focus = Focus.ITEM_LIST;
 
     public InventoryPanel() {
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
@@ -29,13 +49,35 @@ public class InventoryPanel extends PopupWidget {
         itemList.setOnSelectionChange(this::updateDetails);
 
         Border detailsDivider = BorderFactory.createMatteBorder(0, 2, 0, 0, Color.LIGHT_GRAY);
-        Border detailsPadding = BorderFactory.createEmptyBorder(0, 10, 0, 0);
+        Border detailsPadding = BorderFactory.createEmptyBorder(4, 10, 0, 0);
         detailsPanel = new JPanel();
         detailsPanel.setBackground(Color.BLACK);
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
         detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
 
-        addContent(buildBody(buildScrollPane(itemList), detailsPanel));
+        fieldsTable = new TableWidget<>(List.of("Field", "Value"), List.of(FieldRow::field, FieldRow::value));
+        fieldsTable.setWrapAround(false);
+        fieldsTable.setSelectable(false);
+        fieldsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+        fieldsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        effectsLabel = makeEffectsLabel();
+
+        effectsTable = new TableWidget<>(
+                List.of("Type", "Stat", "Calc"),
+                List.of(e -> e.type(), Item.Effect::stat, Item.Effect::calc)
+        );
+        effectsTable.setWrapAround(false);
+        effectsTable.setSelectable(false);
+        effectsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+        effectsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        dropConfirmationPopup = new DropConfirmationPopup();
+        dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
+
+        detailsScrollPane = buildScrollPane(detailsPanel);
+        addContent(buildBody(buildScrollPane(itemList), detailsScrollPane));
+        bindDropKey();
     }
 
     public void showItems(List<Item> items) {
@@ -50,14 +92,91 @@ public class InventoryPanel extends PopupWidget {
         return itemList.getSelectedItem();
     }
 
+    public TableWidget<FieldRow> getFieldsTable() {
+        return fieldsTable;
+    }
+
+    public TableWidget<Item.Effect> getEffectsTable() {
+        return effectsTable;
+    }
+
+    public DropConfirmationPopup getDropConfirmationPopup() {
+        return dropConfirmationPopup;
+    }
+
+    public boolean isFieldsTableFocused() {
+        return focus == Focus.FIELDS;
+    }
+
+    public boolean isEffectsTableFocused() {
+        return focus == Focus.EFFECTS;
+    }
+
+    public boolean isItemListFocused() {
+        return focus == Focus.ITEM_LIST;
+    }
+
     @Override
     protected void onUp() {
-        itemList.moveUp();
+        switch (focus) {
+            case ITEM_LIST -> itemList.moveUp();
+            case FIELDS -> fieldsTable.moveUp();
+            case EFFECTS -> {
+                if (effectsTable.isAtFirstRow()) {
+                    enterFields();
+                    fieldsTable.moveToEnd();
+                } else {
+                    effectsTable.moveUp();
+                }
+            }
+        }
     }
 
     @Override
     protected void onDown() {
-        itemList.moveDown();
+        switch (focus) {
+            case ITEM_LIST -> itemList.moveDown();
+            case FIELDS -> {
+                if (fieldsTable.isAtLastRow()) {
+                    if (effectsTable.getRowCount() > 0) {
+                        enterEffects();
+                        effectsTable.moveToStart();
+                    }
+                } else {
+                    fieldsTable.moveDown();
+                }
+            }
+            case EFFECTS -> effectsTable.moveDown();
+        }
+    }
+
+    @Override
+    protected void onLeft() {
+        if (focus != Focus.ITEM_LIST) {
+            focus = Focus.ITEM_LIST;
+            fieldsTable.setSelectable(false);
+            effectsTable.setSelectable(false);
+        }
+    }
+
+    @Override
+    protected void onRight() {
+        if (focus == Focus.ITEM_LIST) {
+            enterFields();
+            fieldsTable.moveToStart();
+        }
+    }
+
+    private void enterFields() {
+        focus = Focus.FIELDS;
+        fieldsTable.setSelectable(true);
+        effectsTable.setSelectable(false);
+    }
+
+    private void enterEffects() {
+        focus = Focus.EFFECTS;
+        fieldsTable.setSelectable(false);
+        effectsTable.setSelectable(true);
     }
 
     private JLabel makeTitleLabel() {
@@ -66,6 +185,15 @@ public class InventoryPanel extends PopupWidget {
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         return titleLabel;
+    }
+
+    private JLabel makeEffectsLabel() {
+        JLabel label = new JLabel("Effects:");
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
+        return label;
     }
 
     private JScrollPane buildScrollPane(JComponent view) {
@@ -92,30 +220,40 @@ public class InventoryPanel extends PopupWidget {
 
     private void updateDetails(Item item) {
         detailsPanel.removeAll();
-        for (String line : detailLines(item)) {
-            detailsPanel.add(detailLabel(line));
+        focus = Focus.ITEM_LIST;
+        if (item == null) {
+            detailsPanel.add(detailLabel("(no item selected)"));
+        } else {
+            fieldsTable.setRows(fieldRows(item));
+            fieldsTable.setSelectable(false);
+            effectsTable.setRows(item.getEffects());
+            effectsTable.setSelectable(false);
+            detailsPanel.add(fieldsTable);
+            detailsPanel.add(effectsLabel);
+            detailsPanel.add(effectsTable);
         }
         detailsPanel.revalidate();
         detailsPanel.repaint();
+        // Reset the viewport to the top on every rebuild — otherwise switching items while
+        // scrolled down leaves the new item's content (and its header row) starting mid-scroll,
+        // since JScrollPane doesn't do this automatically when its view's content changes.
+        detailsScrollPane.getViewport().setViewPosition(new Point(0, 0));
     }
 
-    private List<String> detailLines(Item item) {
-        if (item == null) {
-            return List.of("(no item selected)");
-        }
-        List<String> lines = new java.util.ArrayList<>(List.of(
-                item.getName(),
-                "Type: " + item.getType(),
-                "Slot: " + item.getSlot()
+    private List<FieldRow> fieldRows(Item item) {
+        List<FieldRow> rows = new java.util.ArrayList<>(List.of(
+                new FieldRow("ID", item.getId()),
+                new FieldRow("Name", item.getName()),
+                new FieldRow("Glyph", String.valueOf(item.getGlyph())),
+                new FieldRow("Type", item.getType()),
+                new FieldRow("Slot", item.getSlot())
         ));
         Item.BaseDamage damage = item.getBaseDamage();
         if (damage.max() > 0) {
-            lines.add("Damage: " + damage.min() + "-" + damage.max());
+            rows.add(new FieldRow("Base Damage (Min)", String.valueOf(damage.min())));
+            rows.add(new FieldRow("Base Damage (Max)", String.valueOf(damage.max())));
         }
-        for (Item.Effect effect : item.getEffects()) {
-            lines.add("+" + effect.stat() + " (" + effect.calc() + ")");
-        }
-        return lines;
+        return rows;
     }
 
     private JLabel detailLabel(String text) {
@@ -124,5 +262,18 @@ public class InventoryPanel extends PopupWidget {
         label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
+    }
+
+    private void bindDropKey() {
+        InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        ActionMap actionMap = getActionMap();
+        inputMap.put(Keybindings.DROP_ITEM, Keybindings.ACTION_DROP_ITEM);
+        actionMap.put(Keybindings.ACTION_DROP_ITEM, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                if (itemList.getSelectedItem() != null) {
+                    dropConfirmationPopup.open();
+                }
+            }
+        });
     }
 }

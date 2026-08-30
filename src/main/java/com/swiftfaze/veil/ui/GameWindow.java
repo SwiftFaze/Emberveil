@@ -27,6 +27,7 @@ public class GameWindow {
 
         layeredPane.add(mainArea, JLayeredPane.DEFAULT_LAYER);
         layeredPane.add(eastPanel.getInventoryPanel(), JLayeredPane.POPUP_LAYER);
+        layeredPane.add(eastPanel.getInventoryPanel().getDropConfirmationPopup(), JLayeredPane.DRAG_LAYER);
 
         return layeredPane;
     }

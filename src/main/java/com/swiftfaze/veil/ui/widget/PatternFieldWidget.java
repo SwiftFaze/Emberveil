@@ -1,0 +1,314 @@
+package com.swiftfaze.veil.ui.widget;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
+import java.util.regex.Pattern;
+
+/**
+ * Material "outlined text field"-style widget: unfocused shows just a bottom
+ * border with its label floating above; focused shows a full outline with
+ * the label breaking the top edge (via {@link TitledBorder}, which already
+ * implements exactly this "label interrupts the border line" look). Border
+ * (and label) color tracks state: white while empty, red/green once there's
+ * input, matching whether it fails or matches the pattern.
+ * <p>
+ * Backed by a real {@link JTextField} (styled to match, not a plain label)
+ * rather than a hand-rolled StringBuilder + KeyListener, so cursor placement,
+ * Left/Right movement, Home/End, Ctrl+A select-all, click-to-position, and
+ * selection-replace-on-type all come from Swing's own well-tested text
+ * component for free — a {@link DocumentFilter} is the only custom piece,
+ * restricting what characters can actually land in the field.
+ */
+public class PatternFieldWidget extends Widget {
+    private static final int UNFOCUSED_BORDER_WIDTH = 1;
+    // Swing line/matte borders only take integer pixel widths, so 1px is as thin as either state
+    // can get — focus is conveyed by the outline shape (full box vs. bottom-only) and color, not
+    // by extra thickness.
+    private static final int FOCUSED_BORDER_WIDTH = 1;
+    private static final Font LABEL_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+    // Fixed and generous, not derived from any child's own metrics — border width and whether a
+    // TitledBorder's reserved label space is present both vary with state, and a tightly-computed
+    // height left no slack for that, squeezing the content label's area toward zero.
+    private static final int FIELD_HEIGHT = 40;
+    private static final int LABELED_FIELD_HEIGHT = 56;
+
+    private final Pattern pattern;
+    private final JTextField textField;
+    private final String fieldLabel;
+    private boolean hasFocus = false;
+
+    public PatternFieldWidget(String pattern) {
+        this(pattern, null);
+    }
+
+    public PatternFieldWidget(String pattern, String fieldLabel) {
+        this.pattern = Pattern.compile(pattern);
+        this.fieldLabel = fieldLabel;
+        this.textField = new JTextField();
+        setFocusable(false); // the text field is the real focus target, not this outer panel
+
+        textField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        textField.setForeground(WidgetTheme.NORMAL_TEXT);
+        textField.setBackground(WidgetTheme.BACKGROUND);
+        textField.setCaretColor(WidgetTheme.NORMAL_TEXT);
+        textField.setCaret(new BlockCaret());
+        textField.setSelectionColor(WidgetTheme.SELECTED_HIGHLIGHT);
+        textField.setSelectedTextColor(WidgetTheme.SELECTED_TEXT);
+        textField.setBorder(BorderFactory.createEmptyBorder());
+        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new AllowedCharacterFilter());
+        textField.getDocument().addDocumentListener(new PatternFieldDocumentListener());
+        textField.addFocusListener(new PatternFieldFocusListener());
+        bindEnterToNextField();
+
+        setLayout(new BorderLayout());
+        setAlignmentX(LEFT_ALIGNMENT);
+        add(textField, BorderLayout.CENTER);
+        updateAppearance();
+
+        // Stretches to fill whatever width its container offers — matches every other widget's
+        // "full width" treatment (ListWidget's rows, TableWidget's row panels).
+        int height = fieldLabel != null ? LABELED_FIELD_HEIGHT : FIELD_HEIGHT;
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
+        setPreferredSize(new Dimension(200, height));
+    }
+
+    @Override
+    public boolean requestFocusInWindow() {
+        return textField.requestFocusInWindow();
+    }
+
+    public String getInput() {
+        return textField.getText();
+    }
+
+    public boolean patternIsValid() {
+        return pattern.matcher(textField.getText()).matches();
+    }
+
+    /**
+     * Inserts at the current cursor position, replacing any active selection — same as real
+     * typing. Existing callers that type into a fresh/empty field (the common case) see the same
+     * append-at-the-end result as before, since the cursor naturally sits at the end there.
+     */
+    public void typeCharacters(String chars) {
+        textField.replaceSelection(chars);
+        // DefaultCaret doesn't reliably auto-advance past a programmatic replaceSelection() on a
+        // component that's never been realized/shown (as in headless unit/Cucumber tests) - real
+        // interactive typing (via the field's own native key handling once it has real focus in
+        // a real window) doesn't need this, only this programmatic test-helper path does.
+        textField.setCaretPosition(textField.getDocument().getLength());
+    }
+
+    /**
+     * Deletes the selection if one is active, else the character immediately before the cursor —
+     * same as a real Backspace press. Called "deleteLastCharacter" for its original meaning
+     * (nothing had moved the cursor away from the end, so backspace-at-cursor and delete-the-
+     * actual-last-character were the same operation); now that the cursor can move, it deletes at
+     * the cursor, matching what Backspace does everywhere else.
+     */
+    public void deleteLastCharacter() {
+        int selectionStart = textField.getSelectionStart();
+        int selectionEnd = textField.getSelectionEnd();
+        if (selectionStart != selectionEnd) {
+            textField.replaceSelection("");
+            return;
+        }
+        int caret = textField.getCaretPosition();
+        if (caret == 0) {
+            return;
+        }
+        try {
+            textField.getDocument().remove(caret - 1, 1);
+        } catch (BadLocationException ignored) {
+            // caret - 1 is always a valid offset here (caret > 0, just checked)
+        }
+    }
+
+    private boolean isAppendable(char c) {
+        // Enter (\n, \r) satisfies Character.isWhitespace() just like a space does, so without
+        // this exclusion it could be inserted as a literal newline — a character no single-line
+        // pattern ever matches. Real Enter presses never reach here (see bindEnterToNextField),
+        // but the filter guards direct/programmatic insertion too.
+        if (c == '\n' || c == '\r') {
+            return false;
+        }
+        return Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c);
+    }
+
+    private boolean isPrintableSpecial(char c) {
+        return c != '\t' && c >= 32 && c <= 126;
+    }
+
+    private void bindEnterToNextField() {
+        InputMap inputMap = textField.getInputMap(WHEN_FOCUSED);
+        ActionMap actionMap = textField.getActionMap();
+        // Enter moves to the next field, like Tab, rather than JTextField's default (fire an
+        // ActionEvent, no focus change) - standard single-line-field behavior.
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "next-field");
+        actionMap.put("next-field", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) { textField.transferFocus(); }
+        });
+    }
+
+    private void updateAppearance() {
+        Color stateColor = stateColor();
+        textField.setForeground(getInput().isEmpty() ? WidgetTheme.NORMAL_TEXT : stateColor);
+        setBorder(buildBorder(stateColor));
+    }
+
+    private Color stateColor() {
+        if (getInput().isEmpty()) {
+            return WidgetTheme.NORMAL_TEXT;
+        }
+        return patternIsValid() ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.INVALID_HIGHLIGHT;
+    }
+
+    private Border buildBorder(Color color) {
+        // Unfocused: bottom line only. Focused: full outline. TitledBorder reserves the same
+        // label space either way, but only visibly "breaks" a line that's actually drawn there —
+        // so the label just floats above the field when unfocused (no top line to interrupt),
+        // and sits on the top edge, breaking it, once focused. Exactly the Material "outlined
+        // field" look, with no custom border-painting/gap-cutting logic needed.
+        Border outline = hasFocus
+                ? BorderFactory.createLineBorder(color, FOCUSED_BORDER_WIDTH)
+                : BorderFactory.createMatteBorder(0, 0, UNFOCUSED_BORDER_WIDTH, 0, color);
+        Border padded = BorderFactory.createCompoundBorder(outline, BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        if (fieldLabel == null) {
+            return padded;
+        }
+        return BorderFactory.createTitledBorder(
+                padded, fieldLabel, TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, LABEL_FONT, color);
+    }
+
+    /**
+     * A solid block cursor (like a terminal/console) instead of Swing's default thin vertical
+     * line — a different paint shape, otherwise using {@link DefaultCaret}'s own blink-timer
+     * machinery as-is.
+     */
+    private static class BlockCaret extends DefaultCaret {
+        private static final int BLINK_RATE_MS = 500;
+
+        BlockCaret() {
+            // The blink rate Swing normally applies comes from the look-and-feel installing its
+            // *own* default caret onto a component; replacing that caret with this one (via
+            // JTextField.setCaret) skips that step entirely, leaving DefaultCaret's own default
+            // (0 - the blink timer never starts, so it just renders solid) unless set explicitly.
+            setBlinkRate(BLINK_RATE_MS);
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            if (!isVisible()) {
+                return;
+            }
+            JTextComponent component = getComponent();
+            if (component == null) {
+                return;
+            }
+            try {
+                int dot = getDot();
+                Rectangle2D caretBounds = component.modelToView2D(dot);
+                FontMetrics metrics = component.getFontMetrics(component.getFont());
+                int x = (int) caretBounds.getX();
+                int y = (int) caretBounds.getY();
+                int charWidth = metrics.charWidth('M');
+
+                g.setColor(component.getCaretColor());
+                g.fillRect(x, y, charWidth, (int) caretBounds.getHeight());
+
+                // A solid block would otherwise paint straight over whatever character sits at
+                // the cursor position — redraw it on top, in the field's background color, so it
+                // stays readable against the block (the usual terminal-cursor "invert" look).
+                if (dot < component.getDocument().getLength()) {
+                    String charUnderCursor = component.getDocument().getText(dot, 1);
+                    g.setColor(component.getBackground());
+                    g.setFont(component.getFont());
+                    g.drawString(charUnderCursor, x, y + metrics.getAscent());
+                }
+            } catch (BadLocationException ignored) {
+                // Nothing at this position to draw a cursor for.
+            }
+        }
+
+        @Override
+        protected synchronized void damage(Rectangle r) {
+            if (r == null) {
+                return;
+            }
+            JTextComponent component = getComponent();
+            FontMetrics metrics = component.getFontMetrics(component.getFont());
+            x = r.x;
+            y = r.y;
+            width = metrics.charWidth('M');
+            height = r.height;
+            repaint();
+        }
+    }
+
+    private class AllowedCharacterFilter extends DocumentFilter {
+        @Override
+        public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr)
+                throws BadLocationException {
+            super.insertString(fb, offset, filtered(text), attr);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                throws BadLocationException {
+            super.replace(fb, offset, length, filtered(text), attrs);
+        }
+
+        private String filtered(String text) {
+            if (text == null) {
+                return "";
+            }
+            StringBuilder allowed = new StringBuilder();
+            for (char c : text.toCharArray()) {
+                if (isAppendable(c)) {
+                    allowed.append(c);
+                }
+            }
+            return allowed.toString();
+        }
+    }
+
+    private class PatternFieldDocumentListener implements DocumentListener {
+        @Override
+        public void insertUpdate(DocumentEvent e) { updateAppearance(); }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) { updateAppearance(); }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) { updateAppearance(); }
+    }
+
+    private class PatternFieldFocusListener implements FocusListener {
+        @Override
+        public void focusGained(FocusEvent e) {
+            hasFocus = true;
+            updateAppearance();
+        }
+
+        @Override
+        public void focusLost(FocusEvent e) {
+            hasFocus = false;
+            updateAppearance();
+        }
+    }
+}
