@@ -10,7 +10,7 @@
 
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` file)
-- [ ] Approved by human
+- [x] Approved by human
 - [ ] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [ ] Acceptance tests passing
