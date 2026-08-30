@@ -422,3 +422,55 @@ next screen that needs them.
   isolated `ui-widget-table.feature` scenarios are unaffected.
   Affects: Scope, Desired behavior (details-pane structure), and
   `ui-widget-table.feature` (new scenario for the fields table).
+
+- Q: (Surfaced during a second round of Step 4.5 manual playtest, after
+  the field-value table restructure above) Three more issues: (1) the
+  effects table's first row showed the selected-row highlight color by
+  default, even before the details pane had navigation focus at all;
+  (2) pressing Right only worked when the selected item had at least
+  one effect — items without effects couldn't reach the details pane
+  at all; (3) the tables rendered as plain left-aligned text, not
+  full-width with visible cell/table borders. How should these be
+  fixed?
+  A: (1)+(2) reveal the same underlying gap: "effects table has
+  navigation focus" was being conflated with "effects table's row 0 is
+  highlighted," and Right's guard required an existing effects row.
+  Fixed by reworking the details pane into one continuous, always-
+  reachable navigable region instead of a single effects-table-only
+  target: `InventoryPanel` now tracks a 3-state `Focus` (`ITEM_LIST`,
+  `FIELDS`, `EFFECTS`) instead of a boolean. Right from the item list
+  always enters `FIELDS` (which always has rows — every item has at
+  least ID/Name/Glyph/Type/Slot) and highlights its first row. Down at
+  the fields table's last row falls through into the effects table's
+  first row (only if it has any); Up at the effects table's first row
+  falls back to the fields table's last row. Left, from either table,
+  exits straight back to `ITEM_LIST`. Only the table matching the
+  current `Focus` is ever highlighted — both tables call
+  `setSelectable(false)` whenever they're not the active one (including
+  on every item-selection change, via `updateDetails`), which is also
+  what fixes issue (1): the stray default highlight was `TableWidget`
+  showing row 0 highlighted purely because `selectable` was left `true`
+  by default, independent of whether the popup's own focus-tracking
+  agreed the table was actually "active." `TableWidget` gained
+  `moveToStart()`/`moveToEnd()`/`isAtFirstRow()`/`isAtLastRow()` to
+  support these boundary transitions, and both tables are now
+  constructed with `setWrapAround(false)` (matching the item list's own
+  convention) so a boundary is actually reachable to trigger a
+  transition, rather than wrapping past it.
+  (3) `TableWidget`'s rendering was reworked from one space-joined
+  `JLabel` per row to one `JPanel` per row (a `GridLayout` of per-cell
+  `JLabel`s), each cell bordered on its bottom/right edge
+  (`WidgetTheme.TABLE_BORDER`, a new constant) with the table's own
+  top/left border completing the grid rectangle; the header row (and,
+  for now, only the header row) uses a new `WidgetTheme.TABLE_HEADER_BACKGROUND`
+  constant to read as visually distinct. Each row panel's maximum width
+  is set to `Integer.MAX_VALUE` so `BoxLayout` stretches it to fill the
+  table's full width, and the table itself gets the same treatment so
+  it fills `detailsPanel`'s full width in turn.
+  This also obsoletes the earlier "Pressing Right does nothing when the
+  selected item has no effects" scenario (issue (2) above was that
+  exact behavior, now deliberately reversed) — removed from
+  `ui-widget-table.feature` and replaced with scenarios for the new
+  fields-table-first, fall-through navigation model.
+  Affects: Scope, Desired behavior (navigation model substantially
+  reworked), `ui-widget-table.feature` (scenarios rewritten/added).

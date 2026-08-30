@@ -1,13 +1,18 @@
 Feature: Table widget
-  A keyboard-navigable table widget (rows/columns of terminal-style cells,
-  with an optional header row) built on the shared Widget/WidgetTheme
-  framework from ui-component-framework.feature. Also supports a
-  non-selectable/non-highlighted mode for purely static data. Proven both
-  in isolation and by two real consumers in the rebuilt inventory popup's
-  details pane: a static field-value table for the selected item's
-  properties, and a row-navigable effects table (see
-  specs/intent/ui-widget-library.md, including its Step 4.5 playtest
-  Clarification for why the details pane became two tables).
+  A keyboard-navigable, full-width table widget (rows/columns of
+  terminal-style cells with visible cell/table borders, and an optional
+  header row) built on the shared Widget/WidgetTheme framework from
+  ui-component-framework.feature. Also supports a non-selectable/
+  non-highlighted mode, used for whichever table isn't currently the
+  active navigation target. Proven both in isolation and by two real
+  consumers in the rebuilt inventory popup's details pane: a field/value
+  table for the selected item's properties, and an effects table — both
+  row-navigable, forming one continuous region (Right enters it at the
+  fields table, Down/Up falls through between the two tables at their
+  ends, Left exits back to the item list). See
+  specs/intent/ui-widget-library.md, including its two rounds of Step
+  4.5 playtest Clarifications for why the details pane looks and
+  navigates this way.
 
   Scenario: Navigating a table widget down moves the selection to the next row
     Given a table widget with rows "Sword", "Shield", "Potion" and row 1 selected
@@ -66,11 +71,26 @@ Feature: Table widget
     Then the details pane shows a field-value table listing the item's ID, Name, Glyph, Type, and Slot
     And the field-value table is not row-highlighted
 
-  Scenario: Pressing Right from the item list moves navigation focus to the effects table
+  Scenario: Pressing Right from the item list moves navigation focus to the fields table
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When the "Right" key is pressed
+    Then the fields table has navigation focus
+
+  Scenario: Pressing Right works even when the selected item has no effects
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the selected item has no effects
+    When the "Right" key is pressed
+    Then the fields table has navigation focus
+
+  Scenario: Down at the fields table's last row falls through into the effects table
     Given the rebuilt in-game inventory screen
     And the inventory is toggled open
     And the selected item has effects
-    When the "Right" key is pressed
+    And the fields table has navigation focus
+    And the fields table's selected row is its last row
+    When the "Down" key is pressed
     Then the effects table has navigation focus
 
   Scenario: Up/Down navigates the effects table once it has navigation focus
@@ -81,19 +101,27 @@ Feature: Table widget
     When the "Down" key is pressed
     Then the effects table's selected row is no longer the first row
 
+  Scenario: Up at the effects table's first row falls back into the fields table's last row
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the selected item has effects
+    And the effects table has navigation focus
+    When the "Up" key is pressed
+    Then the fields table has navigation focus
+
+  Scenario: Pressing Left from the fields table returns navigation focus to the item list
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the fields table has navigation focus
+    When the "Left" key is pressed
+    Then the item list has navigation focus
+
   Scenario: Pressing Left from the effects table returns navigation focus to the item list
     Given the rebuilt in-game inventory screen
     And the inventory is toggled open
     And the effects table has navigation focus
     When the "Left" key is pressed
     Then the item list has navigation focus
-
-  Scenario: Pressing Right does nothing when the selected item has no effects
-    Given the rebuilt in-game inventory screen
-    And the inventory is toggled open
-    And the selected item has no effects
-    When the "Right" key is pressed
-    Then the item list still has navigation focus
 
   # Non-goals:
   #   - Cell-level confirm (as opposed to row-level) — decided against in
@@ -117,12 +145,13 @@ Feature: Table widget
   #     widget — PopupWidget gains onLeft()/onRight() hooks alongside its
   #     existing onUp()/onDown(). See
   #     specs/intent/ui-widget-library.md's Constraints.
-  #   - The exact column set/labels for the effects table ("Stat"/
-  #     "Value") and the no-wrap-at-the-pane-boundary behavion (Left from
-  #     the item list, Right from the effects table with no further pane)
-  #     were autonomous implementation-level calls during spec drafting,
-  #     not separately grilled — flag for confirmation at Step 3 approval
-  #     if they matter.
+  #   - The fields/effects fall-through boundary logic (Down at the last
+  #     fields row enters effects; Up at the first effects row returns to
+  #     the last fields row) lives in InventoryPanel, not TableWidget
+  #     itself — TableWidget only exposes the isAtFirstRow()/isAtLastRow()/
+  #     moveToStart()/moveToEnd() primitives a consumer needs to build
+  #     this kind of multi-table navigation; it doesn't know about any
+  #     other table.
   #
   # Open questions:
   #   - None outstanding for this widget.

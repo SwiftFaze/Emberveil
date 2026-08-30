@@ -590,32 +590,36 @@ public class UiComponentFrameworkSteps {
     public void theEffectsTableHasNavigationFocus() {
         if (!eastPanel.getInventoryPanel().isEffectsTableFocused()) {
             theSelectedItemHasEffects();
-            fireInventoryPopupAction("popup-right");
+            fireInventoryPopupAction("popup-right"); // enters the fields table first
+            // Down falls through the fields table into the effects table once at its last row.
+            int guard = 0;
+            while (!eastPanel.getInventoryPanel().isEffectsTableFocused() && guard < 20) {
+                fireInventoryPopupAction("popup-down");
+                guard++;
+            }
         }
         assertTrue(eastPanel.getInventoryPanel().isEffectsTableFocused());
     }
 
     @Then("the item list has navigation focus")
     public void theItemListHasNavigationFocus() {
-        assertFalse(eastPanel.getInventoryPanel().isEffectsTableFocused());
+        assertTrue(eastPanel.getInventoryPanel().isItemListFocused());
     }
 
     @Then("the effects table's selected row is no longer the first row")
     public void theEffectsTableSelectedRowIsNoLongerFirstRow() {
         assertTrue(eastPanel.getInventoryPanel().isEffectsTableFocused());
+        assertFalse(eastPanel.getInventoryPanel().getEffectsTable().isAtFirstRow());
     }
 
     @Given("the selected item has effects")
     public void theSelectedItemHasEffects() {
-        // Items load alphabetically by filename (ModLoader), not by whether they have effects —
-        // the default first item ("Bread Loaf") has none, so this must actively navigate to one
-        // that does (e.g. "Iron Sword"), not just assume the default selection already qualifies.
-        int guard = 0;
-        while (eastPanel.getInventoryPanel().getSelectedItem().getEffects().isEmpty() && guard < 50) {
-            fireInventoryPopupAction("popup-down");
-            guard++;
-        }
-        assertFalse(eastPanel.getInventoryPanel().getSelectedItem().getEffects().isEmpty());
+        // No real mod item has more than 1 effect (see fakeItemWithEffects's own comment), and
+        // some scenarios using this step need to navigate/confirm *between* multiple effect rows
+        // - a real 1-effect item can't exercise that, so this injects a fake 2-effect item
+        // instead of navigating real ModLoader data.
+        eastPanel.getInventoryPanel().showItems(List.of(
+                fakeItemWithEffects(List.of("+strength (base)", "+agility (base)"))));
     }
 
     @Given("the selected item has no effects")
@@ -629,9 +633,26 @@ public class UiComponentFrameworkSteps {
         assertNotNull(eastPanel.getInventoryPanel().getSelectedItem());
     }
 
-    @Then("the item list still has navigation focus")
-    public void theItemListStillHasNavigationFocus() {
-        assertFalse(eastPanel.getInventoryPanel().isEffectsTableFocused());
+    // Matches both a "Given/And the fields table has navigation focus" precondition (drives it:
+    // presses Right from the item list) and a "Then ... has navigation focus" assertion (a no-op
+    // drive when a prior "When Right pressed" step already put it there) — same shared-step-text
+    // reasoning as theEffectsTableHasNavigationFocus() above.
+    @Then("the fields table has navigation focus")
+    public void theFieldsTableHasNavigationFocus() {
+        if (!eastPanel.getInventoryPanel().isFieldsTableFocused()) {
+            fireInventoryPopupAction("popup-right");
+        }
+        assertTrue(eastPanel.getInventoryPanel().isFieldsTableFocused());
+    }
+
+    @Given("the fields table's selected row is its last row")
+    public void theFieldsTableSelectedRowIsItsLastRow() {
+        int guard = 0;
+        while (!eastPanel.getInventoryPanel().getFieldsTable().isAtLastRow() && guard < 20) {
+            fireInventoryPopupAction("popup-down");
+            guard++;
+        }
+        assertTrue(eastPanel.getInventoryPanel().getFieldsTable().isAtLastRow());
     }
 
     @Then("the drop-confirmation popup asks {string}")

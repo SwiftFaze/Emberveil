@@ -3,17 +3,24 @@ package com.swiftfaze.veil.ui.widget;
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
 import javax.swing.border.Border;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * A keyboard-navigable, full-width table with bordered grid cells (like a
+ * terminal-rendered markdown table), an optional header row, and an optional
+ * non-selectable mode for purely static/display data.
+ */
 public class TableWidget<T> extends Widget {
     private final List<String> columnHeaders;
     private final List<Function<T, String>> columnRenderers;
     private final List<T> rows = new ArrayList<>();
-    private final List<JLabel> labels = new ArrayList<>();
+    private final List<List<JLabel>> rowCells = new ArrayList<>();
     private int selectedRowIndex = 0;
     private int selectedColumnIndex = 0;
     private boolean wrapAround = true;
@@ -28,6 +35,8 @@ public class TableWidget<T> extends Widget {
         this.columnHeaders = columnHeaders;
         this.columnRenderers = columnRenderers;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setAlignmentX(LEFT_ALIGNMENT);
+        setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, WidgetTheme.TABLE_BORDER));
         buildHeaderRow();
         bindKeys();
     }
@@ -45,13 +54,17 @@ public class TableWidget<T> extends Widget {
     }
 
     /**
-     * A non-selectable table renders every row in NORMAL_TEXT, with no row-highlight
-     * indication — for purely static/display data (e.g. a fixed field/value list) that
-     * isn't meant to be keyboard-navigated, as opposed to a real navigable table.
+     * A non-selectable table renders every cell in NORMAL_TEXT, with no row-highlight
+     * indication — for a table that isn't currently the keyboard-navigation target (either
+     * purely static data, or momentarily not the active pane in a multi-table details view).
      */
     public void setSelectable(boolean selectable) {
         this.selectable = selectable;
         refreshHighlight();
+    }
+
+    public boolean isSelectable() {
+        return selectable;
     }
 
     public void setOnConfirm(Consumer<T> onConfirm) {
@@ -66,16 +79,32 @@ public class TableWidget<T> extends Widget {
         return selectedRowIndex;
     }
 
+    public int getSelectedColumnIndex() {
+        return selectedColumnIndex;
+    }
+
     public int getRowCount() {
         return rows.size();
     }
 
-    public boolean isSelectable() {
-        return selectable;
+    public void moveToStart() {
+        if (rows.isEmpty()) return;
+        selectedRowIndex = 0;
+        refreshHighlight();
     }
 
-    public int getSelectedColumnIndex() {
-        return selectedColumnIndex;
+    public void moveToEnd() {
+        if (rows.isEmpty()) return;
+        selectedRowIndex = rows.size() - 1;
+        refreshHighlight();
+    }
+
+    public boolean isAtFirstRow() {
+        return selectedRowIndex == 0;
+    }
+
+    public boolean isAtLastRow() {
+        return rows.isEmpty() || selectedRowIndex == rows.size() - 1;
     }
 
     public void moveUp() {
@@ -138,49 +167,66 @@ public class TableWidget<T> extends Widget {
         if (columnHeaders.isEmpty()) {
             return;
         }
-        JLabel header = new JLabel(String.join("  ", columnHeaders));
-        header.setForeground(WidgetTheme.NORMAL_TEXT);
-        header.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.BOLD, 16));
-        header.setAlignmentX(LEFT_ALIGNMENT);
-        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 1, 0, java.awt.Color.LIGHT_GRAY);
-        header.setBorder(BorderFactory.createCompoundBorder(bottomLine, BorderFactory.createEmptyBorder(0, 0, 2, 0)));
-        add(header);
+        add(buildRowPanel(columnHeaders, true));
     }
 
     private void refresh() {
-        // Remove only the data-row labels, keep the header row (index 0, if present) intact.
-        for (JLabel label : labels) {
-            remove(label);
+        for (List<JLabel> cells : rowCells) {
+            // Each row's panel is the shared parent of its cells; remove it once per row.
+            remove(cells.get(0).getParent());
         }
-        labels.clear();
+        rowCells.clear();
         for (T row : rows) {
-            String cellText = renderRow(row);
-            JLabel label = new JLabel(cellText);
-            label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
-            label.setAlignmentX(LEFT_ALIGNMENT);
-            labels.add(label);
-            add(label);
+            List<String> cellText = new ArrayList<>();
+            for (Function<T, String> renderer : columnRenderers) {
+                cellText.add(renderer.apply(row));
+            }
+            JPanel rowPanel = buildRowPanel(cellText, false);
+            List<JLabel> cells = new ArrayList<>();
+            for (var component : rowPanel.getComponents()) {
+                cells.add((JLabel) component);
+            }
+            rowCells.add(cells);
+            add(rowPanel);
         }
         refreshHighlight();
         revalidate();
         repaint();
     }
 
-    private String renderRow(T row) {
-        List<String> cells = new ArrayList<>();
-        for (Function<T, String> renderer : columnRenderers) {
-            cells.add(renderer.apply(row));
+    private JPanel buildRowPanel(List<String> cellText, boolean isHeader) {
+        int columnCount = Math.max(1, cellText.size());
+        JPanel rowPanel = new JPanel(new GridLayout(1, columnCount));
+        rowPanel.setAlignmentX(LEFT_ALIGNMENT);
+        rowPanel.setBackground(isHeader ? WidgetTheme.TABLE_HEADER_BACKGROUND : WidgetTheme.BACKGROUND);
+        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, rowPanel.getPreferredSize().height));
+        for (String text : cellText) {
+            rowPanel.add(buildCellLabel(text, isHeader));
         }
-        return String.join("  ", cells);
+        return rowPanel;
+    }
+
+    private JLabel buildCellLabel(String text, boolean isHeader) {
+        JLabel label = new JLabel(text);
+        label.setOpaque(true);
+        label.setBackground(isHeader ? WidgetTheme.TABLE_HEADER_BACKGROUND : WidgetTheme.BACKGROUND);
+        label.setForeground(WidgetTheme.NORMAL_TEXT);
+        label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, isHeader ? java.awt.Font.BOLD : java.awt.Font.PLAIN, 16));
+        Border cellLine = BorderFactory.createMatteBorder(0, 0, 1, 1, WidgetTheme.TABLE_BORDER);
+        Border padding = BorderFactory.createEmptyBorder(4, 8, 4, 8);
+        label.setBorder(BorderFactory.createCompoundBorder(cellLine, padding));
+        return label;
     }
 
     private void refreshHighlight() {
-        for (int i = 0; i < labels.size(); i++) {
-            labels.get(i).setForeground(
-                selectable && i == selectedRowIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
+        for (int i = 0; i < rowCells.size(); i++) {
+            boolean highlighted = selectable && i == selectedRowIndex;
+            for (JLabel cell : rowCells.get(i)) {
+                cell.setForeground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
+            }
         }
-        if (selectable && selectedRowIndex < labels.size()) {
-            scrollRectToVisible(labels.get(selectedRowIndex).getBounds());
+        if (selectable && selectedRowIndex < rowCells.size() && !rowCells.isEmpty()) {
+            scrollRectToVisible(rowCells.get(selectedRowIndex).get(0).getParent().getBounds());
         }
     }
 }

@@ -18,6 +18,14 @@ public class InventoryPanel extends PopupWidget {
     private record FieldRow(String field, String value) {
     }
 
+    /**
+     * Which region of the popup currently owns Up/Down (real Swing focus always stays on the
+     * inherited Close button — see PopupWidget). The details pane (FIELDS, then EFFECTS) is one
+     * continuous region: Down falls off the end of one table into the start of the next, Up does
+     * the reverse, and Left from either always exits straight back to ITEM_LIST.
+     */
+    private enum Focus { ITEM_LIST, FIELDS, EFFECTS }
+
     private static final int BODY_HEIGHT = 280;
 
     private final ListWidget<Item> itemList;
@@ -26,7 +34,7 @@ public class InventoryPanel extends PopupWidget {
     private final JLabel effectsLabel;
     private final TableWidget<Item.Effect> effectsTable;
     private final DropConfirmationPopup dropConfirmationPopup;
-    private boolean effectsTableHasFocus = false;
+    private Focus focus = Focus.ITEM_LIST;
 
     public InventoryPanel() {
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
@@ -47,7 +55,10 @@ public class InventoryPanel extends PopupWidget {
         detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
 
         fieldsTable = new TableWidget<>(List.of("Field", "Value"), List.of(FieldRow::field, FieldRow::value));
+        fieldsTable.setWrapAround(false);
         fieldsTable.setSelectable(false);
+        fieldsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+        fieldsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         effectsLabel = makeEffectsLabel();
 
@@ -55,7 +66,10 @@ public class InventoryPanel extends PopupWidget {
                 List.of("Type", "Stat", "Calc"),
                 List.of(e -> e.type(), Item.Effect::stat, Item.Effect::calc)
         );
-        effectsTable.setWrapAround(true);
+        effectsTable.setWrapAround(false);
+        effectsTable.setSelectable(false);
+        effectsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+        effectsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         dropConfirmationPopup = new DropConfirmationPopup();
         dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
@@ -88,40 +102,79 @@ public class InventoryPanel extends PopupWidget {
         return dropConfirmationPopup;
     }
 
+    public boolean isFieldsTableFocused() {
+        return focus == Focus.FIELDS;
+    }
+
     public boolean isEffectsTableFocused() {
-        return effectsTableHasFocus;
+        return focus == Focus.EFFECTS;
+    }
+
+    public boolean isItemListFocused() {
+        return focus == Focus.ITEM_LIST;
     }
 
     @Override
     protected void onUp() {
-        if (effectsTableHasFocus) {
-            effectsTable.moveUp();
-        } else {
-            itemList.moveUp();
+        switch (focus) {
+            case ITEM_LIST -> itemList.moveUp();
+            case FIELDS -> fieldsTable.moveUp();
+            case EFFECTS -> {
+                if (effectsTable.isAtFirstRow()) {
+                    enterFields();
+                    fieldsTable.moveToEnd();
+                } else {
+                    effectsTable.moveUp();
+                }
+            }
         }
     }
 
     @Override
     protected void onDown() {
-        if (effectsTableHasFocus) {
-            effectsTable.moveDown();
-        } else {
-            itemList.moveDown();
+        switch (focus) {
+            case ITEM_LIST -> itemList.moveDown();
+            case FIELDS -> {
+                if (fieldsTable.isAtLastRow()) {
+                    if (effectsTable.getRowCount() > 0) {
+                        enterEffects();
+                        effectsTable.moveToStart();
+                    }
+                } else {
+                    fieldsTable.moveDown();
+                }
+            }
+            case EFFECTS -> effectsTable.moveDown();
         }
     }
 
     @Override
     protected void onLeft() {
-        if (effectsTableHasFocus) {
-            effectsTableHasFocus = false;
+        if (focus != Focus.ITEM_LIST) {
+            focus = Focus.ITEM_LIST;
+            fieldsTable.setSelectable(false);
+            effectsTable.setSelectable(false);
         }
     }
 
     @Override
     protected void onRight() {
-        if (!effectsTableHasFocus && effectsTable.getSelectedRow() != null) {
-            effectsTableHasFocus = true;
+        if (focus == Focus.ITEM_LIST) {
+            enterFields();
+            fieldsTable.moveToStart();
         }
+    }
+
+    private void enterFields() {
+        focus = Focus.FIELDS;
+        fieldsTable.setSelectable(true);
+        effectsTable.setSelectable(false);
+    }
+
+    private void enterEffects() {
+        focus = Focus.EFFECTS;
+        fieldsTable.setSelectable(false);
+        effectsTable.setSelectable(true);
     }
 
     private JLabel makeTitleLabel() {
@@ -165,12 +218,14 @@ public class InventoryPanel extends PopupWidget {
 
     private void updateDetails(Item item) {
         detailsPanel.removeAll();
-        effectsTableHasFocus = false;
+        focus = Focus.ITEM_LIST;
         if (item == null) {
             detailsPanel.add(detailLabel("(no item selected)"));
         } else {
             fieldsTable.setRows(fieldRows(item));
+            fieldsTable.setSelectable(false);
             effectsTable.setRows(item.getEffects());
+            effectsTable.setSelectable(false);
             detailsPanel.add(fieldsTable);
             detailsPanel.add(effectsLabel);
             detailsPanel.add(effectsTable);
