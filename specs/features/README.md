@@ -49,3 +49,4 @@ that change's definition of done, not separate cleanup.
 | `settings-screen.feature` | Settings screen shell (brightness/fullscreen/font/volume/keybinds/folders/about/reset), visual/input shape only |
 | `settings-keybinds-page.feature` | Dedicated keybind-rebinding sub-page (action list, press-any-key popup, Apply/Cancel/Go back), display only |
 | `ui-widget-slider.feature` | Bounded-value slider widget (Left/Right adjusts within [min, max], no wrap) — no real backing system, proven in isolation |
+| `confirmation-popup-variant.feature` | Centered, content-sized PopupWidget presentation, proven by a Yes/No confirm dialog on the settings screen's Reset to Defaults |
