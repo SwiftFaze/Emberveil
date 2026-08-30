@@ -9,7 +9,7 @@
 ## Status
 
 - [x] Intent drafted
-- [ ] Spec drafted (`.feature` file)
+- [x] Spec drafted (`.feature` file)
 - [ ] Approved by human
 - [ ] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
@@ -90,10 +90,12 @@ since no concrete consumer existed yet.
   coupling to #54 is rejected.
 - **Dependency chain**: this issue depends on #54's settings screen (for
   its chosen trigger) and #35's radio group widget (for the Yes/No
-  choice itself), neither approved/implemented yet. This mirrors the
-  same "depends on the prior framework piece landing first" shape
-  already established by #35 depending on #36, and #54 depending on both
-  #36 and #35.
+  choice itself). Both have since landed on `develop` (#54 merged via
+  PR #114; `RadioGroupWidget` at
+  `src/main/java/com/swiftfaze/veil/ui/widget/RadioGroupWidget.java`,
+  the settings screen's "Reset to Defaults" row at
+  `src/main/java/com/swiftfaze/veil/ui/SettingsScreenPanel.java`), so
+  this feature is no longer blocked on either landing first.
 
 ## Open questions
 
