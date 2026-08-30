@@ -95,4 +95,32 @@ public class TableWidgetTest {
         tableWidget.getActionMap().get("table-confirm").actionPerformed(null);
         assertTrue(confirmedRows.isEmpty());
     }
+
+    @Test
+    public void updateRowReplacesRowDataWithoutResettingSelection() {
+        tableWidget.setRows(List.of("Sword", "Shield", "Potion"));
+        tableWidget.moveDown();
+        tableWidget.moveDown();
+        assertEquals(2, tableWidget.getSelectedRowIndex());
+        tableWidget.updateRow(2, "PotionX");
+        assertEquals(2, tableWidget.getSelectedRowIndex());
+        assertEquals("PotionX", tableWidget.getSelectedRow());
+    }
+
+    @Test
+    public void updateRowOutOfBoundsIsNoOp() {
+        tableWidget.setRows(List.of("Sword", "Shield"));
+        tableWidget.updateRow(5, "Nothing");
+        assertEquals(List.of("Sword", "Shield").get(0), tableWidget.getSelectedRow());
+    }
+
+    @Test
+    public void selectedRowAccentColorAndDimmingCanBeToggledWithoutError() {
+        tableWidget.setRows(List.of("Sword", "Shield"));
+        tableWidget.setSelectedRowAccentColor(java.awt.Color.GREEN);
+        tableWidget.setOtherRowsDimmed(true);
+        tableWidget.setSelectedRowAccentColor(null);
+        tableWidget.setOtherRowsDimmed(false);
+        assertEquals("Sword", tableWidget.getSelectedRow());
+    }
 }

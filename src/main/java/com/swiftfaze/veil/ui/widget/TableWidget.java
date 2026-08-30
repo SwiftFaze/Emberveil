@@ -2,9 +2,14 @@ package com.swiftfaze.veil.ui.widget;
 
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +32,8 @@ public class TableWidget<T> extends Widget {
     private boolean wrapAround = true;
     private boolean selectable = true;
     private Consumer<T> onConfirm = t -> {};
+    private Color selectedRowAccentColor;
+    private boolean otherRowsDimmed = false;
 
     public TableWidget(List<Function<T, String>> columnRenderers) {
         this(List.of(), columnRenderers);
@@ -70,6 +77,51 @@ public class TableWidget<T> extends Widget {
 
     public void setOnConfirm(Consumer<T> onConfirm) {
         this.onConfirm = onConfirm;
+    }
+
+    /**
+     * Paints an extra accent-colored outline around the selected row's cells, on top of
+     * the normal selected-row highlight - for a consumer that needs to flag the selected
+     * row as additionally "armed" for some other in-progress action (e.g. a popup open on
+     * its behalf), distinct from just being the current cursor position. Null (the
+     * default) paints no accent. Every cell always reserves this outline's thickness
+     * regardless of whether it's currently painted, matching RadioGroupWidget's confirmed/
+     * unconfirmed border convention - reserving it only when accented would change every
+     * cell's insets between the two states and visibly resize the whole table on selection.
+     */
+    public void setSelectedRowAccentColor(Color color) {
+        this.selectedRowAccentColor = color;
+        refreshHighlight();
+    }
+
+    /**
+     * When true, every row except the selected one renders in WidgetTheme.DIMMED_TEXT
+     * instead of NORMAL_TEXT - pairs with setSelectedRowAccentBorder() to make the
+     * accented row read as the only currently-active thing, like a modal dimming its
+     * backdrop. False (the default) leaves every consumer's existing look unchanged.
+     */
+    public void setOtherRowsDimmed(boolean dimmed) {
+        this.otherRowsDimmed = dimmed;
+        refreshHighlight();
+    }
+
+    /**
+     * Replaces one row's data and re-renders just its cells, preserving the current
+     * selection - unlike setRows(), which always resets selection to the first row.
+     * For a consumer whose row data can change in place (e.g. a live-editable value)
+     * without the row set itself being rebuilt.
+     */
+    public void updateRow(int index, T newRow) {
+        if (index < 0 || index >= rows.size()) {
+            return;
+        }
+        rows.set(index, newRow);
+        List<JLabel> cells = rowCells.get(index);
+        for (int i = 0; i < columnRenderers.size(); i++) {
+            cells.get(i).setText(columnRenderers.get(i).apply(newRow));
+        }
+        revalidate();
+        repaint();
     }
 
     public T getSelectedRow() {
@@ -216,17 +268,26 @@ public class TableWidget<T> extends Widget {
         label.setBackground(isHeader ? WidgetTheme.TABLE_HEADER_BACKGROUND : WidgetTheme.BACKGROUND);
         label.setForeground(WidgetTheme.NORMAL_TEXT);
         label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, isHeader ? java.awt.Font.BOLD : java.awt.Font.PLAIN, 16));
+        label.setBorder(new AccentableCellBorder(baseCellBorder(), null));
+        return label;
+    }
+
+    private Border baseCellBorder() {
         Border cellLine = BorderFactory.createMatteBorder(0, 0, 1, 1, WidgetTheme.TABLE_BORDER);
         Border padding = BorderFactory.createEmptyBorder(4, 8, 4, 8);
-        label.setBorder(BorderFactory.createCompoundBorder(cellLine, padding));
-        return label;
+        return BorderFactory.createCompoundBorder(cellLine, padding);
     }
 
     private void refreshHighlight() {
         for (int i = 0; i < rowCells.size(); i++) {
             boolean highlighted = selectable && i == selectedRowIndex;
+            boolean accented = highlighted && selectedRowAccentColor != null;
             for (JLabel cell : rowCells.get(i)) {
                 WidgetTheme.applySelection(cell, highlighted);
+                cell.setBorder(new AccentableCellBorder(baseCellBorder(), accented ? selectedRowAccentColor : null));
+                if (otherRowsDimmed && !highlighted) {
+                    cell.setForeground(WidgetTheme.DIMMED_TEXT);
+                }
             }
         }
         if (selectable && selectedRowIndex < rowCells.size() && !rowCells.isEmpty()) {
@@ -240,6 +301,51 @@ public class TableWidget<T> extends Widget {
                 target = target.union(headerPanel.getBounds());
             }
             scrollRectToVisible(target);
+        }
+    }
+
+    /**
+     * Paints an optional accent outline INSIDE the wrapped inner border's existing padding
+     * instead of adding new space for it — insets are always exactly the inner border's own
+     * insets, accented or not. An earlier version reserved extra thickness around every
+     * cell so insets wouldn't change on selection, which did stop the whole table resizing
+     * but shifted the inner border's grid lines inward by that same thickness, opening a
+     * visible gap between adjacent rows/columns that used to sit flush. Drawing within the
+     * existing padding avoids both problems at once — nothing about the layout ever changes.
+     */
+    private static class AccentableCellBorder extends AbstractBorder {
+        private static final int OFFSET = 1;
+        private static final int THICKNESS = 2;
+        private final Border inner;
+        private final Color accentColor;
+
+        AccentableCellBorder(Border inner, Color accentColor) {
+            this.inner = inner;
+            this.accentColor = accentColor;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            inner.paintBorder(c, g, x, y, width, height);
+            if (accentColor != null) {
+                g.setColor(accentColor);
+                g.fillRect(x + OFFSET, y + OFFSET, width - 2 * OFFSET, THICKNESS);
+                g.fillRect(x + OFFSET, y + height - OFFSET - THICKNESS, width - 2 * OFFSET, THICKNESS);
+                g.fillRect(x + OFFSET, y + OFFSET, THICKNESS, height - 2 * OFFSET);
+                g.fillRect(x + width - OFFSET - THICKNESS, y + OFFSET, THICKNESS, height - 2 * OFFSET);
+            }
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return inner.getBorderInsets(c);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            Insets result = getBorderInsets(c);
+            insets.set(result.top, result.left, result.bottom, result.right);
+            return insets;
         }
     }
 }

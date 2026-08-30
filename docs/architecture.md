@@ -142,11 +142,21 @@ directly.
 A small reusable widget framework lives in `ui/widget/`: `Widget` (base
 `JPanel` — black background, focusable), `FocusManager` (a modal-open
 flag a popup's content can consult), `WidgetTheme` (shared
-selected/normal/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
+selected/normal/dimmed/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
 optionally non-wrapping list over a pluggable data source, with
 `onConfirm`/`onSelectionChange` callbacks and auto-scroll-into-view of the
 selected row), `ButtonWidget` (an Enter-confirmable label), `TableWidget<T>`
-(a keyboard-navigable row/column table with row-level confirm), `RadioGroupWidget<T>`
+(a keyboard-navigable row/column table with row-level confirm; `updateRow()`
+replaces one row's data and re-renders just its cells without resetting
+selection, unlike `setRows()`; `setSelectedRowAccentColor()` and
+`setOtherRowsDimmed()` let a consumer flag the selected row as additionally
+"armed" for some other in-progress action, with every other row dimmed to
+match — the accent outline paints inside each cell's existing padding rather
+than adding new border thickness, so a cell's insets never change between
+accented and un-accented (an earlier version reserved extra space instead,
+which stopped the whole table resizing on selection but shifted the grid
+lines inward and opened a visible gap between rows); used by
+`SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
 caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
@@ -154,10 +164,70 @@ Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
 Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
 — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
 popup child has real Swing focus — let a subclass wire keyboard navigation to
-its own content), `FillLayout` (a `LayoutManager` stretching every child to the
+its own content), `SliderWidget` (a bounded numeric slider with left/right
+adjustment within a [min, max] range by fixed steps, with hard bounds—no
+wrap-around), `FillLayout` (a `LayoutManager` stretching every child to the
 parent's full bounds, for `JLayeredPane` overlays), and `TerminalScrollBarUI`
 (a flat black-track/solid-thumb `BasicScrollBarUI` replacing the platform
 look-and-feel's default scrollbar chrome).
+
+**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` uses
+`CardLayout` to manage four screens: title, game, settings, and keybinds,
+navigated via a shared `cards` map + `navigateTo()` helper (needed because
+settings and keybinds reference each other - a genuine two-way cycle plain
+lambda capture can't express, since Java lambdas can't forward-reference a
+local variable declared later in the same method). `TitleScreenPanel` and
+`SettingsScreenPanel` are each real `Widget`-style Swing focus targets in
+their own right (focusable, with their own `InputMap`/`ActionMap` bound at
+`WHEN_FOCUSED`) rather than relying on an inner child widget to hold real
+focus - `navigateTo()` calls `requestFocusInWindow()` on whichever screen a
+navigation lands on, matching the same bind-and-delegate idiom
+`InventoryPanel` already established for composite screens with mixed
+navigation.
+
+`TitleScreenPanel` shows the "VEIL" title (with Delta Corps Priest 1 font, or
+monospaced fallback if the font resource is absent) and a centered menu
+(Continue, New, Load, Settings, Exit) — New navigates to the game view and
+starts the game loop. `SettingsScreenPanel` is a centered, bordered, navigable,
+back-able list of ten settings items, every row sharing one width (matching
+the widest row, same convention `RadioGroupWidget`'s vertical mode already
+uses): Brightness and Volume (both sliders, rendered as an actual bar via
+`SliderWidget.getDisplayText()`), Fullscreen (radio toggle: Windowed/
+Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds (opens
+the dedicated keybinds page), placeholder action items (Open Game Folder,
+Open Mod Folder - both call `Desktop.open`, creating `mods/` next to the
+install if missing; About, Reset to Defaults), and an explicit Go Back item
+(added after Step 4.5 playtest found Escape-only back navigation wasn't
+discoverable). Left/Right calls `moveLeft()`/`moveRight()` on sliders or
+radio groups directly (bypassing their own now-unused internal key bindings,
+same as `InventoryPanel`'s sub-widgets), which updates the highlighted
+option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
+returns to the title screen.
+
+`SettingsKeybindsPanel` lists every rebindable action (Move up/down/left/
+right, Toggle inventory) and its current key in a real `TableWidget<ActionRow>`
+(Action/Key columns, bordered grid, header row - the same widget
+`InventoryPanel` uses for its field/value table), allows navigation between
+actions and a footer (Go back, Reset to Defaults, Cancel, Apply - left to
+right), and opens a "press any key" popup on Enter to capture an arbitrary
+key as a new binding (a `KeyListener`, not `InputMap`/`ActionMap`, since it
+must catch any keystroke while armed rather than a fixed set). Rebinding a
+key calls `TableWidget.updateRow()` to refresh just that row's Key cell
+without disturbing the selected row - `setRows()` would have reset selection
+to the first row on every keypress. The armed action row gets a green accent
+border via `TableWidget.setSelectedRowAccentColor()` (the same
+`WidgetTheme.VALID_HIGHLIGHT` convention `RadioGroupWidget`'s confirmed-option
+border already uses), and every other row dims via
+`TableWidget.setOtherRowsDimmed()`, so the armed row reads as the only
+currently-active thing, like a modal dimming its backdrop. Reset to Defaults
+restores every action's default binding (via `updateRow()` per row, same
+selection-preserving reasoning) and stays on this page (state genuinely local
+to this page); Go back/Cancel/Apply all return to the settings screen
+identically (nothing else persists yet). The popup itself is still internal
+boolean state (`popupOpen`), not yet a real rendered overlay component.
+Actual key rebinding is visual only - no persistent state, `Keybindings.java`'s
+real constants are untouched. F5 still resets the entire game (back to the
+title screen).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable

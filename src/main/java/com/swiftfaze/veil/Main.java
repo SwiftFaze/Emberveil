@@ -4,13 +4,22 @@ import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
+import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
+import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SouthPanel;
+import com.swiftfaze.veil.ui.TitleScreenPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -21,7 +30,17 @@ public class Main {
 
     private static void loadGame() {
         JFrame frame = new JFrame("Veil");
+        CardLayout cardLayout = new CardLayout();
+        JPanel cardPanel = new JPanel(cardLayout);
 
+        // Populated as each screen is built below; every screen's navigation callback captures
+        // this same map reference, so forward references between screens built later (settings
+        // <-> keybinds is a genuine two-way cycle) resolve fine at runtime, once the map is full
+        // and before the frame is ever shown - only the map reference itself needs to exist yet
+        // when each lambda is written, not its final contents.
+        Map<String, JComponent> cards = new HashMap<>();
+
+        // Build game view components (for the game card)
         NorthPanel northPanel = new NorthPanel();
         SouthPanel southPanel = new SouthPanel();
         EastPanel eastPanel = new EastPanel();
@@ -30,12 +49,49 @@ public class Main {
         gamePanel.addGameListener(eastPanel);
         eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
 
-        JLayeredPane contentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+        JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+
+        // Build game card: North + South + Center layout
+        JPanel gameCard = new JPanel(new BorderLayout());
+        gameCard.add(northPanel, BorderLayout.NORTH);
+        gameCard.add(southPanel, BorderLayout.SOUTH);
+        gameCard.add(gameContentArea, BorderLayout.CENTER);
+
+        // Build title screen card
+        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> {
+            switch (menuItem) {
+                case "New" -> {
+                    cardLayout.show(cardPanel, "game");
+                    gamePanel.requestFocusInWindow();
+                    gamePanel.startGameLoop();
+                }
+                case "Settings" -> navigateTo(cardLayout, cardPanel, cards, "settings");
+                // Continue, Load, Exit: placeholders, do nothing
+            }
+        });
+
+        // Build settings card
+        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
+            screen -> navigateTo(cardLayout, cardPanel, cards, screen),
+            Main::openFolder
+        );
+
+        // Build keybinds card
+        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
+            screen -> navigateTo(cardLayout, cardPanel, cards, screen)
+        );
+
+        cards.put("title", titleScreen);
+        cards.put("settings", settingsScreen);
+        cards.put("keybinds", keybindsScreen);
+
+        cardPanel.add(titleScreen, "title");
+        cardPanel.add(gameCard, "game");
+        cardPanel.add(settingsScreen, "settings");
+        cardPanel.add(keybindsScreen, "keybinds");
 
         frame.setLayout(new BorderLayout());
-        frame.add(northPanel, BorderLayout.NORTH);
-        frame.add(southPanel, BorderLayout.SOUTH);
-        frame.add(contentArea, BorderLayout.CENTER);
+        frame.add(cardPanel, BorderLayout.CENTER);
 
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,10 +99,33 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-
-        gamePanel.requestFocusInWindow();
-        gamePanel.startGameLoop();
+        cardLayout.show(cardPanel, "title");
+        titleScreen.requestFocusInWindow();
         keyListen(frame);
+    }
+
+    private static void navigateTo(CardLayout cardLayout, JPanel cardPanel,
+                                    Map<String, JComponent> cards, String cardName) {
+        cardLayout.show(cardPanel, cardName);
+        JComponent target = cards.get(cardName);
+        if (target != null) {
+            target.requestFocusInWindow();
+        }
+    }
+
+    private static void openFolder(String which) {
+        try {
+            Path base = Path.of("").toAbsolutePath();
+            File target = "mods".equals(which) ? base.resolve("mods").toFile() : base.toFile();
+            if ("mods".equals(which) && !target.exists()) {
+                Files.createDirectories(target.toPath());
+            }
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(target);
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to open folder: {}", which, e);
+        }
     }
 
     private static void keyListen(JFrame frame) {
