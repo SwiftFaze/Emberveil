@@ -79,13 +79,15 @@ next screen that needs them.
     speculative demo, the table and radio group widgets are proven by
     extending the existing, already-shipped `InventoryPanel`
     (`src/main/java/com/swiftfaze/veil/ui/InventoryPanel.java`):
-    - The details pane's effects list (currently plain `"+" +
-      effect.stat() + " (" + effect.calc() + ")"` text lines built from
-      `item.getEffects()` in `detailLines()`) becomes a table widget: two
-      columns (Stat, Value), one row per effect, row-highlighted,
-      row-confirm is a no-op for now. The rest of the details pane
-      (name/type/slot/damage) is unchanged — those are single per-item
-      values, not a row-per-record dataset.
+    - The whole details pane is restructured into two tables (see the
+      Step 4.5 Clarifications entry below for why): a static, non-
+      selectable "Field | Value" table for every item property (ID,
+      Name, Glyph, Type, Slot, Base Damage Min/Max), and — below an
+      "Effects:" label — a real, row-navigable three-column (Type, Stat,
+      Calc) table for `item.getEffects()`, row-highlighted, row-confirm
+      a no-op for now. Both tables render a header row — the fields
+      table's rows are no longer separate `JLabel`s, they're rows of the
+      static table instead.
     - `PopupWidget` (`src/main/java/com/swiftfaze/veil/ui/widget/PopupWidget.java`)
       gains `onLeft()`/`onRight()` hooks, mirroring its existing
       `onUp()`/`onDown()` pattern exactly (same
@@ -393,3 +395,30 @@ next screen that needs them.
   generically (any caller-supplied regex); the real validation pattern
   is decided once an actual consumer exists.
   Affects: none (Open questions entry stands as-is).
+
+- Q: (Surfaced during Step 4.5 manual playtest) Playtesting the effects
+  table showed it working, but the rest of the details pane (name/type/
+  slot/damage) was still plain, ungridded `JLabel` text — inconsistent
+  with the new table styling right next to it. Should the whole item
+  details section become a table too, and should the effects table gain
+  visible column headers (neither was built — headers were left as an
+  optional/cosmetic nice-to-have when the table widget was first
+  implemented)?
+  A: Yes to both. The details pane is restructured into two tables: a
+  "Field | Value" table listing every item property (ID, Name, Glyph,
+  Type, Slot, and Base Damage Min/Max when the item has damage — same
+  conditional as the original `detailLines()`), followed by an "Effects:"
+  label and the effects table, now three columns (Type, Stat, Calc,
+  matching `Item.Effect`'s actual record fields directly instead of the
+  earlier combined "+stat (calc)" two-column format). Both tables get a
+  header row. This required two `TableWidget` additions: an optional
+  `columnHeaders` constructor parameter (rendered as a non-selectable
+  header row, excluded from row-navigation indexing) and a
+  `setSelectable(boolean)` flag (the new fields table uses
+  `setSelectable(false)` since it's static reference data, not meant to
+  be keyboard-navigated — only the effects table keeps real row
+  navigation/highlighting, unchanged from before). Both additions are
+  backward-compatible defaults (no headers, selectable) so the existing
+  isolated `ui-widget-table.feature` scenarios are unaffected.
+  Affects: Scope, Desired behavior (details-pane structure), and
+  `ui-widget-table.feature` (new scenario for the fields table).

@@ -1,10 +1,13 @@
 Feature: Table widget
-  A keyboard-navigable table widget (rows/columns of terminal-style cells)
-  built on the shared Widget/WidgetTheme framework from
-  ui-component-framework.feature. Proven both in isolation and by a real
-  consumer: the rebuilt inventory popup's details pane, which renders the
-  selected item's effects as a table (see
-  specs/intent/ui-widget-library.md).
+  A keyboard-navigable table widget (rows/columns of terminal-style cells,
+  with an optional header row) built on the shared Widget/WidgetTheme
+  framework from ui-component-framework.feature. Also supports a
+  non-selectable/non-highlighted mode for purely static data. Proven both
+  in isolation and by two real consumers in the rebuilt inventory popup's
+  details pane: a static field-value table for the selected item's
+  properties, and a row-navigable effects table (see
+  specs/intent/ui-widget-library.md, including its Step 4.5 playtest
+  Clarification for why the details pane became two tables).
 
   Scenario: Navigating a table widget down moves the selection to the next row
     Given a table widget with rows "Sword", "Shield", "Potion" and row 1 selected
@@ -55,6 +58,13 @@ Feature: Table widget
     And the inventory is toggled open
     When an item with no effects is selected
     Then the details pane shows an effects table with 0 rows
+
+  Scenario: The inventory popup's details pane shows every item property in a static field-value table
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When an item is selected
+    Then the details pane shows a field-value table listing the item's ID, Name, Glyph, Type, and Slot
+    And the field-value table is not row-highlighted
 
   Scenario: Pressing Right from the item list moves navigation focus to the effects table
     Given the rebuilt in-game inventory screen

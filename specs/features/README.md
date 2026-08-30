@@ -42,6 +42,6 @@ that change's definition of done, not separate cleanup.
 | `ui-panel-rendering-and-composition.feature` | UI panel rendering and composition |
 | `installer-mods-bundling.feature` | jpackage installer build bundles `mods/core` alongside the executable |
 | `ui-component-framework.feature` | Shared terminal-style widget framework (list/button/popup, focus manager, selected-state styling) proven by rebuilding the in-game inventory popup — opened directly via the keyboard toggle, no menu widget — and ClassSandboxPanel; supersedes SelectableMenu-based scenarios previously in `keyboard-input-and-menu-navigation.feature`, `ui-panel-rendering-and-composition.feature`, `class-sandbox-panel-selection.feature`, and `data-driven-item.feature` |
-| `ui-widget-table.feature` | Keyboard-navigable table widget (row/column selection, wrap-around, row-level confirm); real consumer: the inventory popup's effects table |
+| `ui-widget-table.feature` | Keyboard-navigable table widget (row/column selection, wrap-around, row-level confirm, optional header row, non-selectable static mode); real consumers: the inventory popup's field/value table and effects table |
 | `ui-widget-radio-group.feature` | Single-select radio group widget (vertical by default, optional horizontal); real consumer: the inventory popup's "Drop item?" confirmation |
 | `ui-widget-pattern-field.feature` | Regex-pattern-validated text field widget (valid/invalid state via a new WidgetTheme color) — no real consumer yet, proven in isolation |

@@ -15,10 +15,15 @@ import java.util.List;
 
 public class InventoryPanel extends PopupWidget {
 
+    private record FieldRow(String field, String value) {
+    }
+
     private static final int BODY_HEIGHT = 280;
 
     private final ListWidget<Item> itemList;
     private final JPanel detailsPanel;
+    private final TableWidget<FieldRow> fieldsTable;
+    private final JLabel effectsLabel;
     private final TableWidget<Item.Effect> effectsTable;
     private final DropConfirmationPopup dropConfirmationPopup;
     private boolean effectsTableHasFocus = false;
@@ -41,10 +46,15 @@ public class InventoryPanel extends PopupWidget {
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
         detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
 
-        effectsTable = new TableWidget<>(List.of(
-            e -> "+" + e.stat(),
-            e -> "(" + e.calc() + ")"
-        ));
+        fieldsTable = new TableWidget<>(List.of("Field", "Value"), List.of(FieldRow::field, FieldRow::value));
+        fieldsTable.setSelectable(false);
+
+        effectsLabel = makeEffectsLabel();
+
+        effectsTable = new TableWidget<>(
+                List.of("Type", "Stat", "Calc"),
+                List.of(e -> e.type(), Item.Effect::stat, Item.Effect::calc)
+        );
         effectsTable.setWrapAround(true);
 
         dropConfirmationPopup = new DropConfirmationPopup();
@@ -64,6 +74,14 @@ public class InventoryPanel extends PopupWidget {
 
     public Item getSelectedItem() {
         return itemList.getSelectedItem();
+    }
+
+    public TableWidget<FieldRow> getFieldsTable() {
+        return fieldsTable;
+    }
+
+    public TableWidget<Item.Effect> getEffectsTable() {
+        return effectsTable;
     }
 
     public DropConfirmationPopup getDropConfirmationPopup() {
@@ -114,6 +132,15 @@ public class InventoryPanel extends PopupWidget {
         return titleLabel;
     }
 
+    private JLabel makeEffectsLabel() {
+        JLabel label = new JLabel("Effects:");
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
+        return label;
+    }
+
     private JScrollPane buildScrollPane(JComponent view) {
         JScrollPane scrollPane = new JScrollPane(view);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -139,29 +166,33 @@ public class InventoryPanel extends PopupWidget {
     private void updateDetails(Item item) {
         detailsPanel.removeAll();
         effectsTableHasFocus = false;
-        for (String line : detailLines(item)) {
-            detailsPanel.add(detailLabel(line));
+        if (item == null) {
+            detailsPanel.add(detailLabel("(no item selected)"));
+        } else {
+            fieldsTable.setRows(fieldRows(item));
+            effectsTable.setRows(item.getEffects());
+            detailsPanel.add(fieldsTable);
+            detailsPanel.add(effectsLabel);
+            detailsPanel.add(effectsTable);
         }
-        effectsTable.setRows(item == null ? List.of() : item.getEffects());
-        detailsPanel.add(effectsTable);
         detailsPanel.revalidate();
         detailsPanel.repaint();
     }
 
-    private List<String> detailLines(Item item) {
-        if (item == null) {
-            return List.of("(no item selected)");
-        }
-        List<String> lines = new java.util.ArrayList<>(List.of(
-                item.getName(),
-                "Type: " + item.getType(),
-                "Slot: " + item.getSlot()
+    private List<FieldRow> fieldRows(Item item) {
+        List<FieldRow> rows = new java.util.ArrayList<>(List.of(
+                new FieldRow("ID", item.getId()),
+                new FieldRow("Name", item.getName()),
+                new FieldRow("Glyph", String.valueOf(item.getGlyph())),
+                new FieldRow("Type", item.getType()),
+                new FieldRow("Slot", item.getSlot())
         ));
         Item.BaseDamage damage = item.getBaseDamage();
         if (damage.max() > 0) {
-            lines.add("Damage: " + damage.min() + "-" + damage.max());
+            rows.add(new FieldRow("Base Damage (Min)", String.valueOf(damage.min())));
+            rows.add(new FieldRow("Base Damage (Max)", String.valueOf(damage.max())));
         }
-        return lines;
+        return rows;
     }
 
     private JLabel detailLabel(String text) {

@@ -531,23 +531,55 @@ public class UiComponentFrameworkSteps {
 
     @When("an item with effects {string}, {string} is selected")
     public void anItemWithEffectsIsSelected(String effect1, String effect2) {
-        // This is handled by the inventory test setup
+        // No real mod item has 2 effects (max is 1 - core:iron_sword, core:iron_helmet, etc. each
+        // have exactly one), so this scenario's fixed 2-effect precondition needs a fake item
+        // rather than navigating real ModLoader data.
+        eastPanel.getInventoryPanel().showItems(List.of(fakeItemWithEffects(List.of(effect1, effect2))));
     }
 
     @When("an item with no effects is selected")
     public void anItemWithNoEffectsIsSelected() {
-        // This is handled by the inventory test setup
+        eastPanel.getInventoryPanel().showItems(List.of(fakeItemWithEffects(List.of())));
+    }
+
+    // Parses "+strength (base)" into an Item.Effect("stat_bonus", "strength", "base") - the same
+    // shape InventoryPanel.fieldRows()/the old detailLines() format ("+" + stat + " (" + calc +
+    // ")") already used, just inverted back into structured data for test setup.
+    private com.swiftfaze.veil.entities.items.Item fakeItemWithEffects(List<String> effectStrings) {
+        List<com.swiftfaze.veil.entities.items.Item.Effect> effects = new ArrayList<>();
+        for (String s : effectStrings) {
+            String stripped = s.startsWith("+") ? s.substring(1) : s;
+            int parenIndex = stripped.indexOf(" (");
+            String stat = parenIndex >= 0 ? stripped.substring(0, parenIndex) : stripped;
+            String calc = parenIndex >= 0 ? stripped.substring(parenIndex + 2, stripped.length() - 1) : "";
+            effects.add(new com.swiftfaze.veil.entities.items.Item.Effect("stat_bonus", stat, calc));
+        }
+        return new com.swiftfaze.veil.entities.items.Item(
+                "test:fake_item", "Fake Item", '?', "misc", "none",
+                new com.swiftfaze.veil.entities.items.Item.BaseDamage(0, 0), effects);
     }
 
     @Then("the details pane shows an effects table with {int} rows")
     public void theDetailsPaneShowsAnEffectsTableWithRows(int rowCount) {
-        // Verify the effects table has the expected number of rows
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
+        assertEquals(rowCount, eastPanel.getInventoryPanel().getEffectsTable().getRowCount());
     }
 
     @Then("the effects table's first row is highlighted as selected")
     public void theEffectsTableFirstRowIsHighlighted() {
-        assertEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
+        assertEquals(0, eastPanel.getInventoryPanel().getEffectsTable().getSelectedRowIndex());
+    }
+
+    @Then("the details pane shows a field-value table listing the item's ID, Name, Glyph, Type, and Slot")
+    public void theDetailsPaneShowsAFieldValueTable() {
+        // The fields table always has these 5 rows plus 2 more (Base Damage Min/Max) when the
+        // item has damage — asserting >= 5 covers both cases without depending on the private
+        // FieldRow type's content.
+        assertTrue(eastPanel.getInventoryPanel().getFieldsTable().getRowCount() >= 5);
+    }
+
+    @Then("the field-value table is not row-highlighted")
+    public void theFieldValueTableIsNotRowHighlighted() {
+        assertFalse(eastPanel.getInventoryPanel().getFieldsTable().isSelectable());
     }
 
     // Matches both a "Given/And the effects table has navigation focus" precondition (drives it:

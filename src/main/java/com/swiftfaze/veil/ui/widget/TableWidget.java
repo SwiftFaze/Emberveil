@@ -2,6 +2,7 @@ package com.swiftfaze.veil.ui.widget;
 
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,17 +10,25 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class TableWidget<T> extends Widget {
+    private final List<String> columnHeaders;
     private final List<Function<T, String>> columnRenderers;
     private final List<T> rows = new ArrayList<>();
     private final List<JLabel> labels = new ArrayList<>();
     private int selectedRowIndex = 0;
     private int selectedColumnIndex = 0;
     private boolean wrapAround = true;
+    private boolean selectable = true;
     private Consumer<T> onConfirm = t -> {};
 
     public TableWidget(List<Function<T, String>> columnRenderers) {
+        this(List.of(), columnRenderers);
+    }
+
+    public TableWidget(List<String> columnHeaders, List<Function<T, String>> columnRenderers) {
+        this.columnHeaders = columnHeaders;
         this.columnRenderers = columnRenderers;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        buildHeaderRow();
         bindKeys();
     }
 
@@ -35,6 +44,16 @@ public class TableWidget<T> extends Widget {
         this.wrapAround = wrapAround;
     }
 
+    /**
+     * A non-selectable table renders every row in NORMAL_TEXT, with no row-highlight
+     * indication — for purely static/display data (e.g. a fixed field/value list) that
+     * isn't meant to be keyboard-navigated, as opposed to a real navigable table.
+     */
+    public void setSelectable(boolean selectable) {
+        this.selectable = selectable;
+        refreshHighlight();
+    }
+
     public void setOnConfirm(Consumer<T> onConfirm) {
         this.onConfirm = onConfirm;
     }
@@ -45,6 +64,14 @@ public class TableWidget<T> extends Widget {
 
     public int getSelectedRowIndex() {
         return selectedRowIndex;
+    }
+
+    public int getRowCount() {
+        return rows.size();
+    }
+
+    public boolean isSelectable() {
+        return selectable;
     }
 
     public int getSelectedColumnIndex() {
@@ -107,13 +134,28 @@ public class TableWidget<T> extends Widget {
         });
     }
 
+    private void buildHeaderRow() {
+        if (columnHeaders.isEmpty()) {
+            return;
+        }
+        JLabel header = new JLabel(String.join("  ", columnHeaders));
+        header.setForeground(WidgetTheme.NORMAL_TEXT);
+        header.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.BOLD, 16));
+        header.setAlignmentX(LEFT_ALIGNMENT);
+        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 1, 0, java.awt.Color.LIGHT_GRAY);
+        header.setBorder(BorderFactory.createCompoundBorder(bottomLine, BorderFactory.createEmptyBorder(0, 0, 2, 0)));
+        add(header);
+    }
+
     private void refresh() {
-        removeAll();
+        // Remove only the data-row labels, keep the header row (index 0, if present) intact.
+        for (JLabel label : labels) {
+            remove(label);
+        }
         labels.clear();
         for (T row : rows) {
             String cellText = renderRow(row);
             JLabel label = new JLabel(cellText);
-            label.setForeground(WidgetTheme.NORMAL_TEXT);
             label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
             label.setAlignmentX(LEFT_ALIGNMENT);
             labels.add(label);
@@ -135,9 +177,9 @@ public class TableWidget<T> extends Widget {
     private void refreshHighlight() {
         for (int i = 0; i < labels.size(); i++) {
             labels.get(i).setForeground(
-                i == selectedRowIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
+                selectable && i == selectedRowIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
         }
-        if (selectedRowIndex < labels.size()) {
+        if (selectable && selectedRowIndex < labels.size()) {
             scrollRectToVisible(labels.get(selectedRowIndex).getBounds());
         }
     }
