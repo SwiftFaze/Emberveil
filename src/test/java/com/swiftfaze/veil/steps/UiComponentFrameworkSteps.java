@@ -1,10 +1,12 @@
 package com.swiftfaze.veil.steps;
 
 import com.swiftfaze.veil.entities.player.Stats;
+import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.sandbox.ClassSandboxModel;
 import com.swiftfaze.veil.sandbox.ClassSandboxPanel;
 import com.swiftfaze.veil.ui.EastPanel;
+import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.widget.ButtonWidget;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import io.cucumber.java.en.Given;
@@ -13,6 +15,7 @@ import io.cucumber.java.en.When;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
+import javax.swing.JLayeredPane;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -39,6 +42,7 @@ public class UiComponentFrameworkSteps {
     private List<String> classNames;
     private boolean restoreGameFocusInvoked;
     private int lastKeyCode; // Track which key was pressed for scenarios
+    private JLayeredPane layeredContentArea;
 
     @Given("a list widget with items {string}, {string}, {string} and {string} selected")
     public void aListWidgetWithItems(String first, String second, String third, String selected) {
@@ -200,6 +204,20 @@ public class UiComponentFrameworkSteps {
     @Then("the restore-game-focus action was invoked")
     public void theRestoreGameFocusActionWasInvoked() {
         assertTrue(restoreGameFocusInvoked);
+    }
+
+    @Given("the game window's layered content area")
+    public void theGameWindowsLayeredContentArea() {
+        eastPanel = new EastPanel();
+        layeredContentArea = GameWindow.buildContentArea(new GamePanel(), eastPanel);
+    }
+
+    @Then("the inventory popup's layer is above the game and sidebar content's layer")
+    public void theInventoryPopupsLayerIsAboveTheGameAndSidebarContentsLayer() {
+        int popupLayer = layeredContentArea.getLayer(eastPanel.getInventoryPanel());
+        int mainAreaLayer = layeredContentArea.getLayer(
+                layeredContentArea.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0]);
+        assertTrue(popupLayer > mainAreaLayer);
     }
 
     @Then("the menu has keyboard focus")

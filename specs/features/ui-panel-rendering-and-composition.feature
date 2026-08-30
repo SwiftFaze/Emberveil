@@ -2,7 +2,9 @@ Feature: UI panel rendering and composition
   The terminal-style UI shell displays player stats and composes its
   panels consistently: TerminalPanel's shared styling contract,
   PlayerInfoPanel's stat display, NorthPanel/SouthPanel's fixed layout,
-  and EastPanel's composition of PlayerInfoPanel/InventoryPanel/MenuPanel.
+  and EastPanel's composition of PlayerInfoPanel/MenuPanel (the inventory
+  popup is layered above the whole game window instead — see
+  ui-component-framework.feature).
 
   Scenario: A panel extending TerminalPanel uses the shared terminal styling
     Given a new instance of a panel extending TerminalPanel
@@ -43,11 +45,11 @@ Feature: UI panel rendering and composition
     And the panel's preferred height equals 4 times the game window height
     And the panel has a light-gray border
 
-  Scenario: EastPanel composes PlayerInfoPanel, InventoryPanel, and MenuPanel
+  Scenario: EastPanel composes PlayerInfoPanel and MenuPanel
     Given a new EastPanel
     Then its player info panel is in the north of the layout
-    And its inventory panel is in the center of the layout
     And its menu panel is in the south of the layout
+    And its inventory panel is not part of EastPanel's own layout
 
   Scenario: EastPanel itself is a fixed-size, bordered, non-focusable panel
     Given a new EastPanel

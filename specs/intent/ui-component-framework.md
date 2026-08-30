@@ -270,3 +270,23 @@ resolved in a grilling session; see Clarifications below.
   stale "#26 phase 4 plans to" framing to reflect that it already shipped.
   Affects: Scope (existing-specs-migration bullet, now four files),
   Constraints (corrected).
+
+- Q: (Surfaced during Step 4.5 manual playtest) The first implementation
+  laid the inventory popup out inline inside `EastPanel`'s own
+  `BorderLayout.CENTER`, sized to the sidebar. Playtesting it in the real
+  game showed this didn't read as a popup at all — it just looked like the
+  sidebar's old always-visible inventory list, and (compounding a separate
+  real bug where `FocusManager.captureModally()` didn't actually gate
+  `MenuPanel`'s key bindings) the menu behind it kept responding to
+  Up/Down. Given the "disposable skeleton, no layout polish" framing this
+  spec approved under, should the popup's on-screen position be reworked
+  now, or left as-is and deferred with the rest of the layout?
+  A: Rework it now — the popup should cover the game view, not just sit in
+  the sidebar. Implemented via a `JLayeredPane` (`ui/GameWindow.java`)
+  layering the popup above a `mainArea` panel (`GamePanel` + `EastPanel`),
+  stretched to match via a small `FillLayout`. This is judged a real
+  behavior gap (a "popup" that doesn't visually behave like one), not the
+  visual polish/layout-tuning the disposable-skeleton framing was meant to
+  defer.
+  Affects: Desired behavior, Scope (the disposable-skeleton/no-layout-polish
+  non-goal now carries one explicit exception).

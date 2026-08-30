@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiPanelRenderingAndCompositionSteps {
@@ -158,11 +159,12 @@ public class UiPanelRenderingAndCompositionSteps {
         assertTrue(north instanceof PlayerInfoPanel);
     }
 
-    @Then("its inventory panel is in the center of the layout")
-    public void itsInventoryPanelIsInTheCenterOfTheLayout() {
+    @Then("its inventory panel is not part of EastPanel's own layout")
+    public void itsInventoryPanelIsNotPartOfEastPanelsOwnLayout() {
         BorderLayout layout = (BorderLayout) eastPanel.getLayout();
         Component center = layout.getLayoutComponent(BorderLayout.CENTER);
-        assertEquals(eastPanel.getInventoryPanel(), center);
+        assertNotEquals(eastPanel.getInventoryPanel(), center);
+        assertNotEquals(eastPanel, eastPanel.getInventoryPanel().getParent());
     }
 
     @Then("its menu panel is in the south of the layout")

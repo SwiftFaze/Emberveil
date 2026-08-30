@@ -42,7 +42,6 @@ public class EastPanel extends JPanel implements GameListener {
         inventoryPanel.setOnDismiss(this::onInventoryDismissed);
 
         add(playerInfoPanel, BorderLayout.NORTH);
-        add(inventoryPanel, BorderLayout.CENTER);
         add(menuPanel, BorderLayout.SOUTH);
     }
 

@@ -2,6 +2,7 @@ package com.swiftfaze.veil;
 
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.ui.EastPanel;
+import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
 import com.swiftfaze.veil.ui.SouthPanel;
 import org.slf4j.Logger;
@@ -29,11 +30,12 @@ public class Main {
         gamePanel.addGameListener(eastPanel);
         eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
 
+        JLayeredPane contentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+
         frame.setLayout(new BorderLayout());
         frame.add(northPanel, BorderLayout.NORTH);
         frame.add(southPanel, BorderLayout.SOUTH);
-        frame.add(gamePanel, BorderLayout.CENTER);
-        frame.add(eastPanel, BorderLayout.EAST);
+        frame.add(contentArea, BorderLayout.CENTER);
 
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

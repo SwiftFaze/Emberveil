@@ -81,6 +81,10 @@ Feature: Terminal-style UI component framework
     Then the inventory popup lists the item "Iron Sword"
     And none of the inventory popup's items are highlighted as selected
 
+  Scenario: The inventory popup is layered above the game view and sidebar, not inside them
+    Given the game window's layered content area
+    Then the inventory popup's layer is above the game and sidebar content's layer
+
   Scenario: ClassSandboxPanel's initial selection is highlighted and its stats shown
     Given a class sandbox panel is showing
     Then the first class's label is colored "#eeb392"
@@ -126,7 +130,13 @@ Feature: Terminal-style UI component framework
   #     needed to prove the framework against this real screen — this
   #     rebuilt screen is an explicitly disposable skeleton, expected to be
   #     fully deleted and rebuilt once milestone "6. Intro Quest & UI" (#7)
-  #     lands.
+  #     lands. The one exception: the inventory popup is layered above the
+  #     whole game window (JLayeredPane, GameWindow.buildContentArea), not
+  #     just centered in the sidebar — added after Step 4.5 manual playtest
+  #     showed the popup sitting inline in EastPanel's own layout didn't
+  #     read as a popup at all. That's a real behavior gap, not visual
+  #     polish, so it's in scope despite the disposable-skeleton framing
+  #     above.
   #
   # Risks:
   #   - This feature supersedes scenarios in four existing files, which
