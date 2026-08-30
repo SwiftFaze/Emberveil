@@ -7,6 +7,7 @@ import com.swiftfaze.veil.sandbox.ClassSandboxModel;
 import com.swiftfaze.veil.sandbox.ClassSandboxPanel;
 import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
+import com.swiftfaze.veil.ui.ResetConfirmationPopup;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
@@ -157,7 +158,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireLeftKey() {
-        if (settingsScreenPanel != null) {
+        if (confirmationPopupIsOpen()) {
+            fireResetChoiceAction("radio-left");
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveLeft();
         } else if (sliderWidget != null) {
             sliderWidget.moveLeft();
@@ -173,7 +176,9 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireRightKey() {
-        if (settingsScreenPanel != null) {
+        if (confirmationPopupIsOpen()) {
+            fireResetChoiceAction("radio-right");
+        } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveRight();
         } else if (sliderWidget != null) {
             sliderWidget.moveRight();
@@ -191,6 +196,8 @@ public class UiComponentFrameworkSteps {
     private void fireEnterKey() {
         if (keybindsPanel != null) {
             keybindsPanel.confirm();
+        } else if (confirmationPopupIsOpen()) {
+            fireResetChoiceAction("radio-confirm");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.confirm();
         } else if (titleScreenPanel != null) {
@@ -234,9 +241,31 @@ public class UiComponentFrameworkSteps {
         }
     }
 
+    private boolean confirmationPopupIsOpen() {
+        return settingsScreenPanel != null && settingsScreenPanel.getResetConfirmationPopup().isVisible();
+    }
+
+    private void fireResetChoiceAction(String actionName) {
+        RadioGroupWidget<String> choice = settingsScreenPanel.getResetConfirmationPopup().getChoiceWidget();
+        Action action = choice.getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(choice, ActionEvent.ACTION_PERFORMED, actionName));
+        }
+    }
+
+    private void fireResetAction(String actionName) {
+        ResetConfirmationPopup popup = settingsScreenPanel.getResetConfirmationPopup();
+        Action action = popup.getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(popup, ActionEvent.ACTION_PERFORMED, actionName));
+        }
+    }
+
     private void fireEscapeKey() {
         if (keybindsPanel != null) {
             keybindsPanel.back();
+        } else if (confirmationPopupIsOpen()) {
+            fireResetAction("popup-dismiss");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.back();
         } else if (eastPanel != null) {
@@ -963,5 +992,57 @@ public class UiComponentFrameworkSteps {
     @Given("{string} is highlighted in the footer")
     public void itemIsHighlightedInFooter(String action) {
         keybindsPanel.highlightFooterAction(action);
+    }
+
+    // Matches both a "Given the confirmation popup is shown" precondition (drives it open from
+    // scratch when used as a standalone precondition) and "Then the confirmation popup is shown"
+    // (asserts it) — Cucumber matches step text regardless of keyword, so one method must handle both.
+    @Then("the confirmation popup is shown")
+    public void theConfirmationPopupIsShown() {
+        if (settingsScreenPanel == null) {
+            theSettingsScreenIsShown();
+        }
+        if (!settingsScreenPanel.getResetConfirmationPopup().isVisible()) {
+            // Navigate to "Reset to Defaults" and press Enter to open the popup
+            while (!settingsScreenPanel.getHighlightedItemName().equals("Reset to Defaults")) {
+                settingsScreenPanel.moveDown();
+            }
+            settingsScreenPanel.confirm();
+        }
+        assertTrue(settingsScreenPanel.getResetConfirmationPopup().isVisible());
+    }
+
+    @Then("the confirmation popup is not full-screen")
+    public void theConfirmationPopupIsNotFullScreen() {
+        assertFalse(settingsScreenPanel.getResetConfirmationPopup().isFullScreen());
+    }
+
+    @Then("the confirmation popup's title is {string}")
+    public void theConfirmationPopupsTitleIs(String expected) {
+        assertEquals(expected, settingsScreenPanel.getResetConfirmationPopup().getTitle());
+    }
+
+    @Then("the confirmation popup asks {string}")
+    public void theConfirmationPopupAsks(String expected) {
+        assertEquals(expected, settingsScreenPanel.getResetConfirmationPopup().getQuestionText());
+    }
+
+    // Matches both a "Given '<choice>' is highlighted in the confirmation popup" precondition
+    // and a "Then ... is highlighted in the confirmation popup" assertion — Cucumber matches
+    // step text regardless of keyword, so one method must handle both.
+    @Then("{string} is highlighted in the confirmation popup")
+    public void isHighlightedInConfirmationPopup(String option) {
+        RadioGroupWidget<String> choice = settingsScreenPanel.getResetConfirmationPopup().getChoiceWidget();
+        int guard = 0;
+        while (!option.equals(choice.getHighlightedOption()) && guard < 10) {
+            fireResetChoiceAction("radio-right");
+            guard++;
+        }
+        assertEquals(option, choice.getHighlightedOption());
+    }
+
+    @Then("the confirmation popup is closed")
+    public void theConfirmationPopupIsClosed() {
+        assertFalse(settingsScreenPanel.getResetConfirmationPopup().isVisible());
     }
 }
