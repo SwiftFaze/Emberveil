@@ -221,11 +221,25 @@ public class PatternFieldWidget extends Widget {
                 return;
             }
             try {
-                Rectangle2D caretBounds = component.modelToView2D(getDot());
+                int dot = getDot();
+                Rectangle2D caretBounds = component.modelToView2D(dot);
                 FontMetrics metrics = component.getFontMetrics(component.getFont());
+                int x = (int) caretBounds.getX();
+                int y = (int) caretBounds.getY();
+                int charWidth = metrics.charWidth('M');
+
                 g.setColor(component.getCaretColor());
-                g.fillRect((int) caretBounds.getX(), (int) caretBounds.getY(),
-                        metrics.charWidth('M'), (int) caretBounds.getHeight());
+                g.fillRect(x, y, charWidth, (int) caretBounds.getHeight());
+
+                // A solid block would otherwise paint straight over whatever character sits at
+                // the cursor position — redraw it on top, in the field's background color, so it
+                // stays readable against the block (the usual terminal-cursor "invert" look).
+                if (dot < component.getDocument().getLength()) {
+                    String charUnderCursor = component.getDocument().getText(dot, 1);
+                    g.setColor(component.getBackground());
+                    g.setFont(component.getFont());
+                    g.drawString(charUnderCursor, x, y + metrics.getAscent());
+                }
             } catch (BadLocationException ignored) {
                 // Nothing at this position to draw a cursor for.
             }

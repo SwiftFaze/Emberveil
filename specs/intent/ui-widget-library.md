@@ -761,3 +761,15 @@ next screen that needs them.
   explicitly.
   Affects: none (bug fix — restores the blinking that was assumed
   already present).
+
+- Q: Moving the block cursor over a letter made that letter invisible.
+  A: Expected given `BlockCaret`'s own paint order — the JTextComponent
+  UI paints the text first, then the caret's `paint()` runs afterward
+  and simply filled a solid rectangle on top, with nothing redrawing
+  the character underneath. Fixed with the standard terminal-cursor
+  "invert" treatment: after filling the block, if there's an actual
+  character at the cursor's dot position (not the very end of the
+  text, where there's nothing there), it's redrawn on top in the
+  field's background color, so it stays readable against the block
+  instead of being covered by it.
+  Affects: none (bug fix, no behavior/scope change).
