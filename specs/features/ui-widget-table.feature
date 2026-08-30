@@ -1,10 +1,10 @@
 Feature: Table widget
   A keyboard-navigable table widget (rows/columns of terminal-style cells)
   built on the shared Widget/WidgetTheme framework from
-  ui-component-framework.feature. No real in-game screen consumes it yet
-  (see specs/intent/ui-widget-library.md) — proven through isolated
-  widget-level scenarios, same style as the list/button scenarios in
-  ui-component-framework.feature.
+  ui-component-framework.feature. Proven both in isolation and by a real
+  consumer: the rebuilt inventory popup's details pane, which renders the
+  selected item's effects as a table (see
+  specs/intent/ui-widget-library.md).
 
   Scenario: Navigating a table widget down moves the selection to the next row
     Given a table widget with rows "Sword", "Shield", "Potion" and row 1 selected
@@ -43,29 +43,76 @@ Feature: Table widget
     When the "Enter" key is pressed
     Then the confirmed row is "Shield"
 
+  Scenario: The inventory popup's details pane shows an item's effects as a table
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When an item with effects "+strength (base)", "+agility (base)" is selected
+    Then the details pane shows an effects table with 2 rows
+    And the effects table's first row is highlighted as selected
+
+  Scenario: The inventory popup's details pane shows an item with no effects as an empty table
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When an item with no effects is selected
+    Then the details pane shows an effects table with 0 rows
+
+  Scenario: Pressing Right from the item list moves navigation focus to the effects table
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the selected item has effects
+    When the "Right" key is pressed
+    Then the effects table has navigation focus
+
+  Scenario: Up/Down navigates the effects table once it has navigation focus
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the selected item has effects
+    And the effects table has navigation focus
+    When the "Down" key is pressed
+    Then the effects table's selected row is no longer the first row
+
+  Scenario: Pressing Left from the effects table returns navigation focus to the item list
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the effects table has navigation focus
+    When the "Left" key is pressed
+    Then the item list has navigation focus
+
+  Scenario: Pressing Right does nothing when the selected item has no effects
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    And the selected item has no effects
+    When the "Right" key is pressed
+    Then the item list still has navigation focus
+
   # Non-goals:
-  #   - Wiring this widget into any real in-game screen — no consumer
-  #     exists yet (see specs/intent/ui-widget-library.md's Constraints).
   #   - Cell-level confirm (as opposed to row-level) — decided against in
   #     specs/intent/ui-widget-library.md's Clarifications.
   #   - Scrolling behavior specifics — TerminalScrollBarUI is reused
   #     as-is from the existing framework, nothing new to prove there.
-  #   - Any mouse/pointer handling — this game is keyboard-only by design.
+  #   - Any real drop mechanism triggered from the effects table — see
+  #     ui-widget-radio-group.feature's "Drop item?" scenarios; that
+  #     confirmation is keyboard "D", not something the table itself
+  #     does.
+  #   - Any mouse/pointer handling — this game is keyboard-only by
+  #     design.
   #
   # Risks:
   #   - Real Swing focus-transfer is not simulated headlessly here,
   #     matching the existing precedent in ui-component-framework.feature
-  #     — "keyboard focus" Given/Then steps model the widget's internal
-  #     selection state directly.
-  #   - This widget has no real consumer to validate its shape against;
-  #     the row-confirm/wrap-default decisions above were made
-  #     autonomously (see specs/intent/ui-widget-library.md's
-  #     Clarifications) and should be revisited once a real screen needs
-  #     this widget, per the intent doc's Constraints. The new
-  #     MENU_LEFT/MENU_RIGHT keybindings this widget needs are shared
-  #     with the radio group widget, which does have a real consumer
-  #     (issue #54) — see ui-widget-radio-group.feature.
+  #     — "keyboard focus"/"navigation focus" Given/Then steps model
+  #     internal state directly.
+  #   - This feature modifies already-shipped code from #36
+  #     (InventoryPanel, PopupWidget), not just adding a standalone
+  #     widget — PopupWidget gains onLeft()/onRight() hooks alongside its
+  #     existing onUp()/onDown(). See
+  #     specs/intent/ui-widget-library.md's Constraints.
+  #   - The exact column set/labels for the effects table ("Stat"/
+  #     "Value") and the no-wrap-at-the-pane-boundary behavion (Left from
+  #     the item list, Right from the effects table with no further pane)
+  #     were autonomous implementation-level calls during spec drafting,
+  #     not separately grilled — flag for confirmation at Step 3 approval
+  #     if they matter.
   #
   # Open questions:
-  #   - See specs/intent/ui-widget-library.md's Open questions — the
-  #     first real consumer of these widgets is still unidentified.
+  #   - None outstanding for this widget.
