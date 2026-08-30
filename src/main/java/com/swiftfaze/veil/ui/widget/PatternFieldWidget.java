@@ -21,7 +21,10 @@ import java.util.regex.Pattern;
  */
 public class PatternFieldWidget extends Widget {
     private static final int UNFOCUSED_BORDER_WIDTH = 1;
-    private static final int FOCUSED_BORDER_WIDTH = 2;
+    // Swing line/matte borders only take integer pixel widths, so 1px is as thin as either state
+    // can get — focus is conveyed by the outline shape (full box vs. bottom-only) and color, not
+    // by extra thickness.
+    private static final int FOCUSED_BORDER_WIDTH = 1;
     private static final Font LABEL_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     // Fixed and generous, not derived from any child's own metrics — border width and whether a
     // TitledBorder's reserved label space is present both vary with state, and a tightly-computed

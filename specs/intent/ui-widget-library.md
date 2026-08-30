@@ -664,3 +664,12 @@ next screen that needs them.
   Affects: Desired behavior (pattern-field widget's border/label
   presentation), a new constructor overload (additive, old one kept),
   no scope change — still no real consumer.
+
+- Q: Outlined-field look confirmed good, just wanted the border a bit
+  thinner.
+  A: Focused width dropped from 2px to 1px (matching the unfocused
+  width — Swing's line/matte borders only take integer pixel widths,
+  so 1px is as thin as either state can get). Focus is still conveyed
+  by the outline shape (full box vs. bottom-only) and color, not by
+  extra thickness.
+  Affects: none (minor visual tweak).
