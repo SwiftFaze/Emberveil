@@ -5,6 +5,7 @@ import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
 import com.swiftfaze.veil.ui.SouthPanel;
+import com.swiftfaze.veil.ui.TitleScreenPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,10 @@ public class Main {
 
     private static void loadGame() {
         JFrame frame = new JFrame("Veil");
+        CardLayout cardLayout = new CardLayout();
+        JPanel cardPanel = new JPanel(cardLayout);
 
+        // Build game view components (for the game card)
         NorthPanel northPanel = new NorthPanel();
         SouthPanel southPanel = new SouthPanel();
         EastPanel eastPanel = new EastPanel();
@@ -30,12 +34,41 @@ public class Main {
         gamePanel.addGameListener(eastPanel);
         eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
 
-        JLayeredPane contentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+        JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+
+        // Build game card: North + South + Center layout
+        JPanel gameCard = new JPanel(new BorderLayout());
+        gameCard.add(northPanel, BorderLayout.NORTH);
+        gameCard.add(southPanel, BorderLayout.SOUTH);
+        gameCard.add(gameContentArea, BorderLayout.CENTER);
+
+        // Build title screen card
+        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> {
+            switch (menuItem) {
+                case "New" -> {
+                    cardLayout.show(cardPanel, "game");
+                    gamePanel.requestFocusInWindow();
+                    gamePanel.startGameLoop();
+                }
+                case "Settings" -> cardLayout.show(cardPanel, "settings");
+                case "Keybinds" -> cardLayout.show(cardPanel, "keybinds");
+                // Continue, Load, Exit: placeholders, do nothing
+            }
+        });
+
+        // Placeholder settings and keybinds cards (will be replaced in phases 3-4)
+        JPanel settingsCard = new JPanel();
+        settingsCard.setBackground(Color.BLACK);
+        JPanel keybindsCard = new JPanel();
+        keybindsCard.setBackground(Color.BLACK);
+
+        cardPanel.add(titleScreen, "title");
+        cardPanel.add(gameCard, "game");
+        cardPanel.add(settingsCard, "settings");
+        cardPanel.add(keybindsCard, "keybinds");
 
         frame.setLayout(new BorderLayout());
-        frame.add(northPanel, BorderLayout.NORTH);
-        frame.add(southPanel, BorderLayout.SOUTH);
-        frame.add(contentArea, BorderLayout.CENTER);
+        frame.add(cardPanel, BorderLayout.CENTER);
 
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,9 +76,8 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-
-        gamePanel.requestFocusInWindow();
-        gamePanel.startGameLoop();
+        cardLayout.show(cardPanel, "title");
+        titleScreen.requestFocusInWindow();
         keyListen(frame);
     }
 

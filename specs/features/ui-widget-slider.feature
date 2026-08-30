@@ -1,4 +1,3 @@
-@pending
 Feature: Slider widget
   A bounded-value slider widget built on the shared Widget/WidgetTheme
   framework from ui-component-framework.feature. Left/Right adjusts the
