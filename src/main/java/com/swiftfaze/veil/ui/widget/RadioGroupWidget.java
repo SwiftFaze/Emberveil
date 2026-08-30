@@ -3,6 +3,7 @@ package com.swiftfaze.veil.ui.widget;
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
 import javax.swing.border.Border;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +11,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class RadioGroupWidget<T> extends Widget {
-    // Same insets as CONFIRMED_BORDER's line width, drawn in the background color instead of
-    // green — keeps every label's size identical whether or not it's currently the confirmed
-    // option, so confirming doesn't shift the layout of the options around it.
+    // Same "bottom border by default, full outline once committed" pattern as PatternFieldWidget
+    // (there: unfocused/focused; here: unconfirmed/confirmed) — accepting the same minor layout
+    // shift between the two states that widget already does, for the same reason.
     private static final Border CONFIRMED_BORDER = BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2);
-    private static final Border UNCONFIRMED_BORDER = BorderFactory.createEmptyBorder(2, 2, 2, 2);
+    private static final Border UNCONFIRMED_BORDER = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.TABLE_BORDER);
 
     private final Function<T, String> optionRenderer;
     private final boolean horizontal;
@@ -131,6 +132,10 @@ public class RadioGroupWidget<T> extends Widget {
         actionMap.put("radio-confirm", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 selectedIndex = highlightedIndex;
+                // Without this, the confirmed border wasn't applied until whatever move happened
+                // next indirectly triggered a refresh - setting selectedIndex alone doesn't
+                // repaint anything.
+                refreshHighlight();
                 T option = getSelectedOption();
                 if (option != null) onConfirm.accept(option);
             }
@@ -149,6 +154,21 @@ public class RadioGroupWidget<T> extends Widget {
             add(label);
         }
         refreshHighlight();
+        if (!horizontal) {
+            // Vertical options share one width by default (matching the widest option's
+            // rendered size, border and all) instead of each sizing to its own text — same "full
+            // width" convention ListWidget's rows and TableWidget's row panels already use.
+            // Horizontal options stay sized to their own content; stretching those to fill the
+            // row's width wouldn't read as a set of side-by-side choices anymore.
+            int maxWidth = 0;
+            for (JLabel label : labels) {
+                maxWidth = Math.max(maxWidth, label.getPreferredSize().width);
+            }
+            for (JLabel label : labels) {
+                label.setMaximumSize(new Dimension(maxWidth, label.getPreferredSize().height));
+                label.setPreferredSize(new Dimension(maxWidth, label.getPreferredSize().height));
+            }
+        }
         revalidate();
         repaint();
     }

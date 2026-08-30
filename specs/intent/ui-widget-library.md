@@ -800,3 +800,30 @@ next screen that needs them.
   the "global" precedent set earlier in this feature.
   Affects: Desired behavior (radio group's confirmed-state indication;
   the shared highlight color, application-wide).
+
+- Q: Three more findings on the radio group: (1) the confirmed border
+  only appeared after a subsequent move, not immediately on Enter; (2)
+  vertical options should share one width by default, like every other
+  widget's "full width" convention; (3) it should default to a bottom
+  border like the pattern field does, full outline only once
+  confirmed.
+  A: (1) A real bug — the `radio-confirm` action set `selectedIndex`
+  but never called `refreshHighlight()`, so nothing actually repainted
+  until some *other* action (e.g. an arrow key) indirectly triggered
+  one. Now calls it directly.
+  (2) Vertical options now share the widest option's width (computed
+  once, after all labels have their final text/border, same as every
+  other "compute after content" fix earlier in this feature) — matches
+  `ListWidget`'s rows/`TableWidget`'s row panels. Horizontal options
+  are deliberately left sized to their own content — stretching a
+  Yes/No or Windowed/Fullscreen pair to fill the row would stop
+  reading as side-by-side choices.
+  (3) `UNCONFIRMED_BORDER` changed from a transparent placeholder to a
+  real bottom-only matte border (neutral gray, reusing `TABLE_BORDER`)
+  — same "bottom border by default, full outline once committed"
+  pattern `PatternFieldWidget` already uses (there: unfocused/focused;
+  here: unconfirmed/confirmed), accepting the same minor layout shift
+  between the two states that widget already does.
+  Affects: Desired behavior (radio group rendering/timing) — no
+  scenario-visible change (color/border/timing aren't asserted on
+  headlessly, matching this framework's precedent).
