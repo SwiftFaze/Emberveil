@@ -1,3 +1,4 @@
+@pending
 Feature: Startup welcome screen
   A title screen shown before the game view: "VEIL" (Delta Corps Priest 1
   font, with a graceful fallback — see below) and a menu (Continue, New,

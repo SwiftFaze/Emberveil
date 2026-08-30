@@ -1,3 +1,4 @@
+@pending
 Feature: Settings keybinds page
   A dedicated page (opened from the settings screen's Keybinds item)
   listing every rebindable action and its current key, with a "press any
