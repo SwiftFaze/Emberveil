@@ -3,6 +3,7 @@ package com.swiftfaze.veil.ui;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -13,7 +14,7 @@ import java.util.function.Consumer;
 
 public class SettingsKeybindsPanel extends JPanel {
     private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
-    private static final List<String> FOOTER_ACTIONS = List.of("Apply", "Cancel", "Go back");
+    private static final List<String> FOOTER_ACTIONS = List.of("Go back", "Reset to Defaults", "Cancel", "Apply");
 
     private final List<String> actions;
     private final Map<String, String> keyBindings;
@@ -119,11 +120,14 @@ public class SettingsKeybindsPanel extends JPanel {
     }
 
     public void confirm() {
-        if (footerFocused) {
-            onBack.accept("settings");
-        } else {
+        if (!footerFocused) {
             popupOpen = true;
             refresh();
+        } else if ("Reset to Defaults".equals(getHighlightedFooterAction())) {
+            initializeBindings();
+            refresh();
+        } else {
+            onBack.accept("settings");
         }
     }
 
@@ -169,8 +173,14 @@ public class SettingsKeybindsPanel extends JPanel {
             JLabel label = new JLabel(action + ": " + key);
             label.setFont(ROW_FONT);
             label.setAlignmentX(Component.CENTER_ALIGNMENT);
-            label.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
             boolean highlighted = !footerFocused && i == selectedIndex;
+            boolean armed = highlighted && popupOpen;
+            Border emptyPadding = BorderFactory.createEmptyBorder(2, 8, 2, 8);
+            label.setBorder(armed
+                    ? BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2), emptyPadding)
+                    : BorderFactory.createCompoundBorder(
+                            BorderFactory.createEmptyBorder(2, 2, 2, 2), emptyPadding));
             label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
             label.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
             label.setOpaque(true);

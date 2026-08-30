@@ -143,6 +143,7 @@ public class SettingsScreenPanel extends JPanel {
         rows.add(new SettingsRow("Open Mod Folder", null));
         rows.add(new SettingsRow("About", null));
         rows.add(new SettingsRow("Reset to Defaults", null));
+        rows.add(new SettingsRow("Go Back", null));
     }
 
     public String getHighlightedItemName() {
@@ -188,9 +189,8 @@ public class SettingsScreenPanel extends JPanel {
         switch (row.name) {
             case "Keybinds" -> onBack.accept("keybinds");
             case "Open Game Folder" -> onOpenFolder.accept("game");
-            case "Open Mod Folder" -> {
-                onOpenFolder.accept("mods");
-            }
+            case "Open Mod Folder" -> onOpenFolder.accept("mods");
+            case "Go Back" -> back();
             case "About", "Reset to Defaults" -> {
                 // Placeholder actions
             }
@@ -230,6 +230,7 @@ public class SettingsScreenPanel extends JPanel {
 
     private void refresh() {
         rowsPanel.removeAll();
+        List<JLabel> labels = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             SettingsRow row = rows.get(i);
             String text = row.widget == null ? row.name : row.name + ": " + row.displayValue();
@@ -240,8 +241,23 @@ public class SettingsScreenPanel extends JPanel {
             label.setForeground(i == selectedIndex ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
             label.setBackground(i == selectedIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
             label.setOpaque(true);
+            labels.add(label);
             rowsPanel.add(label);
         }
+
+        // Every row shares the widest row's width, matching RadioGroupWidget's vertical-mode
+        // convention - otherwise each row shrink-wraps to its own text and the list reads as a
+        // ragged block instead of a uniform menu.
+        int maxWidth = 0;
+        for (JLabel label : labels) {
+            maxWidth = Math.max(maxWidth, label.getPreferredSize().width);
+        }
+        for (JLabel label : labels) {
+            Dimension size = new Dimension(maxWidth, label.getPreferredSize().height);
+            label.setMaximumSize(size);
+            label.setPreferredSize(size);
+        }
+
         revalidate();
         repaint();
     }

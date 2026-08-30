@@ -1,9 +1,12 @@
 Feature: Settings keybinds page
   A dedicated page (opened from the settings screen's Keybinds item)
   listing every rebindable action and its current key, with a "press any
-  key" popup (reusing PopupWidget) to change a binding's display, and an
-  Apply/Cancel/Go back footer. Visual only — no real rebinding takes
-  effect (Keybindings.java's constants are unchanged). See
+  key" popup to change a binding's display, and a footer with Go back,
+  Reset to Defaults, Cancel, and Apply (left to right, added after Step
+  4.5 playtest feedback - Reset to Defaults restores every action's
+  default binding and stays on this page, unlike the other three which
+  all return to the settings screen). Visual only — no real rebinding
+  takes effect (Keybindings.java's constants are unchanged). See
   specs/intent/startup-and-settings-screens.md.
 
   Background:
@@ -39,11 +42,23 @@ Feature: Settings keybinds page
       | Cancel   |
       | Go back  |
 
+  Scenario: Confirming Reset to Defaults resets all keybinds without leaving the page
+    Given "Move up" is highlighted
+    And the press-any-key popup is shown
+    When the "W" key is pressed
+    And "Reset to Defaults" is highlighted in the footer
+    And the "Enter" key is pressed
+    Then the keybinds page lists "Move up" bound to "Up"
+
   # Non-goals:
   #   - Apply/Cancel/Go back actually differing in behavior — decided
   #     autonomously to behave identically in this visual-only pass, see
   #     specs/intent/startup-and-settings-screens.md's Clarifications;
-  #     they diverge only once real rebind persistence exists.
+  #     they diverge only once real rebind persistence exists. Reset to
+  #     Defaults is the one footer action that does do something real
+  #     (restores every action's default binding) since that state is
+  #     genuinely local to this page, unlike settings-screen.feature's
+  #     own placeholder Reset to Defaults item.
   #   - Actually changing Keybindings.java's real KeyStroke constants, or
   #     any other rebinding side effect — display-only.
   #   - Validating for duplicate/conflicting key assignments — no real

@@ -204,3 +204,27 @@ or keybinds (none of which exist as real systems yet either).
   the file (not something a Gherkin scenario can usefully assert on
   either way).
   Affects: Desired behavior, Scope (startup-welcome-screen), Constraints.
+
+- Q (raised during Step 4.5 manual playtest, 2026-08-30): the first playtest
+  pass found the settings/keybinds screens visually and functionally
+  incomplete beyond the centering/interactivity gaps already fixed that
+  round — no discoverable way back from settings other than Escape, rows
+  of inconsistent width, the keybinds footer's Apply/Cancel/Go back order
+  not matching a natural left-to-right convention, no way to reset
+  keybinds specifically, and no visual indicator on which action is armed
+  for rebinding once its "press any key" popup opens. Do these get folded
+  into this intent doc and its specs, or treated as new out-of-scope
+  follow-up?
+  A: Folded in directly — this is corrective feedback on the same feature
+  from the same playtest step the intent doc's own Status checklist
+  already gates on, not new scope. Settings screen gained an explicit
+  "Go Back" row (tenth item) and uniform row widths (all rows share the
+  widest row's width). Keybinds footer reordered to Go back, Reset to
+  Defaults, Cancel, Apply (left to right) and gained a real Reset to
+  Defaults action — genuinely functional, unlike the settings screen's
+  own placeholder Reset to Defaults, since keybind display state is
+  local to that page and safe to actually reset. The currently-highlighted
+  action row gets a green border (matching `RadioGroupWidget`'s existing
+  confirmed-border convention) while its press-any-key popup is open, so
+  it's visually distinguishable from a merely-highlighted row.
+  Affects: Desired behavior, Scope (settings-screen, settings-keybinds-page).

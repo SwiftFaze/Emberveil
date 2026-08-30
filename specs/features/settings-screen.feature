@@ -1,19 +1,20 @@
 Feature: Settings screen
   A navigable, back-able settings screen reached from the title screen's
-  Settings item, listing nine items with type-specific Left/Right
+  Settings item, listing ten items with type-specific Left/Right
   interaction: sliders (brightness, volume — see ui-widget-slider.feature),
   a Fullscreen/Windowed radio toggle and a font cycle (both reusing #35's
   radio group widget), a dedicated Keybinds sub-page
-  (settings-keybinds-page.feature), folder-opening actions, and
-  placeholder about/reset entries. Visual/input shape only — no setting
-  has a real backing system yet. See
+  (settings-keybinds-page.feature), folder-opening actions, a placeholder
+  about/reset entry, and an explicit Go Back item (added after Step 4.5
+  playtest found Escape-only back navigation wasn't discoverable). Visual/
+  input shape only — no setting has a real backing system yet. See
   specs/intent/startup-and-settings-screens.md.
 
   Background:
     Given the settings screen is shown
 
-  Scenario: The settings screen lists all nine settings items
-    Then the settings items are "Brightness", "Fullscreen", "Font", "Volume", "Keybinds", "Open Game Folder", "Open Mod Folder", "About", "Reset to Defaults"
+  Scenario: The settings screen lists all ten settings items
+    Then the settings items are "Brightness", "Fullscreen", "Font", "Volume", "Keybinds", "Open Game Folder", "Open Mod Folder", "About", "Reset to Defaults", "Go Back"
 
   Scenario: Down moves the highlighted item to the next one
     Given "Brightness" is highlighted
@@ -59,6 +60,11 @@ Feature: Settings screen
 
   Scenario: Escape returns to the title screen's menu
     When the "Escape" key is pressed
+    Then the title screen is shown
+
+  Scenario: Confirming Go Back returns to the title screen's menu
+    Given "Go Back" is highlighted
+    When the "Enter" key is pressed
     Then the title screen is shown
 
   # Non-goals:

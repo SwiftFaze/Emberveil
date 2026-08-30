@@ -161,27 +161,55 @@ parent's full bounds, for `JLayeredPane` overlays), and `TerminalScrollBarUI`
 (a flat black-track/solid-thumb `BasicScrollBarUI` replacing the platform
 look-and-feel's default scrollbar chrome).
 
-**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` now uses
-`CardLayout` to manage four screens: title, game, settings, and keybinds.
+**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` uses
+`CardLayout` to manage four screens: title, game, settings, and keybinds,
+navigated via a shared `cards` map + `navigateTo()` helper (needed because
+settings and keybinds reference each other - a genuine two-way cycle plain
+lambda capture can't express, since Java lambdas can't forward-reference a
+local variable declared later in the same method). `TitleScreenPanel` and
+`SettingsScreenPanel` are each real `Widget`-style Swing focus targets in
+their own right (focusable, with their own `InputMap`/`ActionMap` bound at
+`WHEN_FOCUSED`) rather than relying on an inner child widget to hold real
+focus - `navigateTo()` calls `requestFocusInWindow()` on whichever screen a
+navigation lands on, matching the same bind-and-delegate idiom
+`InventoryPanel` already established for composite screens with mixed
+navigation.
+
 `TitleScreenPanel` shows the "VEIL" title (with Delta Corps Priest 1 font, or
-monospaced fallback if the font resource is absent) and a menu (Continue, New,
-Load, Settings, Exit) — New navigates to the game view and starts the game
-loop. `SettingsScreenPanel` is a navigable, back-able list of nine settings
-items: Brightness and Volume (both sliders), Fullscreen (radio toggle:
-Windowed/Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds
-(opens the dedicated keybinds page), and placeholder action items (Open Game
-Folder, Open Mod Folder, About, Reset to Defaults). Left/Right calls
-`moveLeft()`/`moveRight()` on sliders or radio groups, which updates the
-highlighted option; Up/Down navigates the menu; Enter triggers actions;
-Escape returns to the title screen. Settings rows display their current value
-via `getHighlightedOption()` for radio groups, so Left/Right changes are
-reflected immediately. `SettingsKeybindsPanel` lists every rebindable action
-(Move up/down/left/right, Toggle inventory) with its current key, allows
-navigation between actions and a footer (Apply/Cancel/Go back), opens a
-"press any key" popup on Enter to capture an arbitrary key as a new binding,
-and supports left/right footer navigation; actual rebinding is visual only
-(no persistent state). F5 still resets the entire game (back to the title
-screen).
+monospaced fallback if the font resource is absent) and a centered menu
+(Continue, New, Load, Settings, Exit) — New navigates to the game view and
+starts the game loop. `SettingsScreenPanel` is a centered, bordered, navigable,
+back-able list of ten settings items, every row sharing one width (matching
+the widest row, same convention `RadioGroupWidget`'s vertical mode already
+uses): Brightness and Volume (both sliders, rendered as an actual bar via
+`SliderWidget.getDisplayText()`), Fullscreen (radio toggle: Windowed/
+Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds (opens
+the dedicated keybinds page), placeholder action items (Open Game Folder,
+Open Mod Folder - both call `Desktop.open`, creating `mods/` next to the
+install if missing; About, Reset to Defaults), and an explicit Go Back item
+(added after Step 4.5 playtest found Escape-only back navigation wasn't
+discoverable). Left/Right calls `moveLeft()`/`moveRight()` on sliders or
+radio groups directly (bypassing their own now-unused internal key bindings,
+same as `InventoryPanel`'s sub-widgets), which updates the highlighted
+option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
+returns to the title screen.
+
+`SettingsKeybindsPanel` lists every rebindable action (Move up/down/left/
+right, Toggle inventory) with its current key, allows navigation between
+actions and a footer (Go back, Reset to Defaults, Cancel, Apply - left to
+right), and opens a "press any key" popup on Enter to capture an arbitrary
+key as a new binding (a `KeyListener`, not `InputMap`/`ActionMap`, since it
+must catch any keystroke while armed rather than a fixed set); the armed
+action row gets a green border via the same `WidgetTheme.VALID_HIGHLIGHT`
+convention `RadioGroupWidget`'s confirmed-option border already uses, so
+it's visually distinguishable from the plain highlighted-but-not-armed
+state. Reset to Defaults restores every action's default binding and stays
+on this page (state genuinely local to this page); Go back/Cancel/Apply all
+return to the settings screen identically (nothing else persists yet). The
+popup itself is still internal boolean state (`popupOpen`), not yet a real
+rendered overlay component. Actual key rebinding is visual only - no
+persistent state, `Keybindings.java`'s real constants are untouched. F5 still
+resets the entire game (back to the title screen).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable
