@@ -199,10 +199,12 @@ public class TableWidget<T> extends Widget {
         JPanel rowPanel = new JPanel(new GridLayout(1, columnCount));
         rowPanel.setAlignmentX(LEFT_ALIGNMENT);
         rowPanel.setBackground(isHeader ? WidgetTheme.TABLE_HEADER_BACKGROUND : WidgetTheme.BACKGROUND);
-        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, rowPanel.getPreferredSize().height));
         for (String text : cellText) {
             rowPanel.add(buildCellLabel(text, isHeader));
         }
+        // Computed after the cells are added — an empty panel's preferred height is ~0, which
+        // would otherwise clamp every row (including the header) to zero visible height.
+        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, rowPanel.getPreferredSize().height));
         return rowPanel;
     }
 
