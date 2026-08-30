@@ -2,6 +2,7 @@ package com.swiftfaze.veil.ui.widget;
 
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class RadioGroupWidget<T> extends Widget {
+    // Same insets as CONFIRMED_BORDER's line width, drawn in the background color instead of
+    // green — keeps every label's size identical whether or not it's currently the confirmed
+    // option, so confirming doesn't shift the layout of the options around it.
+    private static final Border CONFIRMED_BORDER = BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2);
+    private static final Border UNCONFIRMED_BORDER = BorderFactory.createEmptyBorder(2, 2, 2, 2);
+
     private final Function<T, String> optionRenderer;
     private final boolean horizontal;
     private final List<T> options = new ArrayList<>();
@@ -138,7 +145,6 @@ public class RadioGroupWidget<T> extends Widget {
             label.setOpaque(true);
             label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
             label.setAlignmentX(LEFT_ALIGNMENT);
-            label.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
             labels.add(label);
             add(label);
         }
@@ -149,7 +155,13 @@ public class RadioGroupWidget<T> extends Widget {
 
     private void refreshHighlight() {
         for (int i = 0; i < labels.size(); i++) {
-            WidgetTheme.applySelection(labels.get(i), i == highlightedIndex);
+            JLabel label = labels.get(i);
+            WidgetTheme.applySelection(label, i == highlightedIndex);
+            // The confirmed option (Enter pressed) gets a green border distinct from the
+            // highlighted/cursor background above — they can be different options at once (you've
+            // confirmed one, then arrowed elsewhere without confirming again).
+            Border outline = i == selectedIndex ? CONFIRMED_BORDER : UNCONFIRMED_BORDER;
+            label.setBorder(BorderFactory.createCompoundBorder(outline, BorderFactory.createEmptyBorder(2, 4, 2, 4)));
         }
         if (highlightedIndex < labels.size()) {
             scrollRectToVisible(labels.get(highlightedIndex).getBounds());

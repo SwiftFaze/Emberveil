@@ -773,3 +773,30 @@ next screen that needs them.
   field's background color, so it stays readable against the block
   instead of being covered by it.
   Affects: none (bug fix, no behavior/scope change).
+
+- Q: (Final-check pass over all three widgets together, in the
+  expanded `sandbox/WidgetLibrarySandbox.java` — still throwaway,
+  still unshipped) Two requests: (1) the radio group's confirmed
+  option (Enter pressed) should get a green border, matching the
+  pattern field's valid-state green; (2) the shared highlight color
+  (`WidgetTheme.SELECTED_HIGHLIGHT`, the tan/orange `#eeb392` used
+  since the very first round of this feature) should become a neutral
+  color instead.
+  A: (1) `RadioGroupWidget` already tracked two independent things —
+  `highlightedIndex` (the navigation cursor, shown via the shared
+  background highlight) and `selectedIndex` (the confirmed choice, set
+  on Enter) — but only ever visualized the first one; the two can
+  differ at once (confirm an option, then arrow elsewhere without
+  confirming again). Added a green (`VALID_HIGHLIGHT`) line border on
+  whichever label matches `selectedIndex`, and a same-size transparent
+  border everywhere else, so confirming doesn't shift the layout of
+  the options around it.
+  (2) `WidgetTheme.SELECTED_HIGHLIGHT` changed to `Color.LIGHT_GRAY` —
+  reusing the same neutral gray `TABLE_BORDER` already uses, rather
+  than inventing a third similar-but-different gray, and because
+  `applySelection()` is the single shared definition every widget
+  already draws from (`ListWidget`, `TableWidget`, `RadioGroupWidget`),
+  this one change updates the highlight everywhere at once, matching
+  the "global" precedent set earlier in this feature.
+  Affects: Desired behavior (radio group's confirmed-state indication;
+  the shared highlight color, application-wide).
