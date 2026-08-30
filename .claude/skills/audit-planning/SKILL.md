@@ -15,7 +15,11 @@ the whole board). Default to the whole board unless the user names a scope.
 
 ## Step 1 — Gather the current state
 
-Pull everything in one pass; every later step reads from this, no repeated
+Run this gathering step in a forked agent (`Agent` with
+`subagent_type: "fork"`), not inline in the main session — the raw `gh`
+JSON below (up to 500 issues, plus milestones and project items) is only
+useful once joined into a summary table, so there's no reason to keep the
+raw dump in context after that. Pull everything in one pass, no repeated
 `gh` calls per issue:
 
 ```
@@ -28,14 +32,17 @@ gh project field-list 2 --owner SwiftFaze --format json
 Join the issue list and project item list by issue `number`/`url` — the
 project item list carries `status`/`priority`/`size` but not the issue body
 or labels, and the issue list doesn't carry project-field values. Build one
-table in your head (or a scratch file) keyed by issue number with: title,
-state, labels, milestone, body (or a body summary), status, priority.
+table keyed by issue number with: title, state, labels, milestone, body (or
+a body summary), status, priority.
 
-Only audit **open** issues and **open** milestones against the checks below
-— a closed issue's missing label/priority from before the repo settled on
-today's conventions is historical, not a live problem, and rewriting closed
-history isn't the point of this skill. Note closed-issue gaps only if the
-user asks for a full historical audit.
+Only keep **open** issues and **open** milestones in the table — a closed
+issue's missing label/priority from before the repo settled on today's
+conventions is historical, not a live problem, and rewriting closed history
+isn't the point of this skill. Note closed-issue gaps only if the user asks
+for a full historical audit.
+
+Have the fork return the finished table as its result, not the raw `gh`
+JSON it pulled — that table, not the raw pulls, is what Step 2 reads from.
 
 ## Step 2 — Run the checks
 
