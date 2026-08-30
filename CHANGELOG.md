@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.5.0-beta.1](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta...v0.5.0-beta.1) (2026-08-30)
+
+
+### Features
+
+* draft Gherkin specs for table, radio group, and pattern-field widgets ([92fefe4](https://github.com/SwiftFaze/Veil/commit/92fefe491083df1b0c95ef5f738429f94fff8065))
+* implement UI widget library (table, radio group, pattern field) ([cc4cc57](https://github.com/SwiftFaze/Veil/commit/cc4cc57309cb15201c125ed5e4063507c9126d79))
+* pattern field gets a Material-style outlined-field look ([c4ddf37](https://github.com/SwiftFaze/Veil/commit/c4ddf3754cf2d5b797ccf72c0bad72f4af3b4b4a))
+* pattern field gets a real cursor, Left/Right movement, Ctrl+A ([ae4b641](https://github.com/SwiftFaze/Veil/commit/ae4b6417f7e72f592b6af578abc9e58c5e7c787c))
+* pattern field widget gets a validity-colored, focus-aware border ([1b0ef5e](https://github.com/SwiftFaze/Veil/commit/1b0ef5e1f34da23ae15ecbad0b58d45e18f0e9e5))
+* radio group gets a confirmed-state border, highlight goes neutral ([1c47f0c](https://github.com/SwiftFaze/Veil/commit/1c47f0c96bff07d762040e174a0014c70782184a))
+* real InventoryPanel consumer for the table and radio group widgets ([e57396a](https://github.com/SwiftFaze/Veil/commit/e57396a504ae533fb4e574aaeef316b32433e2ae))
+* restructure inventory details pane into field/effects tables ([daed315](https://github.com/SwiftFaze/Veil/commit/daed315b3a88374f86cbf0b347de1be82f375601))
+
+
+### Bug Fixes
+
+* block cursor made the letter under it invisible ([63d8fc6](https://github.com/SwiftFaze/Veil/commit/63d8fc60aed7e85316a5a7bcc25a59467172166f))
+* block cursor wasn't blinking - blink rate was never actually set ([0e17d5c](https://github.com/SwiftFaze/Veil/commit/0e17d5c7071a28935387960a3ae31f90535f731e))
+* confirming a radio option truncated its text and shifted position ([c6d150c](https://github.com/SwiftFaze/Veil/commit/c6d150cd6e032e96930ff411e6d60d5289a6b1d5))
+* correct radio group widget to horizontal Left/Right per real consumer ([5cdb828](https://github.com/SwiftFaze/Veil/commit/5cdb82808979ea4e9dc8aaa55a3d4ac3f4d5cd1c))
+* correct table widget off-by-one indexing and step definition issues ([5bff70f](https://github.com/SwiftFaze/Veil/commit/5bff70f61bc2e0056b8537adafc491d9330d639a))
+* Enter typed a literal newline instead of moving focus ([0ac0148](https://github.com/SwiftFaze/Veil/commit/0ac01483f2577db85e78e9591925d4245b290723))
+* gray scrollbar, reset scroll on rebuild, centralize highlight logic ([9a11e19](https://github.com/SwiftFaze/Veil/commit/9a11e19c14eb27594033e033c267759a764392fa))
+* pattern field border thickness squeezed the label's text to nothing ([98826ec](https://github.com/SwiftFaze/Veil/commit/98826eca0c34d444d2e5ee3a036e7fe684fba5d0))
+* radio group confirm timing, vertical width, default bottom border ([19d62e3](https://github.com/SwiftFaze/Veil/commit/19d62e364cf03e00f77e5c08f31bd3d5745f27ec))
+* resolve remaining Cucumber failures in the UI widget library suite ([1388f62](https://github.com/SwiftFaze/Veil/commit/1388f622cad20655e602ca8a9c8632cab4e66a40))
+* scroll the details pane, highlight the whole row not just text ([65bdb05](https://github.com/SwiftFaze/Veil/commit/65bdb05f6b1ef5937082d60bc2bd303cbb4bb37c))
+* scrolling to row 0 didn't guarantee the header scrolled into view ([ad1df91](https://github.com/SwiftFaze/Veil/commit/ad1df9165a37b36810800c042a7a88188a01ac60))
+* tables rendering completely empty (rows collapsed to zero height) ([c647509](https://github.com/SwiftFaze/Veil/commit/c6475090c14a2ea8aeb875e61ecf087426ddca68))
+* unify details-pane navigation, fix stray highlight, bordered tables ([bfbebb8](https://github.com/SwiftFaze/Veil/commit/bfbebb8b61d294ee442cf2ae9110b9a17e07fe69))
+
 ## [0.5.0-beta](https://github.com/SwiftFaze/Veil/compare/v0.4.0...v0.5.0-beta) (2026-08-30)
 
 
