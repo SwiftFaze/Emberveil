@@ -581,3 +581,30 @@ next screen that needs them.
   effects tables, and to any future consumer with a header.
   Affects: none (bug fix, no behavior/scope change beyond "row 0 +
   header now scroll into view together").
+
+- Q: The pattern-field widget still has no real consumer (see Open
+  questions), but its visual quality was checked against a throwaway,
+  unshipped dev harness (`sandbox/PatternFieldSandbox.java` — a
+  standalone `main()` with a few labeled fields, explicitly for a
+  one-off look, not committed as part of this feature and deleted
+  after). That look prompted real widget-level feedback: it needs a
+  border, full width, the border colored by validity (red/green, not
+  just the text), and a visible focused state when tabbed to. Since
+  the widget itself is real, approved scope even without a shipped
+  consumer yet, should this feedback be applied to `PatternFieldWidget`
+  itself?
+  A: Yes — this is feedback on the real widget, the throwaway harness
+  was just how it got looked at. Added a `FocusListener` (new state:
+  `PatternFieldWidget` didn't track focus at all before) and a
+  compound border: a colored line border (new
+  `WidgetTheme.VALID_HIGHLIGHT`, green, alongside the existing
+  `INVALID_HIGHLIGHT`, red — chosen by `patternIsValid()`) at 1px
+  normally, 2px while focused, plus fixed internal padding. Full width
+  via the same `setMaximumSize`-after-content technique every other
+  widget in this feature already uses. No change to the widget's
+  actual validation/input behavior — `PatternFieldWidgetTest` and
+  `ui-widget-pattern-field.feature`'s scenarios (which don't assert on
+  color/border/focus, matching this framework's precedent of not
+  testing exact colors headlessly) are unaffected.
+  Affects: Desired behavior (pattern-field widget's visual
+  presentation), no scope change — still no real consumer.
