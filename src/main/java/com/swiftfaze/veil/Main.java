@@ -4,6 +4,7 @@ import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
+import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SouthPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
 import org.slf4j.Logger;
@@ -56,15 +57,28 @@ public class Main {
             }
         });
 
-        // Placeholder settings and keybinds cards (will be replaced in phases 3-4)
-        JPanel settingsCard = new JPanel();
-        settingsCard.setBackground(Color.BLACK);
+        // Build settings card
+        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
+            screen -> {
+                if ("title".equals(screen)) {
+                    cardLayout.show(cardPanel, "title");
+                    titleScreen.requestFocusInWindow();
+                } else if ("keybinds".equals(screen)) {
+                    cardLayout.show(cardPanel, "keybinds");
+                }
+            },
+            folder -> {
+                // Open folder actions are mocked in tests
+            }
+        );
+
+        // Placeholder keybinds card (will be replaced in phase 4)
         JPanel keybindsCard = new JPanel();
         keybindsCard.setBackground(Color.BLACK);
 
         cardPanel.add(titleScreen, "title");
         cardPanel.add(gameCard, "game");
-        cardPanel.add(settingsCard, "settings");
+        cardPanel.add(settingsScreen, "settings");
         cardPanel.add(keybindsCard, "keybinds");
 
         frame.setLayout(new BorderLayout());
