@@ -74,7 +74,7 @@ public class InventoryPanel extends PopupWidget {
         dropConfirmationPopup = new DropConfirmationPopup();
         dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
 
-        addContent(buildBody(buildScrollPane(itemList), detailsPanel));
+        addContent(buildBody(buildScrollPane(itemList), buildScrollPane(detailsPanel)));
         bindDropKey();
     }
 

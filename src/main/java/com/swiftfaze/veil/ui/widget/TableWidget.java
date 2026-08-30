@@ -224,7 +224,8 @@ public class TableWidget<T> extends Widget {
         for (int i = 0; i < rowCells.size(); i++) {
             boolean highlighted = selectable && i == selectedRowIndex;
             for (JLabel cell : rowCells.get(i)) {
-                cell.setForeground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
+                cell.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
+                cell.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
             }
         }
         if (selectable && selectedRowIndex < rowCells.size() && !rowCells.isEmpty()) {

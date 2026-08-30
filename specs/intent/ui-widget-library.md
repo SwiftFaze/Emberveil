@@ -474,3 +474,41 @@ next screen that needs them.
   fields-table-first, fall-through navigation model.
   Affects: Scope, Desired behavior (navigation model substantially
   reworked), `ui-widget-table.feature` (scenarios rewritten/added).
+
+- Q: (Bug found from a playtest screenshot, same round) Both tables
+  rendered as completely empty black boxes — no header text, no data
+  rows, just the outer table border. Root cause?
+  A: `TableWidget.buildRowPanel()` called `rowPanel.getPreferredSize()`
+  to compute `setMaximumSize`'s height *before* any cell labels had
+  been added to the panel — an empty `JPanel`'s preferred height is
+  ~0, so `BoxLayout` clamped every row (including the header) to zero
+  visible height, even though the labels themselves existed with
+  correct text/borders. Fixed by moving the `getPreferredSize()` call
+  to after the cells are added. Not something the headless Cucumber
+  suite could catch (it doesn't exercise real Swing layout), so this
+  needed a real playtest screenshot to surface.
+  Affects: none (bug fix, no behavior/scope change).
+
+- Q: (Third round of Step 4.5 playtest, after the above fix) Two more
+  findings: (1) the details pane has no scrollbar, so a field/effects
+  table taller than the fixed `BODY_HEIGHT` (280px) gets clipped
+  instead of being reachable; (2) the selected-row highlight only
+  recolors the text, not the whole row — same for the item list.
+  A: (1) `detailsPanel` is now wrapped in the same `buildScrollPane()`
+  helper (`JScrollPane` + `TerminalScrollBarUI`) the item list already
+  uses, rather than being added to the body directly.
+  (2) Both `ListWidget` and `TableWidget`'s highlight logic now set the
+  row's/cell's *background* to `WidgetTheme.SELECTED_HIGHLIGHT` (with
+  foreground switching to a new `WidgetTheme.SELECTED_TEXT`, black, for
+  contrast) instead of only recoloring the foreground text — matching
+  every other widget's still-single-highlight-state convention, just
+  rendered as a filled row instead of colored text. For `ListWidget`,
+  this also needed each item label stretched to the widget's full width
+  (`setMaximumSize` after the label's text is set, same technique
+  `TableWidget`'s row panels already use) — otherwise a background fill
+  would only show behind the text itself, not "the whole row" as asked.
+  `RadioGroupWidget` was deliberately left alone — not asked, and it
+  has no current real-screen consumer to playtest against yet (see
+  Open questions).
+  Affects: Desired behavior (list/table selected-row rendering), no
+  scope change.
