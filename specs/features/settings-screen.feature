@@ -1,0 +1,97 @@
+Feature: Settings screen
+  A navigable, back-able settings screen reached from the title screen's
+  Settings item, listing nine items with type-specific Left/Right
+  interaction: sliders (brightness, volume — see ui-widget-slider.feature),
+  a Fullscreen/Windowed radio toggle and a font cycle (both reusing #35's
+  radio group widget), a dedicated Keybinds sub-page
+  (settings-keybinds-page.feature), folder-opening actions, and
+  placeholder about/reset entries. Visual/input shape only — no setting
+  has a real backing system yet. See
+  specs/intent/startup-and-settings-screens.md.
+
+  Background:
+    Given the settings screen is shown
+
+  Scenario: The settings screen lists all nine settings items
+    Then the settings items are "Brightness", "Fullscreen", "Font", "Volume", "Keybinds", "Open Game Folder", "Open Mod Folder", "About", "Reset to Defaults"
+
+  Scenario: Down moves the highlighted item to the next one
+    Given "Brightness" is highlighted
+    When the "Down" key is pressed
+    Then "Fullscreen" is highlighted
+
+  Scenario: Adjusting brightness right increases its slider value
+    Given "Brightness" is highlighted with slider value 5
+    When the "Right" key is pressed
+    Then "Brightness"'s slider value is 6
+
+  Scenario: Adjusting volume left decreases its slider value
+    Given "Volume" is highlighted with slider value 5
+    When the "Left" key is pressed
+    Then "Volume"'s slider value is 4
+
+  Scenario: Toggling fullscreen right switches from Windowed to Fullscreen
+    Given "Fullscreen" is highlighted with value "Windowed"
+    When the "Right" key is pressed
+    Then "Fullscreen"'s value is "Fullscreen"
+
+  Scenario: Cycling font right moves to the next font choice
+    Given "Font" is highlighted with value "Monospaced"
+    When the "Right" key is pressed
+    Then "Font"'s value is "Serif"
+
+  Scenario: Confirming Keybinds opens the keybinds page
+    Given "Keybinds" is highlighted
+    When the "Enter" key is pressed
+    Then the keybinds page is shown
+
+  Scenario: Confirming Open Game Folder opens the install directory
+    Given "Open Game Folder" is highlighted
+    When the "Enter" key is pressed
+    Then the install directory was opened
+
+  Scenario: Confirming Open Mod Folder opens the mods directory, creating it if missing
+    Given "Open Mod Folder" is highlighted
+    And no "mods" directory exists next to the install
+    When the "Enter" key is pressed
+    Then a "mods" directory was created next to the install
+    And the mods directory was opened
+
+  Scenario: Escape returns to the title screen's menu
+    When the "Escape" key is pressed
+    Then the title screen is shown
+
+  # Non-goals:
+  #   - Any real mechanism behind brightness, fullscreen, font, volume,
+  #     or keybind rebinding — no rendering/audio/config-persistence
+  #     system exists yet; this screen is visual/input shape only.
+  #   - Reset to Defaults actually resetting anything — no setting
+  #     persists real state yet.
+  #   - About/version info's actual content — a static placeholder
+  #     label, nothing to prove behaviorally.
+  #   - Confirmation dialogs before opening folders — confirm opens
+  #     immediately.
+  #   - Any mouse/pointer handling — this game is keyboard-only by
+  #     design.
+  #
+  # Risks:
+  #   - Depends on issue #35's radio group widget (not yet
+  #     approved/implemented) for the Fullscreen/Windowed toggle and font
+  #     cycle scenarios above, and on ui-widget-slider.feature's slider
+  #     widget for the brightness/volume scenarios — this feature cannot
+  #     be fully implemented until both land.
+  #   - The font cycle's "Monospaced" -> "Serif" -> "SansSerif" list was
+  #     an autonomous placeholder decision (see
+  #     specs/intent/startup-and-settings-screens.md's Clarifications)
+  #     and should be confirmed at Step 3 approval.
+  #   - `Desktop.open` behavior (and mods-directory creation) is not
+  #     simulated headlessly here — "the install directory was opened" /
+  #     "a mods directory was created" model the action being invoked,
+  #     not real filesystem/OS-shell side effects, matching this repo's
+  #     existing precedent of not exercising real OS integration in
+  #     Cucumber scenarios.
+  #
+  # Open questions:
+  #   - None outstanding for this screen specifically — see
+  #     specs/intent/startup-and-settings-screens.md's Open questions for
+  #     the font-asset question (doesn't block this file).

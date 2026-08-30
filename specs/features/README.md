@@ -45,3 +45,7 @@ that change's definition of done, not separate cleanup.
 | `ui-widget-table.feature` | Keyboard-navigable, full-width, bordered table widget (row/column selection, wrap-around, row-level confirm, header row, non-selectable mode); real consumers: the inventory popup's field/value and effects tables, forming one continuous navigable region |
 | `ui-widget-radio-group.feature` | Single-select radio group widget (vertical by default, optional horizontal); real consumer: the inventory popup's "Drop item?" confirmation |
 | `ui-widget-pattern-field.feature` | Regex-pattern-validated text field widget (valid/invalid state via a new WidgetTheme color) — no real consumer yet, proven in isolation |
+| `startup-welcome-screen.feature` | Title screen shown on launch (VEIL title + Continue/New/Load/Settings/Exit menu), replacing direct-to-world startup |
+| `settings-screen.feature` | Settings screen shell (brightness/fullscreen/font/volume/keybinds/folders/about/reset), visual/input shape only |
+| `settings-keybinds-page.feature` | Dedicated keybind-rebinding sub-page (action list, press-any-key popup, Apply/Cancel/Go back), display only |
+| `ui-widget-slider.feature` | Bounded-value slider widget (Left/Right adjusts within [min, max], no wrap) — no real backing system, proven in isolation |
