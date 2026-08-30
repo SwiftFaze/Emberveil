@@ -71,6 +71,16 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       excerpt-pasting rule applies.
     - Keep every function within the complexity budget below. These are
       enforced by CI, not by your judgment alone.
+    - Before considering a file or logical unit done, self-apply the
+      `uncle-bob-craft` skill's "writing or refactoring code" checklist
+      (small single-purpose functions, dependencies pointing inward,
+      design patterns only when duplication/variation actually justifies
+      them) — this is a self-check the same Haiku agent runs while
+      writing, not a separate review pass or extra agent call, so it adds
+      no cost and does not change the "implementation code is not
+      reviewed, by design" rule in the review table below. The
+      orchestrator's handoff prompt should tell the agent to do this
+      explicitly, the same as it states the complexity budget.
     - See "Context & session management" below for checkpoint guidance —
       this step is the most common place sessions run long.
     - See "Model selection" below — this step uses Claude Haiku 4.5.
