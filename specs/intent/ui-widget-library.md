@@ -55,14 +55,16 @@ next screen that needs them.
     only defines `MENU_UP`/`MENU_DOWN`/`MENU_CONFIRM`/`MENU_CANCEL`, so
     this widget needs new `MENU_LEFT`/`MENU_RIGHT` (or equivalent)
     keystroke constants added there — no horizontal menu navigation exists
-    anywhere in the codebase yet.
+    anywhere in the codebase yet. (These are shared with the radio group
+    widget below, not table-only — see Clarifications.)
   - A **radio group widget**: single-select from a set of options,
-    vertical (Up/Down) layout only — no new keybindings needed, reusing
-    `MENU_UP`/`MENU_DOWN`/`MENU_CONFIRM` — using the same selected/normal
+    horizontal (Left/Right) layout by default — sharing the new
+    `MENU_LEFT`/`MENU_RIGHT` keybindings with the table widget (see
+    Clarifications for why this was corrected from an earlier
+    vertical-only decision) — using the same selected/normal
     `WidgetTheme` indication as every other widget (no separate
     hover/focused state — see the parent framework's Clarifications on
-    this, and this doc's own Clarifications for why horizontal layout is
-    deferred).
+    this).
   - A **text/form-field widget** with regex pattern validation: accepts
     keyboard text entry, validates against a caller-supplied pattern,
     surfaces valid/invalid state visually via a new
@@ -124,11 +126,12 @@ next screen that needs them.
   override this the same way `ListWidget.setWrapAround(false)` already
   does, if a future consumer needs stop-at-the-ends behavior like
   `InventoryPanel` does today.
-- **Radio group widget:** a developer supplies a set of options; Up/Down
-  moves the highlighted option (vertical layout only — see
-  Clarifications); Enter selects it; only one option is selected at a
-  time, matching standard radio-button semantics; wraps around at the
-  ends by default, same as the table/list widgets.
+- **Radio group widget:** a developer supplies a set of options;
+  Left/Right moves the highlighted option (horizontal layout by default —
+  see Clarifications for why this was corrected from an earlier
+  vertical-only decision); Enter selects it; only one option is selected
+  at a time, matching standard radio-button semantics; wraps around at
+  the ends by default, same as the table/list widgets.
 - **Text/pattern field widget:** a developer supplies a regex pattern; the
   widget accepts keyboard character entry, shows the current input text,
   and visually distinguishes valid vs. invalid state as the pattern
@@ -233,3 +236,28 @@ next screen that needs them.
   dev-only, no-current-consumer code.
   Affects: Scope (new in-scope bullet: a dev sandbox harness), Desired
   behavior.
+
+- Q: (Supersedes the "vertical only" radio-group answer above) While
+  investigating issue #54 (same milestone, "2. Terminal UI component
+  framework") for a separate task, its settings screen turned out to be
+  a real consumer that had already been filed: a Fullscreen/Windowed
+  "radio-style choice" and a font cycler, both explicitly navigated via
+  Left/Right within a settings row (the same left/right-arrow gesture
+  the rest of that screen's sliders use), not Up/Down. Does this change
+  the radio group widget's default orientation?
+  A: Yes — reverse the earlier "vertical only" decision. The radio group
+  widget's default orientation is horizontal (Left/Right), matching this
+  real consumer. It therefore does need the new `MENU_LEFT`/`MENU_RIGHT`
+  keybindings after all — shared with the table widget's requirement for
+  the same constants, not scoped to table alone as the earlier entry
+  said. Vertical (Up/Down) support is not ruled out, but horizontal is
+  now the proven, needed default rather than a deferred nice-to-have.
+  This was found by reading the tracker, not invented — per this repo's
+  workflow, this kind of correction belongs in the intent doc before
+  regenerating the `.feature` file, which is why it's recorded here
+  rather than silently fixed in the spec. The pattern-field widget still
+  has no identified real consumer even after checking #54 (its settings
+  items are all sliders/radio/cycler/keybind-capture, no free-text
+  entry) — that open question stands.
+  Affects: Desired behavior, Scope (radio group's Keybindings addition
+  restored; the earlier "table widget only" framing corrected).

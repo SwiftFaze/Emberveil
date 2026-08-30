@@ -58,10 +58,13 @@ Feature: Table widget
   #     — "keyboard focus" Given/Then steps model the widget's internal
   #     selection state directly.
   #   - This widget has no real consumer to validate its shape against;
-  #     the row-confirm/wrap-default/new-keybinding decisions above were
-  #     made autonomously (see specs/intent/ui-widget-library.md's
+  #     the row-confirm/wrap-default decisions above were made
+  #     autonomously (see specs/intent/ui-widget-library.md's
   #     Clarifications) and should be revisited once a real screen needs
-  #     this widget, per the intent doc's Constraints.
+  #     this widget, per the intent doc's Constraints. The new
+  #     MENU_LEFT/MENU_RIGHT keybindings this widget needs are shared
+  #     with the radio group widget, which does have a real consumer
+  #     (issue #54) — see ui-widget-radio-group.feature.
   #
   # Open questions:
   #   - See specs/intent/ui-widget-library.md's Open questions — the
