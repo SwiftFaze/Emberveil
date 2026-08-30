@@ -1,11 +1,7 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.player.Player;
-import com.swiftfaze.veil.input.Keybindings;
 import org.junit.jupiter.api.Test;
-
-import javax.swing.Action;
-import java.awt.event.ActionEvent;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,39 +58,9 @@ class EastPanelTest {
     }
 
     @Test
-    void cancelMenuWithNoInventoryOpenRestoresGameFocus() {
-        EastPanel eastPanel = new EastPanel();
-        eastPanel.getInventoryPanel().setVisible(false);
-        boolean[] restored = {false};
-        eastPanel.setRestoreGameFocusAction(() -> restored[0] = true);
-
-        fireMenuCancel(eastPanel);
-
-        assertFalse(eastPanel.getInventoryPanel().isVisible());
-        assertTrue(restored[0]);
-    }
-
-    @Test
-    void menuCancelWithInventoryOpenClosesIt() {
-        EastPanel eastPanel = new EastPanel();
-        eastPanel.getInventoryPanel().setVisible(true);
-        boolean[] restored = {false};
-        eastPanel.setRestoreGameFocusAction(() -> restored[0] = true);
-
-        fireMenuCancel(eastPanel);
-
-        assertFalse(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Test
     void updatePlayerDoesNotThrow() {
         EastPanel eastPanel = new EastPanel();
 
         assertDoesNotThrow(() -> eastPanel.updatePlayer(new Player(0, 0)));
-    }
-
-    private void fireMenuCancel(EastPanel eastPanel) {
-        Action cancelAction = eastPanel.getMenuPanel().getActionMap().get(Keybindings.ACTION_MENU_CANCEL);
-        cancelAction.actionPerformed(new ActionEvent(eastPanel, ActionEvent.ACTION_PERFORMED, Keybindings.ACTION_MENU_CANCEL));
     }
 }

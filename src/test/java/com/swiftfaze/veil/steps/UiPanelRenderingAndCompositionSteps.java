@@ -167,13 +167,6 @@ public class UiPanelRenderingAndCompositionSteps {
         assertNotEquals(eastPanel, eastPanel.getInventoryPanel().getParent());
     }
 
-    @Then("its menu panel is in the south of the layout")
-    public void itsMenuPanelIsInTheSouthOfTheLayout() {
-        BorderLayout layout = (BorderLayout) eastPanel.getLayout();
-        Component south = layout.getLayoutComponent(BorderLayout.SOUTH);
-        assertEquals(eastPanel.getMenuPanel(), south);
-    }
-
     @When("EastPanel is updated with that player")
     public void eastPanelIsUpdatedWithThatPlayer() {
         eastPanel.updatePlayer(player);
@@ -234,23 +227,6 @@ public class UiPanelRenderingAndCompositionSteps {
         assertTrue(border instanceof LineBorder);
         LineBorder lineBorder = (LineBorder) border;
         assertEquals(Color.LIGHT_GRAY, lineBorder.getLineColor());
-    }
-
-    @Given("its inventory is visible")
-    public void itsInventoryIsVisible() {
-        eastPanel.getInventoryPanel().setVisible(true);
-    }
-
-    @Given("its inventory is hidden")
-    public void itsInventoryIsHidden() {
-        eastPanel.getInventoryPanel().setVisible(false);
-    }
-
-    @Given("a restore-game-focus action is registered")
-    public void aRestoreGameFocusActionIsRegistered() {
-        // No-op: "the rebuilt in-game menu and inventory screen" step
-        // (UiComponentFrameworkSteps) already registers the restore action
-        // on the EastPanel that scenario exercises.
     }
 
 }

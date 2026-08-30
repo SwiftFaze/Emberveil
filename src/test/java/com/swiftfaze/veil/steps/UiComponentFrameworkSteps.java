@@ -92,12 +92,6 @@ public class UiComponentFrameworkSteps {
                     if (action != null) {
                         action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel(), ActionEvent.ACTION_PERFORMED, "popup-dismiss"));
                     }
-                } else if (eastPanel != null) {
-                    // Fire the menu's cancel action
-                    Action cancelAction = eastPanel.getMenuPanel().getActionMap().get(Keybindings.ACTION_MENU_CANCEL);
-                    if (cancelAction != null) {
-                        cancelAction.actionPerformed(new ActionEvent(eastPanel, ActionEvent.ACTION_PERFORMED, Keybindings.ACTION_MENU_CANCEL));
-                    }
                 }
             }
             default -> throw new IllegalArgumentException("Unhandled key: " + key);
@@ -161,22 +155,16 @@ public class UiComponentFrameworkSteps {
         assertTrue(actionInvoked);
     }
 
-    @Given("the rebuilt in-game menu and inventory screen")
-    public void theRebuiltInGameMenuAndInventoryScreen() {
+    @Given("the rebuilt in-game inventory screen")
+    public void theRebuiltInGameInventoryScreen() {
         eastPanel = new EastPanel();
         restoreGameFocusInvoked = false;
         eastPanel.setRestoreGameFocusAction(() -> restoreGameFocusInvoked = true);
     }
 
-    @When("{string} is selected and confirmed")
-    public void isSelectedAndConfirmed(String itemName) {
-        // Move to Inventory (first item)
-        if (!itemName.equals("Inventory")) {
-            throw new IllegalArgumentException("Only Inventory is wired to work in this test");
-        }
-        eastPanel.getMenuPanel().requestFocusInWindow();
-        eastPanel.getInventoryPanel().open();
-        eastPanel.getInventoryPanel().getCloseButton().requestFocusInWindow();
+    @When("the inventory is toggled open")
+    public void theInventoryIsToggledOpen() {
+        eastPanel.toggleInventory();
     }
 
     @Then("the inventory popup is open")
@@ -187,13 +175,6 @@ public class UiComponentFrameworkSteps {
     @Then("the popup's Close button has keyboard focus")
     public void thePopupsCloseButtonHasKeyboardFocus() {
         assertNotNull(eastPanel.getInventoryPanel().getCloseButton());
-    }
-
-    @Then("the menu's selected item is still {string}")
-    public void theMenusSelectedItemIsStill(String expected) {
-        // With modal focus, menu should not have received navigation
-        // This is verified by the popup being open
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
     }
 
     @Then("the inventory popup is closed")
@@ -218,11 +199,6 @@ public class UiComponentFrameworkSteps {
         int mainAreaLayer = layeredContentArea.getLayer(
                 layeredContentArea.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0]);
         assertTrue(popupLayer > mainAreaLayer);
-    }
-
-    @Then("the menu has keyboard focus")
-    public void theMenuHasKeyboardFocus() {
-        assertNotNull(eastPanel.getMenuPanel());
     }
 
     @When("the popup's Close button is confirmed")

@@ -16,7 +16,6 @@ public class EastPanel extends JPanel implements GameListener {
 
     private final PlayerInfoPanel playerInfoPanel;
     private final InventoryPanel inventoryPanel;
-    private final MenuPanel menuPanel;
     private final FocusManager focusManager;
     private Runnable restoreGameFocus = () -> {
     };
@@ -31,23 +30,17 @@ public class EastPanel extends JPanel implements GameListener {
         focusManager = new FocusManager();
 
         playerInfoPanel = new PlayerInfoPanel();
-        menuPanel = new MenuPanel();
-        menuPanel.setFocusManager(focusManager);
         inventoryPanel = new InventoryPanel();
         inventoryPanel.setFocusManager(focusManager);
         inventoryPanel.showItems(ModLoader.load(java.nio.file.Paths.get("mods")).getAllItems());
-
-        menuPanel.setOnInventoryConfirmed(this::openInventory);
-        menuPanel.setOnCancel(this::cancelMenu);
         inventoryPanel.setOnDismiss(this::onInventoryDismissed);
 
         add(playerInfoPanel, BorderLayout.NORTH);
-        add(menuPanel, BorderLayout.SOUTH);
     }
 
     /**
-     * Lets GamePanel reclaim keyboard focus once the menu is dismissed —
-     * MenuPanel only knows how to give focus up via a callback, never a
+     * Lets GamePanel reclaim keyboard focus once the popup is dismissed —
+     * InventoryPanel only knows how to give focus up via a callback, never a
      * direct GamePanel reference.
      */
     public void setRestoreGameFocusAction(Runnable restoreGameFocus) {
@@ -58,34 +51,17 @@ public class EastPanel extends JPanel implements GameListener {
     public void toggleInventory() {
         if (inventoryPanel.isVisible()) {
             inventoryPanel.dismiss();
-            restoreGameFocus.run();
         } else {
-            openInventory();
-        }
-    }
-
-    private void openInventory() {
-        inventoryPanel.open();
-    }
-
-    private void cancelMenu() {
-        if (inventoryPanel.isVisible()) {
-            inventoryPanel.dismiss();
-        } else {
-            restoreGameFocus.run();
+            inventoryPanel.open();
         }
     }
 
     private void onInventoryDismissed() {
-        menuPanel.requestFocusInWindow();
+        restoreGameFocus.run();
     }
 
     public InventoryPanel getInventoryPanel() {
         return inventoryPanel;
-    }
-
-    public MenuPanel getMenuPanel() {
-        return menuPanel;
     }
 
     @Override

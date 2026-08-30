@@ -290,3 +290,21 @@ resolved in a grilling session; see Clarifications below.
   defer.
   Affects: Desired behavior, Scope (the disposable-skeleton/no-layout-polish
   non-goal now carries one explicit exception).
+
+- Q: (Surfaced during the same Step 4.5 playtest, right after the popup
+  overlay fix above) With the popup now correctly covering the game view,
+  playtesting also showed the sidebar's MenuPanel (I/H/J/M/P/O) sitting
+  underneath/behind it — only "I - Inventory" ever did anything, the rest
+  were always decorative placeholders. Given the inventory toggle already
+  works directly via the keyboard "I" shortcut (`GamePanel` ->
+  `EastPanel.toggleInventory()`), independent of the menu, should
+  MenuPanel be kept (trimmed to just the working Inventory entry) or
+  deleted outright?
+  A: Delete it entirely — the "I" key already opens/closes the inventory
+  on its own; the menu was a second, redundant way to do the same one
+  thing, plus five entries that don't do anything. `MenuPanel.java` is
+  deleted, `EastPanel` no longer composes it, and the popup's dismiss
+  path now restores focus straight to the game (`restoreGameFocus`)
+  instead of handing off to a menu that no longer exists.
+  Affects: Scope, Desired behavior (menu<->popup transition and modal
+  focus capture no longer apply — nothing exists to block).

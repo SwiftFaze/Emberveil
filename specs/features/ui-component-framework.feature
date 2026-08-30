@@ -4,8 +4,9 @@ Feature: Terminal-style UI component framework
   — replaces each panel's hand-rolled InputMap/ActionMap wiring and ad hoc
   highlight color. Three concrete widgets (list, button, popup/modal) are
   built on it and proven end-to-end by rebuilding the existing in-game
-  menu and inventory screen, and by migrating ClassSandboxPanel off the
-  deleted SelectableMenu, on top of it.
+  inventory screen (opened directly via the keyboard inventory toggle, no
+  navigable menu widget — see Clarifications), and by migrating
+  ClassSandboxPanel off the deleted SelectableMenu, on top of it.
 
   Scenario: Navigating a list widget down moves the selection to the next item
     Given a list widget with items "Inventory", "Help", "Journal" and "Inventory" selected
@@ -43,41 +44,29 @@ Feature: Terminal-style UI component framework
     When the "Enter" key is pressed
     Then the button's action was invoked
 
-  Scenario: Confirming Inventory in the rebuilt menu opens the popup and focuses its Close button
-    Given the rebuilt in-game menu and inventory screen
-    When "Inventory" is selected and confirmed
+  Scenario: Toggling the inventory open focuses the popup's Close button
+    Given the rebuilt in-game inventory screen
+    When the inventory is toggled open
     Then the inventory popup is open
     And the popup's Close button has keyboard focus
 
-  Scenario: The open popup is modal — the menu behind it ignores navigation
-    Given the rebuilt in-game menu and inventory screen
-    And "Inventory" is selected and confirmed
-    When the "Down" key is pressed
-    Then the menu's selected item is still "Inventory"
-
-  Scenario: Dismissing the popup with Escape closes it and restores focus to the menu
-    Given the rebuilt in-game menu and inventory screen
-    And "Inventory" is selected and confirmed
+  Scenario: Dismissing the popup with Escape closes it and restores game focus
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
     When the "Escape" key is pressed
     Then the inventory popup is closed
-    And the menu has keyboard focus
+    And the restore-game-focus action was invoked
 
-  Scenario: Confirming the popup's Close button closes it and restores focus to the menu
-    Given the rebuilt in-game menu and inventory screen
-    And "Inventory" is selected and confirmed
+  Scenario: Confirming the popup's Close button closes it and restores game focus
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
     When the popup's Close button is confirmed
     Then the inventory popup is closed
-    And the menu has keyboard focus
-
-  Scenario: Cancelling the menu directly, with no popup open, still restores game focus
-    Given the rebuilt in-game menu and inventory screen
-    And a restore-game-focus action is registered
-    When the "Escape" key is pressed
-    Then the restore-game-focus action was invoked
+    And the restore-game-focus action was invoked
 
   Scenario: The rebuilt inventory popup displays real loaded item data, with no per-item selection
-    Given the rebuilt in-game menu and inventory screen
-    When "Inventory" is selected and confirmed
+    Given the rebuilt in-game inventory screen
+    When the inventory is toggled open
     Then the inventory popup lists the item "Iron Sword"
     And none of the inventory popup's items are highlighted as selected
 
@@ -109,8 +98,12 @@ Feature: Terminal-style UI component framework
   #     concrete list/button/popup scenarios above.
   #   - Left-right / tab-style movement between widgets — nothing in the
   #     real screen being rebuilt has a natural left-right layout, so
-  #     there's no concrete case to prove; only the menu<->popup
-  #     (up/down-adjacent, modal-capture) transition is exercised here.
+  #     there's no concrete case to prove.
+  #   - A navigable menu widget in the rebuilt screen at all (see
+  #     Clarifications) — the inventory popup opens directly off the
+  #     keyboard inventory toggle now, no Up/Down/Enter-through-a-menu
+  #     step in between, so there's no menu<->popup focus transition or
+  #     modal-capture-blocks-the-menu-behind-it behavior to prove either.
   #   - Disabled-widget styling — the shared style/theme constants support
   #     it as a convention hook, but no widget in the rebuilt real screen is
   #     ever disabled, so there's nothing concrete to prove end-to-end.
@@ -157,14 +150,15 @@ Feature: Terminal-style UI component framework
   #     ui-panel-rendering-and-composition.feature's — don't delete them
   #     wholesale when migrating the latter; both files' migrations need to
   #     land together.
-  #   - Modal focus capture (popup blocks the menu behind it) is a genuine
-  #     behavior change from today, where MenuPanel keeps focus the whole
-  #     time inventory is open and Enter-on-Inventory toggles it closed
-  #     again. That old toggle-via-re-selecting-Inventory path no longer
-  #     exists post-rebuild; Escape and the Close button are the only ways
-  #     to dismiss the popup now. This is intentional (see
-  #     specs/intent/ui-component-framework.md's Clarifications), not an
-  #     oversight.
+  #   - MenuPanel itself (the sidebar's I/H/J/M/P/O list) was deleted
+  #     entirely after Step 4.5 manual playtest, on top of the popup's
+  #     layered-overlay rework above — decided too late to avoid a second
+  #     pass over ui-panel-rendering-and-composition.feature's EastPanel
+  #     composition scenario (menu-panel assertion dropped) and
+  #     EastPanelTest (menu-cancel tests dropped). The inventory toggle
+  #     (the "I" key, GamePanel -> EastPanel.toggleInventory) is untouched
+  #     and still the only way to open/close it; see
+  #     specs/intent/ui-component-framework.md's Clarifications for why.
   #   - Real Swing focus-transfer (does a widget actually become the AWT
   #     focus owner) is not simulated headlessly here, matching the
   #     existing precedent in keyboard-input-and-menu-navigation.feature —

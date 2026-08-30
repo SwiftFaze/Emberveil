@@ -22,10 +22,15 @@ Feature: Keyboard input and menu navigation
     And the toggle did not use a direct field reference to EastPanel
 
   # Non-goals:
-  #   - Making Help/Journal/Map/Character/Stats do anything when selected —
-  #     only Inventory needs to work end-to-end; the rest stay decorative.
   #   - A generic rebindable keymap UI — Keybindings is a constants class,
   #     not a settings screen.
+  #
+  # Note: the sidebar menu this file originally described (Up/Down/Enter
+  # through a MenuPanel, with Help/Journal/Map/Character/Stats staying
+  # decorative) was deleted entirely in ui-component-framework.feature —
+  # see that file and specs/intent/ui-component-framework.md's
+  # Clarifications. The "toggle inventory" scenario below is unaffected,
+  # since it goes through GamePanel's own "I" binding, not a menu.
   #
   # Risks:
   #   - GamePanel's existing WASD/arrow keys are already bound to movement;
