@@ -154,10 +154,30 @@ Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
 Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
 — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
 popup child has real Swing focus — let a subclass wire keyboard navigation to
-its own content), `FillLayout` (a `LayoutManager` stretching every child to the
+its own content), `SliderWidget` (a bounded numeric slider with left/right
+adjustment within a [min, max] range by fixed steps, with hard bounds—no
+wrap-around), `FillLayout` (a `LayoutManager` stretching every child to the
 parent's full bounds, for `JLayeredPane` overlays), and `TerminalScrollBarUI`
 (a flat black-track/solid-thumb `BasicScrollBarUI` replacing the platform
 look-and-feel's default scrollbar chrome).
+
+**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` now uses
+`CardLayout` to manage four screens: title, game, settings, and keybinds.
+`TitleScreenPanel` shows the "VEIL" title (with Delta Corps Priest 1 font, or
+monospaced fallback if the font resource is absent) and a menu (Continue, New,
+Load, Settings, Exit) — New navigates to the game view and starts the game
+loop. `SettingsScreenPanel` is a navigable, back-able list of nine settings
+items: Brightness and Volume (both sliders), Fullscreen (radio toggle:
+Windowed/Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds
+(opens the dedicated keybinds page), and placeholder action items (Open Game
+Folder, Open Mod Folder, About, Reset to Defaults). Left/Right adjusts sliders
+and radio selections; Up/Down navigates the menu; Enter triggers actions;
+Escape returns to the title screen. `SettingsKeybindsPanel` lists every
+rebindable action (Move up/down/left/right, Toggle inventory) with its current
+key, allowing navigation and confirmation—actual rebinding is visual only (no
+persistent state). Both settings panels use reflection to access
+`RadioGroupWidget`'s private fields to cycle selected options when Left/Right
+are pressed. F5 still resets the entire game (back to the title screen).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable
