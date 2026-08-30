@@ -15,6 +15,9 @@ import java.util.function.Consumer;
 public class SettingsKeybindsPanel extends JPanel {
     private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
     private static final List<String> FOOTER_ACTIONS = List.of("Go back", "Reset to Defaults", "Cancel", "Apply");
+    // Dims the other action rows while one is armed for rebinding, so the green-bordered row
+    // reads as the only thing currently active - same idea as a modal dimming its backdrop.
+    private static final Color DIMMED_TEXT = Color.GRAY;
 
     private final List<String> actions;
     private final Map<String, String> keyBindings;
@@ -181,7 +184,8 @@ public class SettingsKeybindsPanel extends JPanel {
                             BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2), emptyPadding)
                     : BorderFactory.createCompoundBorder(
                             BorderFactory.createEmptyBorder(2, 2, 2, 2), emptyPadding));
-            label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
+            boolean dimmed = popupOpen && !armed;
+            label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : (dimmed ? DIMMED_TEXT : WidgetTheme.NORMAL_TEXT));
             label.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
             label.setOpaque(true);
             actionsPanel.add(label);
