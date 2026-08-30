@@ -8,6 +8,7 @@ public final class WidgetTheme {
     public static final Color SELECTED_HIGHLIGHT = Color.LIGHT_GRAY;
     public static final Color SELECTED_TEXT = Color.BLACK;
     public static final Color NORMAL_TEXT = Color.WHITE;
+    public static final Color DIMMED_TEXT = Color.GRAY;
     public static final Color BACKGROUND = Color.BLACK;
     public static final Color INVALID_HIGHLIGHT = Color.decode("#e05a4e");
     public static final Color VALID_HIGHLIGHT = Color.decode("#6fcf7d");

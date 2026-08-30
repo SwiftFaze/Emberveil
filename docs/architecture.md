@@ -142,11 +142,16 @@ directly.
 A small reusable widget framework lives in `ui/widget/`: `Widget` (base
 `JPanel` — black background, focusable), `FocusManager` (a modal-open
 flag a popup's content can consult), `WidgetTheme` (shared
-selected/normal/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
+selected/normal/dimmed/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
 optionally non-wrapping list over a pluggable data source, with
 `onConfirm`/`onSelectionChange` callbacks and auto-scroll-into-view of the
 selected row), `ButtonWidget` (an Enter-confirmable label), `TableWidget<T>`
-(a keyboard-navigable row/column table with row-level confirm), `RadioGroupWidget<T>`
+(a keyboard-navigable row/column table with row-level confirm; `updateRow()`
+replaces one row's data and re-renders just its cells without resetting
+selection, unlike `setRows()`; `setSelectedRowAccentBorder()` and
+`setOtherRowsDimmed()` let a consumer flag the selected row as additionally
+"armed" for some other in-progress action, with every other row dimmed to
+match — used by `SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
 caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
@@ -195,21 +200,29 @@ option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
 returns to the title screen.
 
 `SettingsKeybindsPanel` lists every rebindable action (Move up/down/left/
-right, Toggle inventory) with its current key, allows navigation between
+right, Toggle inventory) and its current key in a real `TableWidget<ActionRow>`
+(Action/Key columns, bordered grid, header row - the same widget
+`InventoryPanel` uses for its field/value table), allows navigation between
 actions and a footer (Go back, Reset to Defaults, Cancel, Apply - left to
 right), and opens a "press any key" popup on Enter to capture an arbitrary
 key as a new binding (a `KeyListener`, not `InputMap`/`ActionMap`, since it
-must catch any keystroke while armed rather than a fixed set); the armed
-action row gets a green border via the same `WidgetTheme.VALID_HIGHLIGHT`
-convention `RadioGroupWidget`'s confirmed-option border already uses, so
-it's visually distinguishable from the plain highlighted-but-not-armed
-state. Reset to Defaults restores every action's default binding and stays
-on this page (state genuinely local to this page); Go back/Cancel/Apply all
-return to the settings screen identically (nothing else persists yet). The
-popup itself is still internal boolean state (`popupOpen`), not yet a real
-rendered overlay component. Actual key rebinding is visual only - no
-persistent state, `Keybindings.java`'s real constants are untouched. F5 still
-resets the entire game (back to the title screen).
+must catch any keystroke while armed rather than a fixed set). Rebinding a
+key calls `TableWidget.updateRow()` to refresh just that row's Key cell
+without disturbing the selected row - `setRows()` would have reset selection
+to the first row on every keypress. The armed action row gets a green accent
+border via `TableWidget.setSelectedRowAccentBorder()` (the same
+`WidgetTheme.VALID_HIGHLIGHT` convention `RadioGroupWidget`'s confirmed-option
+border already uses), and every other row dims via
+`TableWidget.setOtherRowsDimmed()`, so the armed row reads as the only
+currently-active thing, like a modal dimming its backdrop. Reset to Defaults
+restores every action's default binding (via `updateRow()` per row, same
+selection-preserving reasoning) and stays on this page (state genuinely local
+to this page); Go back/Cancel/Apply all return to the settings screen
+identically (nothing else persists yet). The popup itself is still internal
+boolean state (`popupOpen`), not yet a real rendered overlay component.
+Actual key rebinding is visual only - no persistent state, `Keybindings.java`'s
+real constants are untouched. F5 still resets the entire game (back to the
+title screen).
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable

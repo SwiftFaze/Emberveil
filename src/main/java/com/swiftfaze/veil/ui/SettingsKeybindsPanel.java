@@ -1,12 +1,13 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,17 +16,16 @@ import java.util.function.Consumer;
 public class SettingsKeybindsPanel extends JPanel {
     private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
     private static final List<String> FOOTER_ACTIONS = List.of("Go back", "Reset to Defaults", "Cancel", "Apply");
-    // Dims the other action rows while one is armed for rebinding, so the green-bordered row
-    // reads as the only thing currently active - same idea as a modal dimming its backdrop.
-    private static final Color DIMMED_TEXT = Color.GRAY;
+
+    private record ActionRow(String action, String key) {
+    }
 
     private final List<String> actions;
     private final Map<String, String> keyBindings;
     private final Consumer<String> onBack;
-    private final JPanel actionsPanel;
+    private final TableWidget<ActionRow> actionsTable;
     private final JPanel footerPanel;
 
-    private int selectedIndex = 0;
     private boolean footerFocused = false;
     private int footerIndex = 0;
     private boolean popupOpen = false;
@@ -47,10 +47,9 @@ public class SettingsKeybindsPanel extends JPanel {
         header.setFont(new Font(Font.MONOSPACED, Font.BOLD, 24));
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        actionsPanel = new JPanel();
-        actionsPanel.setBackground(Color.BLACK);
-        actionsPanel.setLayout(new BoxLayout(actionsPanel, BoxLayout.Y_AXIS));
-        actionsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        actionsTable = new TableWidget<>(List.of("Action", "Key"), List.of(ActionRow::action, ActionRow::key));
+        actionsTable.setWrapAround(false);
+        actionsTable.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         footerPanel = new JPanel();
         footerPanel.setBackground(Color.BLACK);
@@ -61,16 +60,17 @@ public class SettingsKeybindsPanel extends JPanel {
         add(Box.createVerticalGlue());
         add(header);
         add(Box.createVerticalStrut(20));
-        add(actionsPanel);
+        add(actionsTable);
         add(footerPanel);
         add(Box.createVerticalGlue());
 
-        initializeBindings();
-        refresh();
+        setDefaultBindings();
+        actionsTable.setRows(buildRows());
+        refreshFooter();
         addKeyListener(new KeybindsKeyListener());
     }
 
-    private void initializeBindings() {
+    private void setDefaultBindings() {
         keyBindings.put("Move up", "Up");
         keyBindings.put("Move down", "Down");
         keyBindings.put("Move left", "Left");
@@ -78,57 +78,76 @@ public class SettingsKeybindsPanel extends JPanel {
         keyBindings.put("Toggle inventory", "I");
     }
 
-    public String getHighlightedActionName() {
-        if (selectedIndex < actions.size()) {
-            return actions.get(selectedIndex);
+    private List<ActionRow> buildRows() {
+        List<ActionRow> rows = new ArrayList<>();
+        for (String action : actions) {
+            rows.add(new ActionRow(action, keyBindings.getOrDefault(action, "")));
         }
-        return "";
+        return rows;
+    }
+
+    /**
+     * Restores every action's default binding without disturbing the table's current
+     * selection - unlike setRows(), which always resets selection to the first row, and
+     * would be visible the next time Up leaves the footer back into the action list.
+     */
+    private void resetBindingsToDefaults() {
+        setDefaultBindings();
+        for (int i = 0; i < actions.size(); i++) {
+            String action = actions.get(i);
+            actionsTable.updateRow(i, new ActionRow(action, keyBindings.get(action)));
+        }
+    }
+
+    public String getHighlightedActionName() {
+        ActionRow row = actionsTable.getSelectedRow();
+        return row == null ? "" : row.action();
     }
 
     public void moveUp() {
         if (footerFocused) {
             footerFocused = false;
-            selectedIndex = actions.size() - 1;
-        } else if (selectedIndex > 0) {
-            selectedIndex--;
+            actionsTable.setSelectable(true);
+        } else {
+            actionsTable.moveUp();
         }
-        refresh();
+        refreshFooter();
     }
 
     public void moveDown() {
         if (footerFocused) {
             return;
         }
-        if (selectedIndex < actions.size() - 1) {
-            selectedIndex++;
-        } else {
+        if (actionsTable.isAtLastRow()) {
             footerFocused = true;
             footerIndex = 0;
+            actionsTable.setSelectable(false);
+        } else {
+            actionsTable.moveDown();
         }
-        refresh();
+        refreshFooter();
     }
 
     public void moveFooterLeft() {
         if (footerFocused && footerIndex > 0) {
             footerIndex--;
-            refresh();
+            refreshFooter();
         }
     }
 
     public void moveFooterRight() {
         if (footerFocused && footerIndex < FOOTER_ACTIONS.size() - 1) {
             footerIndex++;
-            refresh();
+            refreshFooter();
         }
     }
 
     public void confirm() {
         if (!footerFocused) {
             popupOpen = true;
-            refresh();
+            applyArmedStyle();
         } else if ("Reset to Defaults".equals(getHighlightedFooterAction())) {
-            initializeBindings();
-            refresh();
+            resetBindingsToDefaults();
         } else {
             onBack.accept("settings");
         }
@@ -144,8 +163,9 @@ public class SettingsKeybindsPanel extends JPanel {
 
     public void updateKeyForAction(String action, String key) {
         keyBindings.put(action, key);
+        actionsTable.updateRow(actions.indexOf(action), new ActionRow(action, key));
         popupOpen = false;
-        refresh();
+        applyArmedStyle();
     }
 
     public boolean isPopupOpen() {
@@ -159,7 +179,8 @@ public class SettingsKeybindsPanel extends JPanel {
     public void highlightFooterAction(String action) {
         footerFocused = true;
         footerIndex = FOOTER_ACTIONS.indexOf(action);
-        refresh();
+        actionsTable.setSelectable(false);
+        refreshFooter();
     }
 
     public void pressKey(String key) {
@@ -168,29 +189,18 @@ public class SettingsKeybindsPanel extends JPanel {
         }
     }
 
-    private void refresh() {
-        actionsPanel.removeAll();
-        for (int i = 0; i < actions.size(); i++) {
-            String action = actions.get(i);
-            String key = keyBindings.getOrDefault(action, "");
-            JLabel label = new JLabel(action + ": " + key);
-            label.setFont(ROW_FONT);
-            label.setAlignmentX(Component.CENTER_ALIGNMENT);
-            boolean highlighted = !footerFocused && i == selectedIndex;
-            boolean armed = highlighted && popupOpen;
-            Border emptyPadding = BorderFactory.createEmptyBorder(2, 8, 2, 8);
-            label.setBorder(armed
-                    ? BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2), emptyPadding)
-                    : BorderFactory.createCompoundBorder(
-                            BorderFactory.createEmptyBorder(2, 2, 2, 2), emptyPadding));
-            boolean dimmed = popupOpen && !armed;
-            label.setForeground(highlighted ? WidgetTheme.SELECTED_TEXT : (dimmed ? DIMMED_TEXT : WidgetTheme.NORMAL_TEXT));
-            label.setBackground(highlighted ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
-            label.setOpaque(true);
-            actionsPanel.add(label);
-        }
+    /**
+     * Flags the selected action row as "armed" (green accent border, every other row
+     * dimmed) while its press-any-key popup is open, mirroring RadioGroupWidget's
+     * confirmed-option border convention.
+     */
+    private void applyArmedStyle() {
+        actionsTable.setSelectedRowAccentBorder(
+                popupOpen ? BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2) : null);
+        actionsTable.setOtherRowsDimmed(popupOpen);
+    }
 
+    private void refreshFooter() {
         footerPanel.removeAll();
         for (int i = 0; i < FOOTER_ACTIONS.size(); i++) {
             JLabel label = new JLabel(FOOTER_ACTIONS.get(i));
@@ -205,7 +215,6 @@ public class SettingsKeybindsPanel extends JPanel {
                 footerPanel.add(Box.createHorizontalStrut(20));
             }
         }
-
         revalidate();
         repaint();
     }
