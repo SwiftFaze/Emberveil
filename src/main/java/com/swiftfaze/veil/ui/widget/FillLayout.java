@@ -33,7 +33,16 @@ public class FillLayout implements LayoutManager {
     @Override
     public void layoutContainer(Container parent) {
         for (Component child : parent.getComponents()) {
-            child.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+            if (child instanceof PopupWidget popup && !popup.isFullScreen()) {
+                // Center non-full-screen popups at their preferred size
+                Dimension prefSize = child.getPreferredSize();
+                int x = (parent.getWidth() - prefSize.width) / 2;
+                int y = (parent.getHeight() - prefSize.height) / 2;
+                child.setBounds(x, y, prefSize.width, prefSize.height);
+            } else {
+                // Stretch full-screen and non-popup children to fill parent
+                child.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+            }
         }
     }
 }
