@@ -148,10 +148,14 @@ optionally non-wrapping list over a pluggable data source, with
 selected row), `ButtonWidget` (an Enter-confirmable label), `TableWidget<T>`
 (a keyboard-navigable row/column table with row-level confirm; `updateRow()`
 replaces one row's data and re-renders just its cells without resetting
-selection, unlike `setRows()`; `setSelectedRowAccentBorder()` and
+selection, unlike `setRows()`; `setSelectedRowAccentColor()` and
 `setOtherRowsDimmed()` let a consumer flag the selected row as additionally
 "armed" for some other in-progress action, with every other row dimmed to
-match — used by `SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
+match — the accent outline's thickness is always reserved on every cell
+regardless of whether it's currently painted, matching RadioGroupWidget's
+confirmed/unconfirmed border convention below, since reserving it only when
+accented would visibly resize the whole table on selection; used by
+`SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
 caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
@@ -210,7 +214,7 @@ must catch any keystroke while armed rather than a fixed set). Rebinding a
 key calls `TableWidget.updateRow()` to refresh just that row's Key cell
 without disturbing the selected row - `setRows()` would have reset selection
 to the first row on every keypress. The armed action row gets a green accent
-border via `TableWidget.setSelectedRowAccentBorder()` (the same
+border via `TableWidget.setSelectedRowAccentColor()` (the same
 `WidgetTheme.VALID_HIGHLIGHT` convention `RadioGroupWidget`'s confirmed-option
 border already uses), and every other row dims via
 `TableWidget.setOtherRowsDimmed()`, so the armed row reads as the only

@@ -2,9 +2,14 @@ package com.swiftfaze.veil.ui.widget;
 
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +32,7 @@ public class TableWidget<T> extends Widget {
     private boolean wrapAround = true;
     private boolean selectable = true;
     private Consumer<T> onConfirm = t -> {};
-    private Border selectedRowAccentBorder;
+    private Color selectedRowAccentColor;
     private boolean otherRowsDimmed = false;
 
     public TableWidget(List<Function<T, String>> columnRenderers) {
@@ -75,14 +80,17 @@ public class TableWidget<T> extends Widget {
     }
 
     /**
-     * An extra border drawn around the selected row's cells, on top of the normal
-     * selected-row highlight - for a consumer that needs to flag the selected row as
-     * additionally "armed" for some other in-progress action (e.g. a popup open on its
-     * behalf), distinct from just being the current cursor position. Null (the default)
-     * draws no extra border, matching every consumer that doesn't need this.
+     * Paints an extra accent-colored outline around the selected row's cells, on top of
+     * the normal selected-row highlight - for a consumer that needs to flag the selected
+     * row as additionally "armed" for some other in-progress action (e.g. a popup open on
+     * its behalf), distinct from just being the current cursor position. Null (the
+     * default) paints no accent. Every cell always reserves this outline's thickness
+     * regardless of whether it's currently painted, matching RadioGroupWidget's confirmed/
+     * unconfirmed border convention - reserving it only when accented would change every
+     * cell's insets between the two states and visibly resize the whole table on selection.
      */
-    public void setSelectedRowAccentBorder(Border border) {
-        this.selectedRowAccentBorder = border;
+    public void setSelectedRowAccentColor(Color color) {
+        this.selectedRowAccentColor = color;
         refreshHighlight();
     }
 
@@ -260,7 +268,7 @@ public class TableWidget<T> extends Widget {
         label.setBackground(isHeader ? WidgetTheme.TABLE_HEADER_BACKGROUND : WidgetTheme.BACKGROUND);
         label.setForeground(WidgetTheme.NORMAL_TEXT);
         label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, isHeader ? java.awt.Font.BOLD : java.awt.Font.PLAIN, 16));
-        label.setBorder(baseCellBorder());
+        label.setBorder(new AccentableCellBorder(baseCellBorder(), null));
         return label;
     }
 
@@ -273,16 +281,12 @@ public class TableWidget<T> extends Widget {
     private void refreshHighlight() {
         for (int i = 0; i < rowCells.size(); i++) {
             boolean highlighted = selectable && i == selectedRowIndex;
-            boolean accented = highlighted && selectedRowAccentBorder != null;
+            boolean accented = highlighted && selectedRowAccentColor != null;
             for (JLabel cell : rowCells.get(i)) {
                 WidgetTheme.applySelection(cell, highlighted);
-                if (accented) {
-                    cell.setBorder(BorderFactory.createCompoundBorder(selectedRowAccentBorder, baseCellBorder()));
-                } else {
-                    cell.setBorder(baseCellBorder());
-                    if (otherRowsDimmed && !highlighted) {
-                        cell.setForeground(WidgetTheme.DIMMED_TEXT);
-                    }
+                cell.setBorder(new AccentableCellBorder(baseCellBorder(), accented ? selectedRowAccentColor : null));
+                if (otherRowsDimmed && !highlighted) {
+                    cell.setForeground(WidgetTheme.DIMMED_TEXT);
                 }
             }
         }
@@ -297,6 +301,49 @@ public class TableWidget<T> extends Widget {
                 target = target.union(headerPanel.getBounds());
             }
             scrollRectToVisible(target);
+        }
+    }
+
+    /**
+     * Always reserves the same fixed accent-outline thickness around the wrapped inner
+     * border, whether or not an accent color is actually set — otherwise a cell's total
+     * insets differ between the accented and un-accented state, which visibly resizes the
+     * whole table on selection. Same fix shape as RadioGroupWidget's RadioOptionBorder.
+     */
+    private static class AccentableCellBorder extends AbstractBorder {
+        private static final int THICKNESS = 2;
+        private final Border inner;
+        private final Color accentColor;
+
+        AccentableCellBorder(Border inner, Color accentColor) {
+            this.inner = inner;
+            this.accentColor = accentColor;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            if (accentColor != null) {
+                g.setColor(accentColor);
+                g.fillRect(x, y, width, THICKNESS);
+                g.fillRect(x, y + height - THICKNESS, width, THICKNESS);
+                g.fillRect(x, y, THICKNESS, height);
+                g.fillRect(x + width - THICKNESS, y, THICKNESS, height);
+            }
+            inner.paintBorder(c, g, x + THICKNESS, y + THICKNESS, width - 2 * THICKNESS, height - 2 * THICKNESS);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            Insets innerInsets = inner.getBorderInsets(c);
+            return new Insets(innerInsets.top + THICKNESS, innerInsets.left + THICKNESS,
+                    innerInsets.bottom + THICKNESS, innerInsets.right + THICKNESS);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            Insets result = getBorderInsets(c);
+            insets.set(result.top, result.left, result.bottom, result.right);
+            return insets;
         }
     }
 }

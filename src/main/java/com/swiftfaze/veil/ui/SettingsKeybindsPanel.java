@@ -195,8 +195,7 @@ public class SettingsKeybindsPanel extends JPanel {
      * confirmed-option border convention.
      */
     private void applyArmedStyle() {
-        actionsTable.setSelectedRowAccentBorder(
-                popupOpen ? BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2) : null);
+        actionsTable.setSelectedRowAccentColor(popupOpen ? WidgetTheme.VALID_HIGHLIGHT : null);
         actionsTable.setOtherRowsDimmed(popupOpen);
     }
 

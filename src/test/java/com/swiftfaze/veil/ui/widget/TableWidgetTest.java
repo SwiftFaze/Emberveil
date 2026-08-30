@@ -115,11 +115,11 @@ public class TableWidgetTest {
     }
 
     @Test
-    public void selectedRowAccentBorderAndDimmingCanBeToggledWithoutError() {
+    public void selectedRowAccentColorAndDimmingCanBeToggledWithoutError() {
         tableWidget.setRows(List.of("Sword", "Shield"));
-        tableWidget.setSelectedRowAccentBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GREEN));
+        tableWidget.setSelectedRowAccentColor(java.awt.Color.GREEN);
         tableWidget.setOtherRowsDimmed(true);
-        tableWidget.setSelectedRowAccentBorder(null);
+        tableWidget.setSelectedRowAccentColor(null);
         tableWidget.setOtherRowsDimmed(false);
         assertEquals("Sword", tableWidget.getSelectedRow());
     }
