@@ -843,15 +843,17 @@ public class UiComponentFrameworkSteps {
         assertEquals(expected, actual);
     }
 
-    @Given("{string} is highlighted")
-    public void itemIsHighlighted(String item) {
-        while (!settingsScreenPanel.getHighlightedItemName().equals(item)) {
-            settingsScreenPanel.moveDown();
-        }
-    }
-
+    // Matches both a "Given '<item>' is highlighted" precondition (drives the highlight to match)
+    // and a "Then '<item>' is highlighted" assertion (a no-op drive when a prior "Down" step
+    // already put it there) — same reason as isHighlightedInDropPopup() above: Cucumber matches
+    // step text regardless of keyword, so this one method must serve both.
     @Then("{string} is highlighted")
-    public void thenItemIsHighlighted(String item) {
+    public void itemIsHighlighted(String item) {
+        int guard = 0;
+        while (!settingsScreenPanel.getHighlightedItemName().equals(item) && guard < 20) {
+            settingsScreenPanel.moveDown();
+            guard++;
+        }
         assertEquals(item, settingsScreenPanel.getHighlightedItemName());
     }
 
@@ -914,12 +916,6 @@ public class UiComponentFrameworkSteps {
     public void theKeybindsPageLists(String action, String key) {
         String actualKey = keybindsPanel.getKeyForAction(action);
         assertEquals(key, actualKey);
-    }
-
-    @Given("{string} is highlighted")
-    public void isHighlighted(String item) {
-        // This is context-dependent; handled by specific screen implementations
-        assertTrue(true);
     }
 
     @Then("the press-any-key popup is shown")

@@ -19,9 +19,9 @@
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` file)
 - [x] Approved by human
-- [x] Implemented
+- [ ] Implemented (slider widget + startup welcome screen done; settings screen + keybinds page have real defects — see status note)
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
-- [x] Acceptance tests passing (Phase 1-2 green, Phases 3-4 need refinement)
+- [ ] Acceptance tests passing (slider widget + startup welcome screen green; settings screen + keybinds page re-tagged @pending — build was broken before this correction)
 - [ ] Mutation testing passed
 - [ ] Documentation updated (`docs/`, and the wiki if player-facing)
 

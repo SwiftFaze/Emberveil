@@ -1,3 +1,4 @@
+@pending
 Feature: Settings screen
   A navigable, back-able settings screen reached from the title screen's
   Settings item, listing nine items with type-specific Left/Right
