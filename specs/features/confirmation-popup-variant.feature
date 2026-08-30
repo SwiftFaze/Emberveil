@@ -1,10 +1,16 @@
 Feature: Smaller confirmation-style popup variant
-  A centered, content-sized PopupWidget presentation (as opposed to
-  InventoryPanel's existing full-screen one), proven by a concrete Yes/No
-  confirmation dialog wired to the settings screen's "Reset to Defaults"
-  item. Reuses the existing PopupWidget base (Close/Escape, onUp/onDown)
-  and #35's radio group widget for the Yes/No choice — no new dialog
-  control is built. See specs/intent/confirmation-popup-variant.md.
+  A fixed-size, centered PopupWidget presentation (PopupWidget.isFullScreen()
+  false, as opposed to InventoryPanel's existing full-screen popups) with a
+  bordered, arrow-accented title bar, hosted by a new JLayeredPane wired
+  specifically for the settings card (GameWindow.buildContentArea's own
+  JLayeredPane is scoped to the game card and isn't reusable as-is). Proven
+  by a concrete Yes/No confirmation dialog wired to the settings screen's
+  "Reset to Defaults" item. Reuses the existing PopupWidget base's core
+  mechanism (Escape-to-dismiss, onUp/onDown/onLeft/onRight) and #35's radio
+  group widget for the Yes/No choice — no new dialog control is built — but
+  does not use PopupWidget's inherited Close-button footer: Yes/No is this
+  dialog's only confirm/cancel mechanism. See
+  specs/intent/confirmation-popup-variant.md, including its Clarifications.
 
   Scenario: Confirming Reset to Defaults opens the Yes/No confirmation popup
     Given the settings screen is shown
@@ -12,6 +18,9 @@ Feature: Smaller confirmation-style popup variant
     When the "Enter" key is pressed
     Then the confirmation popup is shown
     And the confirmation popup is not full-screen
+    And the confirmation popup's title is "Confirm Reset"
+    And the confirmation popup asks "Reset all settings to their defaults?"
+    And "No" is highlighted
 
   Scenario: Choosing No on the confirmation popup dismisses it without resetting
     Given the confirmation popup is shown
@@ -45,22 +54,30 @@ Feature: Smaller confirmation-style popup variant
   #     out-of-scope framing for that item.
   #   - A bigger real-world trigger for Yes/No confirmation (e.g. NPC
   #     dialogue) — explicitly out of scope for issue #99 itself.
+  #   - Building the future Close-only "alert" popup (Clarifications
+  #     Q4) — only its underlying mechanism must not be precluded.
+  #   - A general-purpose popup host usable by every card/screen — only
+  #     the settings card gets one (Clarifications Q1).
   #   - Any mouse/pointer handling — this game is keyboard-only by
   #     design.
+  #   - No error/failure path exists for this feature: it's UI-only
+  #     (no I/O, no persistence, no validation), matching this repo's
+  #     other display/interaction-only specs.
   #
   # Risks:
-  #   - Depends on #54's settings screen (Reset to Defaults item, not
-  #     yet approved/implemented) as this feature's trigger, and on
-  #     #35's radio group widget (not yet approved/implemented) for the
-  #     Yes/No choice control. This feature cannot be fully implemented
-  #     until both land.
   #   - The choice of "Reset to Defaults" as the concrete trigger (over
   #     a dev-only sandbox demo) was an autonomous decision — see
   #     specs/intent/confirmation-popup-variant.md's Constraints —
   #     flagged for confirmation at Step 3 approval.
+  #   - The exact title/question wording ("Confirm Reset" / "Reset all
+  #     settings to their defaults?") is a minor copy decision, not yet
+  #     reviewed by the human — adjustable at Step 3 approval without
+  #     changing the feature's shape.
   #   - Real Swing focus-transfer is not simulated headlessly here,
   #     matching this repo's existing Cucumber precedent
   #     (ui-component-framework.feature).
   #
   # Open questions:
-  #   - None outstanding.
+  #   - None outstanding — all Step 2 clarification-round questions were
+  #     resolved (see specs/intent/confirmation-popup-variant.md's
+  #     Clarifications section).
