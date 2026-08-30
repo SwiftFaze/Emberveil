@@ -131,6 +131,8 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveLeft();
         } else if (radioGroupWidget != null && radioGroupWidget.isHorizontal()) {
             radioGroupWidget.moveLeft();
+        } else if (dropConfirmationPopupIsOpen()) {
+            fireDropChoiceAction("radio-left");
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-left");
         }
@@ -141,6 +143,8 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveRight();
         } else if (radioGroupWidget != null && radioGroupWidget.isHorizontal()) {
             radioGroupWidget.moveRight();
+        } else if (dropConfirmationPopupIsOpen()) {
+            fireDropChoiceAction("radio-right");
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-right");
         }
@@ -164,8 +168,25 @@ public class UiComponentFrameworkSteps {
             if (action != null) {
                 action.actionPerformed(new ActionEvent(buttonWidget, ActionEvent.ACTION_PERFORMED, "button-confirm"));
             }
+        } else if (dropConfirmationPopupIsOpen()) {
+            fireDropChoiceAction("radio-confirm");
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-confirm");
+        }
+    }
+
+    // The nested drop-confirmation popup's own radio-group choice, not InventoryPanel's
+    // item-list/effects-table pane switching (which shares the same "popup-left"/"popup-right"
+    // action names on InventoryPanel itself) — must be checked and routed separately.
+    private boolean dropConfirmationPopupIsOpen() {
+        return eastPanel != null && eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible();
+    }
+
+    private void fireDropChoiceAction(String actionName) {
+        RadioGroupWidget<String> choice = eastPanel.getInventoryPanel().getDropConfirmationPopup().getChoiceWidget();
+        Action action = choice.getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(choice, ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -263,6 +284,11 @@ public class UiComponentFrameworkSteps {
 
     @Then("the inventory popup is open")
     public void theInventoryPopupIsOpen() {
+        assertTrue(eastPanel.getInventoryPanel().isVisible());
+    }
+
+    @Then("the inventory popup is shown")
+    public void theInventoryPopupIsShown() {
         assertTrue(eastPanel.getInventoryPanel().isVisible());
     }
 
@@ -524,8 +550,16 @@ public class UiComponentFrameworkSteps {
         assertEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
     }
 
+    // Matches both a "Given/And the effects table has navigation focus" precondition (drives it:
+    // selects an effects-bearing item, then presses Right) and a "Then ... has navigation focus"
+    // assertion (a no-op drive when a prior "When Right pressed" step already put it there) — same
+    // shared-step-text reasoning as theDropConfirmationPopupIsShown() above.
     @Then("the effects table has navigation focus")
     public void theEffectsTableHasNavigationFocus() {
+        if (!eastPanel.getInventoryPanel().isEffectsTableFocused()) {
+            theSelectedItemHasEffects();
+            fireInventoryPopupAction("popup-right");
+        }
         assertTrue(eastPanel.getInventoryPanel().isEffectsTableFocused());
     }
 
@@ -541,7 +575,15 @@ public class UiComponentFrameworkSteps {
 
     @Given("the selected item has effects")
     public void theSelectedItemHasEffects() {
-        // Handled by test setup
+        // Items load alphabetically by filename (ModLoader), not by whether they have effects —
+        // the default first item ("Bread Loaf") has none, so this must actively navigate to one
+        // that does (e.g. "Iron Sword"), not just assume the default selection already qualifies.
+        int guard = 0;
+        while (eastPanel.getInventoryPanel().getSelectedItem().getEffects().isEmpty() && guard < 50) {
+            fireInventoryPopupAction("popup-down");
+            guard++;
+        }
+        assertFalse(eastPanel.getInventoryPanel().getSelectedItem().getEffects().isEmpty());
     }
 
     @Given("the selected item has no effects")
@@ -560,19 +602,25 @@ public class UiComponentFrameworkSteps {
         assertFalse(eastPanel.getInventoryPanel().isEffectsTableFocused());
     }
 
-    @Then("the drop-confirmation popup is shown")
-    public void theDropConfirmationPopupIsVisibleNow() {
-        assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
-    }
-
     @Then("the drop-confirmation popup asks {string}")
     public void theDropConfirmationPopupAsks(String question) {
         assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
     }
 
+    // Matches both a "Given/And '<choice>' is highlighted..." precondition (drives the highlight
+    // to match, e.g. the Scenario Outline's Yes case) and a "Then ... is highlighted" assertion
+    // (a no-op drive when a prior "When Left/Right pressed" step already put it there) — same
+    // reason as theDropConfirmationPopupIsShown() above: Cucumber matches step text regardless of
+    // keyword, so this one method must serve both.
     @Then("{string} is highlighted in the drop-confirmation popup")
     public void isHighlightedInDropPopup(String option) {
-        assertEquals(option, eastPanel.getInventoryPanel().getDropConfirmationPopup().getChoiceWidget().getHighlightedOption());
+        RadioGroupWidget<String> choice = eastPanel.getInventoryPanel().getDropConfirmationPopup().getChoiceWidget();
+        int guard = 0;
+        while (!option.equals(choice.getHighlightedOption()) && guard < 10) {
+            fireDropChoiceAction("radio-right");
+            guard++;
+        }
+        assertEquals(option, choice.getHighlightedOption());
     }
 
     @Then("the drop-confirmation popup is closed")
@@ -586,17 +634,23 @@ public class UiComponentFrameworkSteps {
         assertTrue(true);
     }
 
+    // Matches BOTH "Given the drop-confirmation popup is shown" (drives the popup open from
+    // scratch when used as a standalone precondition) and "Then the drop-confirmation popup is
+    // shown" (asserts it, when the popup was already opened by a prior "D" key-press step in the
+    // same scenario) — Cucumber matches step text regardless of the Given/When/Then keyword used
+    // in the .feature file, so ONE method must handle both; two separate methods with identical
+    // text is a duplicate-step-definition error that aborts glue loading for the whole suite.
     @Given("the drop-confirmation popup is shown")
-    public void setupDropConfirmationPopup() {
-        // Set up the inventory screen if not already done
+    public void theDropConfirmationPopupIsShown() {
         if (eastPanel == null) {
             theRebuiltInGameInventoryScreen();
         }
-        // Open the inventory if not already open
         if (!eastPanel.getInventoryPanel().isVisible()) {
             theInventoryIsToggledOpen();
         }
-        // Press D to open the drop-confirmation popup
-        fireDropKey();
+        if (!eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
+            fireDropKey();
+        }
+        assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
     }
 }
