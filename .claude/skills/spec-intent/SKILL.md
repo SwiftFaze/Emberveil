@@ -102,7 +102,7 @@ structure:
   - If the issue is terse (a one-line bug report, a short ask with no
     structure), derive what you can from it and the codebase, and use the
     `grilling` skill to ask whatever's genuinely missing or ambiguous —
-    per root `CLAUDE.md`'s "Notes for the agent": never invent scope to
+    per `.claude/workflow.md`'s "Notes for the agent": never invent scope to
     fill a section. Most terse issues only produce one open question, so
     this is usually a single-question round, but let grilling ask more if
     the terseness turns out to hide several open forks rather than
