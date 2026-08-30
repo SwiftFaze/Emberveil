@@ -12,6 +12,11 @@ import java.util.regex.Pattern;
 public class PatternFieldWidget extends Widget {
     private static final int UNFOCUSED_BORDER_WIDTH = 1;
     private static final int FOCUSED_BORDER_WIDTH = 2;
+    // Fixed and generous, not derived from the label's own metrics — the border's width changes
+    // with focus state, and a tightly-computed height left no slack for that, squeezing the
+    // label's content area toward zero (border eating the only space budgeted for text) whenever
+    // the thicker, focused border was applied.
+    private static final int FIELD_HEIGHT = 40;
 
     private final Pattern pattern;
     private final StringBuilder input;
@@ -33,9 +38,8 @@ public class PatternFieldWidget extends Widget {
         updateAppearance();
         // Fixed height, stretches to fill whatever width its container offers — matches every
         // other widget's "full width" treatment (ListWidget's rows, TableWidget's row panels).
-        int height = label.getPreferredSize().height + 12;
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
-        setPreferredSize(new Dimension(200, height));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, FIELD_HEIGHT));
+        setPreferredSize(new Dimension(200, FIELD_HEIGHT));
     }
 
     public String getInput() {

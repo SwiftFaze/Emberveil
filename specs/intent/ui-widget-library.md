@@ -608,3 +608,19 @@ next screen that needs them.
   testing exact colors headlessly) are unaffected.
   Affects: Desired behavior (pattern-field widget's visual
   presentation), no scope change — still no real consumer.
+
+- Q: A follow-up look at the same throwaway harness showed the border
+  looking too thick and the typed text not visible at all inside it.
+  Root cause?
+  A: The widget's total height was fixed once at construction, computed
+  tightly from the label's own preferred height plus a small, fixed
+  buffer — barely enough for the *thinnest* (unfocused) border+padding
+  combination, with no slack budgeted for the border growing 1px->2px
+  on focus. Since that total height never grew to compensate, the
+  thicker focused border ate further into an already-tight budget,
+  squeezing the label's own content area toward zero — "thick border"
+  and "invisible text" were the same bug, not two. Fixed by using a
+  generous fixed height (40px) that isn't derived from the label's
+  metrics at all, comfortably fitting label + border + padding in
+  either focus state.
+  Affects: none (bug fix, no behavior/scope change).
