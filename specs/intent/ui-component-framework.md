@@ -338,3 +338,24 @@ resolved in a grilling session; see Clarifications below.
   that `InventoryPanel` sets `false` on its own item list only.
   Affects: Desired behavior (inventory-list-specific, not a framework-wide
   change).
+
+- Q: (Surfaced from a screenshot during playtest) The popup's item list
+  ran the full popup width, and the scrollbar used the platform
+  look-and-feel's default chrome (light-gray with arrow buttons), clashing
+  with the terminal aesthetic everywhere else. Should the popup gain an
+  item-details pane, and should the scrollbar be restyled?
+  A: Yes to both. `InventoryPanel`'s body is now a 50/50 split (`GridLayout`
+  inside a stretched row) — item list on the left, a details pane on the
+  right (name, type, slot, damage range if any, `+stat (calc)` per effect;
+  divided by a 2px light-gray line matching the rest of the UI's border
+  style), updating live as `ListWidget`'s new `onSelectionChange` hook
+  fires. The scrollbar got a small custom `TerminalScrollBarUI`
+  (`ui/widget/TerminalScrollBarUI.java`, extends `BasicScrollBarUI`): flat
+  black track, solid `WidgetTheme.SELECTED_HIGHLIGHT`-colored thumb, no
+  arrow buttons, narrow width — generic enough to reuse on any future
+  scrollable widget, not inventory-specific.
+  Affects: Desired behavior, Scope (adds a details pane and a fourth
+  reusable framework piece — the scrollbar UI — beyond the three
+  originally scoped widgets; still within the "prove the framework
+  end-to-end" spirit, not the deferred milestone #7 real-inventory-UI
+  work, since there's still no equip/drop/use interaction).

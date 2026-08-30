@@ -17,6 +17,8 @@ public class ListWidget<T> extends Widget {
     private boolean wrapAround = true;
     private Consumer<T> onConfirm = t -> {
     };
+    private Consumer<T> onSelectionChange = t -> {
+    };
     private final List<JLabel> labels = new ArrayList<>();
 
     public ListWidget(Function<T, String> itemRenderer) {
@@ -38,6 +40,10 @@ public class ListWidget<T> extends Widget {
 
     public void setWrapAround(boolean wrapAround) {
         this.wrapAround = wrapAround;
+    }
+
+    public void setOnSelectionChange(Consumer<T> onSelectionChange) {
+        this.onSelectionChange = onSelectionChange;
     }
 
     public T getSelectedItem() {
@@ -128,5 +134,6 @@ public class ListWidget<T> extends Widget {
         if (selectedIndex < labels.size()) {
             scrollRectToVisible(labels.get(selectedIndex).getBounds());
         }
+        onSelectionChange.accept(getSelectedItem());
     }
 }
