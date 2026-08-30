@@ -749,3 +749,15 @@ next screen that needs them.
   of drawing the default 1px line.
   Affects: Desired behavior (cursor appearance only, no
   functional/API change).
+
+- Q: The block cursor wasn't blinking.
+  A: The 500ms blink Swing normally shows comes from the look-and-feel
+  installing its *own* default caret onto a component at creation time
+  — replacing that caret with `BlockCaret` (via `JTextField.setCaret`)
+  skips that installation step entirely, leaving `DefaultCaret`'s own
+  un-set default blink rate (0, meaning the blink timer never starts
+  and it just renders solid) rather than actually being 500ms already
+  as assumed. `BlockCaret`'s constructor now calls `setBlinkRate(500)`
+  explicitly.
+  Affects: none (bug fix — restores the blinking that was assumed
+  already present).

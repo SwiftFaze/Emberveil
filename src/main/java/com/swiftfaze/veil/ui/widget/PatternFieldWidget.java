@@ -197,9 +197,20 @@ public class PatternFieldWidget extends Widget {
 
     /**
      * A solid block cursor (like a terminal/console) instead of Swing's default thin vertical
-     * line — same blink timing as {@link DefaultCaret}, just a different paint shape.
+     * line — a different paint shape, otherwise using {@link DefaultCaret}'s own blink-timer
+     * machinery as-is.
      */
     private static class BlockCaret extends DefaultCaret {
+        private static final int BLINK_RATE_MS = 500;
+
+        BlockCaret() {
+            // The blink rate Swing normally applies comes from the look-and-feel installing its
+            // *own* default caret onto a component; replacing that caret with this one (via
+            // JTextField.setCaret) skips that step entirely, leaving DefaultCaret's own default
+            // (0 - the blink timer never starts, so it just renders solid) unless set explicitly.
+            setBlinkRate(BLINK_RATE_MS);
+        }
+
         @Override
         public void paint(Graphics g) {
             if (!isVisible()) {
