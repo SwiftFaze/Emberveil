@@ -555,3 +555,29 @@ next screen that needs them.
   (`WidgetTheme.applySelection`) with no scenario-visible behavior
   change for `ListWidget`/`TableWidget` (same colors as before, just
   centralized).
+
+- Q: (Fifth round of Step 4.5 playtest) The scrollbar color and radio
+  group fixes were confirmed working, but the fields table's header
+  was still hidden after scrolling — two screenshots at the same
+  selection ("Steel Dagger", "ID" row highlighted) showed the header
+  visible only after scrolling up slightly *further* than wherever the
+  automatic positioning had stopped. What was still wrong, given the
+  previous entry's viewport-reset fix?
+  A: A different bug than previously diagnosed — the viewport-reset-to-
+  (0,0) fix was real and correct, but only runs on `updateDetails()`
+  (item *selection* changes). Entering the fields table via Right calls
+  `TableWidget.moveToStart()`, which calls `refreshHighlight()`, which
+  calls `scrollRectToVisible()` on row 0's own bounds — and
+  `scrollRectToVisible` scrolls the *minimum* distance needed to reveal
+  exactly the rectangle it's given. Since the header is a separate
+  component sitting above row 0 that this call knows nothing about,
+  "just enough to reveal row 0" can leave the header scrolled out of
+  view immediately above it — confirmed by the screenshots (more room
+  existed above; the automatic scroll simply didn't use it). Fixed by
+  having `TableWidget` union the header panel's bounds into the scroll
+  target whenever row 0 is the selected row, so revealing row 0 always
+  drags the header along with it. This is a `TableWidget`-level fix
+  (not `InventoryPanel`-specific), so it applies to both the fields and
+  effects tables, and to any future consumer with a header.
+  Affects: none (bug fix, no behavior/scope change beyond "row 0 +
+  header now scroll into view together").

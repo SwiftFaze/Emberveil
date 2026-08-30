@@ -21,6 +21,7 @@ public class TableWidget<T> extends Widget {
     private final List<Function<T, String>> columnRenderers;
     private final List<T> rows = new ArrayList<>();
     private final List<List<JLabel>> rowCells = new ArrayList<>();
+    private JPanel headerPanel;
     private int selectedRowIndex = 0;
     private int selectedColumnIndex = 0;
     private boolean wrapAround = true;
@@ -167,7 +168,8 @@ public class TableWidget<T> extends Widget {
         if (columnHeaders.isEmpty()) {
             return;
         }
-        add(buildRowPanel(columnHeaders, true));
+        headerPanel = buildRowPanel(columnHeaders, true);
+        add(headerPanel);
     }
 
     private void refresh() {
@@ -228,7 +230,16 @@ public class TableWidget<T> extends Widget {
             }
         }
         if (selectable && selectedRowIndex < rowCells.size() && !rowCells.isEmpty()) {
-            scrollRectToVisible(rowCells.get(selectedRowIndex).get(0).getParent().getBounds());
+            // scrollRectToVisible scrolls the *minimum* distance needed to reveal exactly the
+            // rectangle it's given. The header is a separate component sitting above row 0 that
+            // it knows nothing about, so scrolling to reveal row 0 alone can (and did, in
+            // practice) leave the header scrolled just out of view above it. Unioning the
+            // header's bounds into the target whenever row 0 is selected forces the header along.
+            java.awt.Rectangle target = rowCells.get(selectedRowIndex).get(0).getParent().getBounds();
+            if (selectedRowIndex == 0 && headerPanel != null) {
+                target = target.union(headerPanel.getBounds());
+            }
+            scrollRectToVisible(target);
         }
     }
 }
