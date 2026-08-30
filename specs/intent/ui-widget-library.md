@@ -56,13 +56,24 @@ next screen that needs them.
     this widget needs new `MENU_LEFT`/`MENU_RIGHT` (or equivalent)
     keystroke constants added there — no horizontal menu navigation exists
     anywhere in the codebase yet.
-  - A **radio group widget**: single-select from a set of options, using
-    the same selected/normal `WidgetTheme` indication as every other
-    widget (no separate hover/focused state — see the parent framework's
-    Clarifications on this).
+  - A **radio group widget**: single-select from a set of options,
+    vertical (Up/Down) layout only — no new keybindings needed, reusing
+    `MENU_UP`/`MENU_DOWN`/`MENU_CONFIRM` — using the same selected/normal
+    `WidgetTheme` indication as every other widget (no separate
+    hover/focused state — see the parent framework's Clarifications on
+    this, and this doc's own Clarifications for why horizontal layout is
+    deferred).
   - A **text/form-field widget** with regex pattern validation: accepts
     keyboard text entry, validates against a caller-supplied pattern,
-    surfaces valid/invalid state visually.
+    surfaces valid/invalid state visually via a new
+    `WidgetTheme.INVALID_HIGHLIGHT` constant (see Clarifications).
+  - A minimal **dev-only demo harness** exercising all three widgets
+    together, following the `ClassSandboxPanel`/`ClassSandbox` precedent
+    (`src/main/java/com/swiftfaze/veil/sandbox/`), run via
+    `mvn compile exec:java -Dexec.mainClass=...`, not part of the packaged
+    build — this is what Step 4.5's manual playtest is performed against,
+    since no real in-game screen consumes these widgets yet (see
+    Clarifications).
   - All three extend `Widget` directly (matching `ListWidget`/
     `ButtonWidget`/`PopupWidget`'s pattern) and bind their own key bindings
     via `Keybindings` constants, following the existing
@@ -106,18 +117,24 @@ next screen that needs them.
   and row data; the currently-selected cell is visually indicated per
   `WidgetTheme.SELECTED_HIGHLIGHT`; Up/Down moves the selection between
   rows, Left/Right moves it between columns (new keybindings); Enter
-  confirms the selected cell/row (exact confirm granularity — cell vs.
-  row — is an open question, see below).
+  confirms the selected row (see Clarifications). Both dimensions wrap
+  around at the ends by default (Up from the first row goes to the last,
+  Left from the first column goes to the last, and vice versa), matching
+  `ListWidget`'s own `wrapAround` default of `true` — a caller can
+  override this the same way `ListWidget.setWrapAround(false)` already
+  does, if a future consumer needs stop-at-the-ends behavior like
+  `InventoryPanel` does today.
 - **Radio group widget:** a developer supplies a set of options; Up/Down
-  (or Left/Right, depending on orientation — see Open questions) moves the
-  highlighted option; Enter selects it; only one option is selected at a
-  time, matching standard radio-button semantics.
+  moves the highlighted option (vertical layout only — see
+  Clarifications); Enter selects it; only one option is selected at a
+  time, matching standard radio-button semantics; wraps around at the
+  ends by default, same as the table/list widgets.
 - **Text/pattern field widget:** a developer supplies a regex pattern; the
   widget accepts keyboard character entry, shows the current input text,
   and visually distinguishes valid vs. invalid state as the pattern
-  matches or fails to match the current input (exact visual treatment for
-  "invalid" — since `WidgetTheme` only currently defines a "selected"
-  highlight, not an error state — is an open question, see below).
+  matches or fails to match the current input, using a new
+  `WidgetTheme.INVALID_HIGHLIGHT` color when invalid (see
+  Clarifications).
 - All three widgets integrate with the shared framework the same way
   `ListWidget`/`ButtonWidget` do today: no custom per-widget focus
   management, reusing `WidgetTheme` styling, and (where relevant)
@@ -125,8 +142,9 @@ next screen that needs them.
   inside a modal popup.
 - Since no real screen consumes them yet, "desired behavior" is verified
   through widget-level unit/acceptance tests exercising each widget in
-  isolation (construction, navigation, selection/validation state) rather
-  than an end-to-end screen playtest.
+  isolation (construction, navigation, selection/validation state), plus
+  the dev-only demo harness (see Clarifications) for Step 4.5's manual
+  playtest.
 
 ## Constraints / non-functional notes
 
@@ -155,24 +173,63 @@ next screen that needs them.
 
 ## Open questions
 
-- What's the first real consumer of the text/pattern-field widget? This
-  was flagged as open in issue #35 itself and is still unresolved —
-  worth identifying (even just conceptually, e.g. "a future
-  character-creation name field") before finalizing validation-pattern
-  API shape, so it isn't designed in a vacuum.
-- Since there's no real screen to prove these widgets against, how should
-  Step 4.5's manual playtest be satisfied? Options include a throwaway
-  demo screen/harness (similar in spirit to the class/stats sandbox,
-  `com.swiftfaze.veil.sandbox.ClassSandboxPanel`) that exercises all three
-  widgets together, or treating comprehensive unit/acceptance test
-  coverage as sufficient given the explicit "no consumer yet" framing.
-- Table widget: does Enter confirm the whole selected row, or just the
-  selected cell? Depends on what a future consumer (e.g. a settings table)
-  would actually need.
-- Radio group widget: vertical (Up/Down) or horizontal (Left/Right)
-  option layout, or does the widget support both depending on caller
-  configuration?
-- Text/pattern field: `WidgetTheme` only defines one highlight color
-  (`SELECTED_HIGHLIGHT`) today — does an invalid-input state need a new
-  color constant (e.g. an error/red highlight), or does it reuse existing
-  styling some other way (e.g. a border change)?
+- What's the first real consumer of the text/pattern-field widget? Still
+  genuinely unresolved (see Clarifications — this doesn't block the
+  widget's generic contract, but the eventual real validation patterns
+  used in-game depend on it).
+
+## Clarifications
+
+- Q: Table widget: does Enter confirm the whole selected row, or just the
+  selected cell?
+  A: (Decided autonomously, no human available — flag for confirmation
+  at Step 3 approval) The whole selected row, mirroring `ListWidget`'s
+  existing row-level confirm semantics (`getSelectedItem()`/
+  `setOnConfirm(Consumer<T>)`) rather than introducing a separate
+  cell-level confirm concept. Column position still matters for
+  navigation/highlighting, just not for what "confirm" returns. Simplest
+  generalization, and most plausible future consumers (e.g. a settings
+  table) want a row-level action.
+  Affects: Desired behavior, Scope.
+
+- Q: Radio group widget: vertical (Up/Down) or horizontal (Left/Right)
+  option layout?
+  A: (Decided autonomously, no human available — flag for confirmation
+  at Step 3 approval) Vertical only (Up/Down), matching every other
+  existing widget (`ListWidget`, `PopupWidget`'s onUp/onDown hooks) and
+  the keybindings that already exist. This also means the radio group
+  does NOT need new `MENU_LEFT`/`MENU_RIGHT` keybindings — those remain
+  scoped to the table widget only, which genuinely needs 2D navigation.
+  Reduces scope/risk for a widget with no real consumer yet; horizontal
+  layout can be added later if a real consumer needs it.
+  Affects: Desired behavior, Scope (narrows the Keybindings addition to
+  the table widget only).
+
+- Q: Text/pattern field: how is invalid-input state visually
+  distinguished, given `WidgetTheme` only defines one highlight color
+  today?
+  A: (Decided autonomously, no human available — flag for confirmation
+  at Step 3 approval) Add a new `WidgetTheme.INVALID_HIGHLIGHT` constant
+  (a distinct color, e.g. a red tone) alongside the existing
+  `SELECTED_HIGHLIGHT`/`NORMAL_TEXT`/`BACKGROUND` constants, applied to
+  the field's text/border when the current input fails the pattern.
+  Keeps the "shared styling convention" principle intact (a framework-
+  level constant, not a widget-local color) so any future widget needing
+  an error state can reuse it.
+  Affects: Desired behavior, Constraints.
+
+- Q: With no real screen to prove these widgets against, how is Step
+  4.5's manual playtest (CLAUDE.md's repo-specific gate, "no feature is
+  done without this playtest") satisfied?
+  A: (Decided autonomously, no human available — flag for confirmation
+  at Step 3 approval) Build a minimal dev-only demo harness exercising
+  all three widgets together, following the existing precedent of
+  `com.swiftfaze.veil.sandbox.ClassSandboxPanel` /
+  `com.swiftfaze.veil.sandbox.ClassSandbox` (run via
+  `mvn compile exec:java -Dexec.mainClass=...`, not part of the packaged
+  build — see `docs/architecture.md`). This gives the human something
+  real to visually playtest against without inventing a fake in-game
+  screen, consistent with how the sandbox already serves this purpose for
+  dev-only, no-current-consumer code.
+  Affects: Scope (new in-scope bullet: a dev sandbox harness), Desired
+  behavior.
