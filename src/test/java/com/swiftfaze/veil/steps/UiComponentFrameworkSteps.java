@@ -860,15 +860,26 @@ public class UiComponentFrameworkSteps {
     // Matches both a "Given '<item>' is highlighted" precondition (drives the highlight to match)
     // and a "Then '<item>' is highlighted" assertion (a no-op drive when a prior "Down" step
     // already put it there) — same reason as isHighlightedInDropPopup() above: Cucumber matches
-    // step text regardless of keyword, so this one method must serve both.
+    // step text regardless of keyword, so this one method must serve both. Also shared verbatim
+    // by settings-screen.feature ("Brightness" is highlighted) and settings-keybinds-page.feature
+    // ("Move up" is highlighted) - both use the identical phrase, so this dispatches on whichever
+    // panel is currently active, same pattern as fireUpKey()/fireDownKey() elsewhere in this file.
     @Then("{string} is highlighted")
     public void itemIsHighlighted(String item) {
         int guard = 0;
-        while (!settingsScreenPanel.getHighlightedItemName().equals(item) && guard < 20) {
-            settingsScreenPanel.moveDown();
-            guard++;
+        if (keybindsPanel != null) {
+            while (!keybindsPanel.getHighlightedActionName().equals(item) && guard < 20) {
+                keybindsPanel.moveDown();
+                guard++;
+            }
+            assertEquals(item, keybindsPanel.getHighlightedActionName());
+        } else {
+            while (!settingsScreenPanel.getHighlightedItemName().equals(item) && guard < 20) {
+                settingsScreenPanel.moveDown();
+                guard++;
+            }
+            assertEquals(item, settingsScreenPanel.getHighlightedItemName());
         }
-        assertEquals(item, settingsScreenPanel.getHighlightedItemName());
     }
 
     @Given("{string} is highlighted with slider value {int}")
@@ -932,8 +943,15 @@ public class UiComponentFrameworkSteps {
         assertEquals(key, actualKey);
     }
 
+    // Matches both a "Then the press-any-key popup is shown" assertion (after a prior "Enter"
+    // step already opened it via confirm()) and a bare "Given the press-any-key popup is shown"
+    // precondition with no prior Enter in the same scenario - drives it open first if needed,
+    // same dual-purpose reason as itemIsHighlighted() and isHighlightedInDropPopup() above.
     @Then("the press-any-key popup is shown")
     public void thePressAnyKeyPopupIsShown() {
+        if (!keybindsPanel.isPopupOpen()) {
+            keybindsPanel.confirm();
+        }
         assertTrue(keybindsPanel.isPopupOpen());
     }
 
