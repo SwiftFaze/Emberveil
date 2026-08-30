@@ -11,6 +11,7 @@ import com.swiftfaze.veil.ui.widget.ButtonWidget;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -30,6 +31,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiComponentFrameworkSteps {
+
+    @Before
+    public void beforeScenario() {
+        // Clear widget fields at the start of each scenario to prevent cross-scenario pollution
+        // But leave classPanel, classModel, classNames alone since they're used by class sandbox tests
+        listWidget = null;
+        buttonWidget = null;
+        tableWidget = null;
+        radioGroupWidget = null;
+        eastPanel = null;
+        confirmedTableRows.clear();
+        confirmedItem = null;
+        actionInvoked = false;
+        listItems = null;
+        dataSourceItems = null;
+        restoreGameFocusInvoked = false;
+        lastKeyCode = 0;
+        layeredContentArea = null;
+    }
 
     private ListWidget<String> listWidget;
     private ButtonWidget buttonWidget;
@@ -150,10 +170,12 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireEscapeKey() {
-        if (eastPanel != null && eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
-            fireInventoryPopupDropAction("popup-dismiss");
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-dismiss");
+        if (eastPanel != null) {
+            if (eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
+                fireInventoryPopupDropAction("popup-dismiss");
+            } else if (eastPanel.getInventoryPanel().isVisible()) {
+                fireInventoryPopupAction("popup-dismiss");
+            }
         }
     }
 
@@ -380,7 +402,8 @@ public class UiComponentFrameworkSteps {
         tableWidget = new TableWidget<>(List.of(s -> s));
         tableWidget.setOnConfirm(confirmedTableRows::add);
         tableWidget.setRows(rows);
-        for (int i = 0; i < selectedRow; i++) {
+        // "row 1" means index 0, "row 2" means index 1, so move down (selectedRow - 1) times
+        for (int i = 0; i < selectedRow - 1; i++) {
             tableWidget.moveDown();
         }
     }
@@ -410,13 +433,15 @@ public class UiComponentFrameworkSteps {
     }
 
     @Then("the selected row is {int}")
-    public void theSelectedRowIs(int rowIndex) {
-        assertEquals(rowIndex, tableWidget.getSelectedRowIndex());
+    public void theSelectedRowIs(int rowNumber) {
+        // Gherkin uses 1-indexed row numbers ("row 1" is the first row, index 0)
+        assertEquals(rowNumber - 1, tableWidget.getSelectedRowIndex());
     }
 
     @Then("the selected column is {int}")
-    public void theSelectedColumnIs(int columnIndex) {
-        assertEquals(columnIndex, tableWidget.getSelectedColumnIndex());
+    public void theSelectedColumnIs(int columnNumber) {
+        // Gherkin uses 1-indexed column numbers ("column 1" is the first column, index 0)
+        assertEquals(columnNumber - 1, tableWidget.getSelectedColumnIndex());
     }
 
     @Then("the confirmed row is {string}")
@@ -536,7 +561,7 @@ public class UiComponentFrameworkSteps {
     }
 
     @Then("the drop-confirmation popup is shown")
-    public void theDropConfirmationPopupIsShown() {
+    public void theDropConfirmationPopupIsVisibleNow() {
         assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
     }
 
@@ -559,5 +584,19 @@ public class UiComponentFrameworkSteps {
     public void theItemWasNotRemoved() {
         // No actual drop logic exists yet, so this is always true
         assertTrue(true);
+    }
+
+    @Given("the drop-confirmation popup is shown")
+    public void setupDropConfirmationPopup() {
+        // Set up the inventory screen if not already done
+        if (eastPanel == null) {
+            theRebuiltInGameInventoryScreen();
+        }
+        // Open the inventory if not already open
+        if (!eastPanel.getInventoryPanel().isVisible()) {
+            theInventoryIsToggledOpen();
+        }
+        // Press D to open the drop-confirmation popup
+        fireDropKey();
     }
 }
