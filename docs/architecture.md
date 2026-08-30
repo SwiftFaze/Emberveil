@@ -126,25 +126,55 @@ notifies `GameListener`s and repaints itself, so there's no catch-all
 "notify after every keypress" path — an unbound key simply never invokes
 an `Action`.
 
-**UI shell** (`ui/`): `NorthPanel`, `SouthPanel`, `MenuPanel`,
-`InventoryPanel`, and `PlayerInfoPanel` all extend `TerminalPanel`, a
-shared `JPanel` base centralizing the black background, monospaced label
-styling, and a `makeLabel` helper — each panel still sets its own
-border/layout specifics that genuinely differ (e.g. `InventoryPanel`'s and
-`PlayerInfoPanel`'s bottom-line border, `NorthPanel`'s centered title).
-`EastPanel` composes `PlayerInfoPanel` + `InventoryPanel` + `MenuPanel` and
-implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`, and
-the interface's `toggleInventory` default method is overridden to show/hide
-`InventoryPanel` — this replaced the old direct `GamePanel` → `EastPanel`
-field reference that pressing **I** used to go through. `InventoryPanel`
-itself is populated externally (`showItems(List<Item>)`, called from
-`EastPanel`'s constructor) rather than loading mod content itself, mirroring
-`PlayerInfoPanel`'s `updatePlayer`-style external push. `MenuPanel` wires
-its item list to a `SelectableMenu` (current index plus wrap-around
-`moveUp`/`moveDown`) via its own focus-scoped (`WHEN_FOCUSED`) Up/Down/Enter
-bindings; only the "Inventory" entry does anything on confirm today
-(toggling the same way pressing **I** does) — Help/Journal/Map/Character/
-Stats stay decorative for now.
+**UI shell** (`ui/`): `NorthPanel`, `SouthPanel`, and `PlayerInfoPanel`
+extend `TerminalPanel`, a shared `JPanel` base centralizing the black
+background, monospaced label styling, and a `makeLabel` helper — each
+panel still sets its own border/layout specifics that genuinely differ
+(e.g. `PlayerInfoPanel`'s bottom-line border, `NorthPanel`'s centered
+title). `EastPanel` composes just `PlayerInfoPanel` (in `BorderLayout.NORTH`)
+and implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`,
+and the interface's `toggleInventory` default method is overridden to
+open/dismiss the inventory popup — this replaced the old direct `GamePanel`
+→ `EastPanel` field reference that pressing **I** used to go through, and
+there is no menu widget in between: **I** calls `toggleInventory()`
+directly.
+
+A small reusable widget framework lives in `ui/widget/`: `Widget` (base
+`JPanel` — black background, focusable), `FocusManager` (a modal-open
+flag a popup's content can consult), `WidgetTheme` (shared
+selected/normal/background colors), `ListWidget<T>` (a keyboard-navigable,
+optionally non-wrapping list over a pluggable data source, with
+`onConfirm`/`onSelectionChange` callbacks and auto-scroll-into-view of the
+selected row), `ButtonWidget` (an Enter-confirmable label), `PopupWidget`
+(a dismissible overlay with a Close button; `open()`/`dismiss()` manage
+visibility and focus, Escape or the Close button dismiss it, and
+`onUp()`/`onDown()` hooks — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`,
+so they fire no matter which popup child has real Swing focus — let a
+subclass wire keyboard navigation to its own content), `FillLayout` (a
+`LayoutManager` stretching every child to the parent's full bounds, for
+`JLayeredPane` overlays), and `TerminalScrollBarUI` (a flat black-track/
+solid-thumb `BasicScrollBarUI` replacing the platform look-and-feel's
+default scrollbar chrome).
+
+`InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
+(`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable
+via a `JScrollPane` styled with `TerminalScrollBarUI`, non-wrapping) and a
+details pane on the right (name/type/slot/damage range/per-effect stat
+bonuses, refreshed live off the list's `onSelectionChange` hook), divided
+by a 2px light-gray line matching the rest of the UI's border style. It's
+populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
+constructor) rather than loading mod content itself, mirroring
+`PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
+inside `EastPanel`'s own layout, the popup is promoted to window level:
+`ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a
+`JLayeredPane` with a `mainArea` panel (`GamePanel` + `EastPanel`) at
+`DEFAULT_LAYER` and the popup at `POPUP_LAYER` above it, both stretched to
+match via `FillLayout` — so opening it covers the whole game view and
+sidebar, not just a slice of the sidebar. `Main.java` wires that layered
+pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
+`EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
+counter `MenuPanel` used to drive) is deleted entirely, superseded by
+`ListWidget`.
 
 **Class/stats sandbox** (`sandbox/`): a dev-only stat inspector, not
 referenced from `Main.java` and not the packaged/jpackage build's entry
@@ -152,10 +182,11 @@ point (`pom.xml`'s `main.class` stays `com.swiftfaze.veil.Main`). Run it
 explicitly: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox`.
 `ClassSandboxModel` wraps `PlayerClassLoader.loadAll()` and exposes class
 names plus computed `Stats` per class (via `PlayerClass.applyBaseStats`, no
-duplicated formulas); `ClassSandboxPanel` (a `TerminalPanel`) reuses the
-`SelectableMenu`/Key Bindings pattern from `MenuPanel` — Up/Down moves the
-selection and immediately refreshes the displayed attack power/defense/HP/
-mana, no separate confirm step. Editing a class's JSON and re-launching the
+duplicated formulas); `ClassSandboxPanel` (a `TerminalPanel`) reuses
+`ui/widget/ListWidget` (wrap-around left on, the framework default) via
+its own Key Bindings wiring — Up/Down moves the selection and immediately
+refreshes the displayed attack power/defense/HP/mana, no separate confirm
+step. Editing a class's JSON and re-launching the
 sandbox picks up the change with no recompile, since `PlayerClassLoader`
 reads the resource fresh on every `ClassSandboxModel` construction — there
 is no static caching of loaded classes anywhere in this path.

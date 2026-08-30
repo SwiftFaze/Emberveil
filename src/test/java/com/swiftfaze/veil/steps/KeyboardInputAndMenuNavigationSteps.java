@@ -3,7 +3,6 @@ package com.swiftfaze.veil.steps;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.EastPanel;
-import com.swiftfaze.veil.ui.SelectableMenu;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -11,7 +10,6 @@ import io.cucumber.java.en.When;
 import javax.swing.Action;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,10 +20,6 @@ public class KeyboardInputAndMenuNavigationSteps {
     private GamePanel gamePanel;
     private EastPanel eastPanel;
     private boolean listenerNotified;
-
-    private List<String> menuItems;
-    private SelectableMenu selectableMenu;
-    private String confirmedItem;
 
     @Given("a game panel with a player at position \\({int}, {int})")
     public void aGamePanelWithAPlayerAtPosition(int x, int y) {
@@ -82,41 +76,6 @@ public class KeyboardInputAndMenuNavigationSteps {
         assertFalse(hasEastPanelField);
     }
 
-    @Given("a selectable menu with items {string}, {string}, {string} and {string} selected")
-    public void aSelectableMenuWithItems(String first, String second, String third, String selectedItem) {
-        menuItems = List.of(first, second, third);
-        selectableMenu = new SelectableMenu(menuItems.size());
-        while (!menuItems.get(selectableMenu.selected()).equals(selectedItem)) {
-            selectableMenu.moveDown();
-        }
-    }
-
-    @Given("the menu has keyboard focus")
-    public void theMenuHasKeyboardFocus() {
-        // Modeled at the SelectableMenu level here; real focus-transfer
-        // between GamePanel and MenuPanel is exercised in the manual
-        // playtest (this repo's Step 4.5), not in a headless test.
-    }
-
-    @When("the {string} key is pressed")
-    public void theKeyIsPressed(String key) {
-        switch (key) {
-            case "Up" -> selectableMenu.moveUp();
-            case "Down" -> selectableMenu.moveDown();
-            case "Enter" -> confirmedItem = menuItems.get(selectableMenu.selected());
-            default -> throw new IllegalArgumentException("Unhandled key: " + key);
-        }
-    }
-
-    @Then("the selected item is {string}")
-    public void theSelectedItemIs(String expected) {
-        assertEquals(expected, menuItems.get(selectableMenu.selected()));
-    }
-
-    @Then("the confirmed item is {string}")
-    public void theConfirmedItemIs(String expected) {
-        assertEquals(expected, confirmedItem);
-    }
 
     private String actionNameFor(String spokenName) {
         return switch (spokenName) {

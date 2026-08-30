@@ -4,8 +4,15 @@
   "glyph": "/",
   "type": "weapon",
   "slot": "main_hand",
-  "baseDamage": { "min": 4, "max": 9 },
+  "baseDamage": {
+    "min": 4,
+    "max": 9
+  },
   "effects": [
-    { "type": "stat_bonus", "stat": "strength", "calc": "level*1.5+2" }
+    {
+      "type": "stat_bonus",
+      "stat": "strength",
+      "calc": "level*1.5+2"
+    }
   ]
 }

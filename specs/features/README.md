@@ -30,7 +30,6 @@ that change's definition of done, not separate cleanup.
 | `default-player-class.feature` | New player defaults to the Warrior class |
 | `data-driven-player-class.feature` | Data-driven PlayerClass loaded from `mods/core/classes/*.json` with per-level stat growth |
 | `class-stats-sandbox.feature` | Dev-only `ClassSandbox` stat display |
-| `class-sandbox-panel-selection.feature` | Dev-only `ClassSandbox` panel/class selection |
 | `data-driven-tile.feature` | Tile definitions loaded from JSON + registry |
 | `data-driven-item.feature` | Item definitions loaded from JSON + stat registry, minimal InventoryPanel wiring |
 | `data-driven-quest.feature` | Quest definitions loaded from JSON + item registry, minimal per-player quest-state tracking |
@@ -42,3 +41,4 @@ that change's definition of done, not separate cleanup.
 | `keyboard-input-and-menu-navigation.feature` | Key Bindings input and menu navigation |
 | `ui-panel-rendering-and-composition.feature` | UI panel rendering and composition |
 | `installer-mods-bundling.feature` | jpackage installer build bundles `mods/core` alongside the executable |
+| `ui-component-framework.feature` | Shared terminal-style widget framework (list/button/popup, focus manager, selected-state styling) proven by rebuilding the in-game inventory popup — opened directly via the keyboard toggle, no menu widget — and ClassSandboxPanel; supersedes SelectableMenu-based scenarios previously in `keyboard-input-and-menu-navigation.feature`, `ui-panel-rendering-and-composition.feature`, `class-sandbox-panel-selection.feature`, and `data-driven-item.feature` |

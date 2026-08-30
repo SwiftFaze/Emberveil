@@ -2,7 +2,9 @@ Feature: UI panel rendering and composition
   The terminal-style UI shell displays player stats and composes its
   panels consistently: TerminalPanel's shared styling contract,
   PlayerInfoPanel's stat display, NorthPanel/SouthPanel's fixed layout,
-  and EastPanel's composition of PlayerInfoPanel/InventoryPanel/MenuPanel.
+  and EastPanel's composition of PlayerInfoPanel (the inventory popup is
+  layered above the whole game window instead of living in EastPanel's
+  own layout — see ui-component-framework.feature).
 
   Scenario: A panel extending TerminalPanel uses the shared terminal styling
     Given a new instance of a panel extending TerminalPanel
@@ -43,11 +45,10 @@ Feature: UI panel rendering and composition
     And the panel's preferred height equals 4 times the game window height
     And the panel has a light-gray border
 
-  Scenario: EastPanel composes PlayerInfoPanel, InventoryPanel, and MenuPanel
+  Scenario: EastPanel composes PlayerInfoPanel
     Given a new EastPanel
     Then its player info panel is in the north of the layout
-    And its inventory panel is in the center of the layout
-    And its menu panel is in the south of the layout
+    And its inventory panel is not part of EastPanel's own layout
 
   Scenario: EastPanel itself is a fixed-size, bordered, non-focusable panel
     Given a new EastPanel
@@ -56,37 +57,12 @@ Feature: UI panel rendering and composition
     And EastPanel is not focusable
     And EastPanel has a light-gray border
 
-  Scenario: A newly created EastPanel's inventory panel starts visible
-    Given a new EastPanel
-    Then the inventory panel is visible
-
   Scenario: Updating EastPanel with a player delegates to its player info panel
     Given a new EastPanel
     And a player named "Aria Blackwood" at level 3 with 40 XP at position (5, 8)
     When EastPanel is updated with that player
     Then its player info panel's name label reads "Aria Blackwood | Warrior"
 
-  Scenario: Cancelling the menu while the inventory is open closes it and restores game focus
-    Given a new EastPanel
-    And its inventory is visible
-    And a restore-game-focus action is registered
-    When the menu's cancel action fires
-    Then the inventory panel is now hidden
-    And the restore-game-focus action was invoked
-
-  Scenario: Cancelling the menu while the inventory is already hidden still restores game focus
-    Given a new EastPanel
-    And its inventory is hidden
-    And a restore-game-focus action is registered
-    When the menu's cancel action fires
-    Then the inventory panel is now hidden
-    And the restore-game-focus action was invoked
-
-  Scenario: Confirming the Inventory menu item toggles the inventory panel closed
-    Given a new EastPanel
-    And its inventory is visible
-    When the menu's inventory-confirmed action fires
-    Then the inventory panel is now hidden
 
   # Non-goals:
   #   - Keyboard navigation/dispatch and the inventory-toggle listener

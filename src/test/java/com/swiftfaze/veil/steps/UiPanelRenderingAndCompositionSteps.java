@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiPanelRenderingAndCompositionSteps {
@@ -34,7 +35,6 @@ public class UiPanelRenderingAndCompositionSteps {
     private EastPanel eastPanel;
     private Player player;
     private JPanel currentPanel;
-    private boolean restoreGameFocusInvoked;
 
     @Given("a new instance of a panel extending TerminalPanel")
     public void aNewInstanceOfAPanelExtendingTerminalPanel() {
@@ -159,23 +159,12 @@ public class UiPanelRenderingAndCompositionSteps {
         assertTrue(north instanceof PlayerInfoPanel);
     }
 
-    @Then("its inventory panel is in the center of the layout")
-    public void itsInventoryPanelIsInTheCenterOfTheLayout() {
+    @Then("its inventory panel is not part of EastPanel's own layout")
+    public void itsInventoryPanelIsNotPartOfEastPanelsOwnLayout() {
         BorderLayout layout = (BorderLayout) eastPanel.getLayout();
         Component center = layout.getLayoutComponent(BorderLayout.CENTER);
-        assertEquals(eastPanel.getInventoryPanel(), center);
-    }
-
-    @Then("its menu panel is in the south of the layout")
-    public void itsMenuPanelIsInTheSouthOfTheLayout() {
-        BorderLayout layout = (BorderLayout) eastPanel.getLayout();
-        Component south = layout.getLayoutComponent(BorderLayout.SOUTH);
-        assertEquals(eastPanel.getMenuPanel(), south);
-    }
-
-    @Then("the inventory panel is visible")
-    public void theInventoryPanelIsVisible() {
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
+        assertNotEquals(eastPanel.getInventoryPanel(), center);
+        assertNotEquals(eastPanel, eastPanel.getInventoryPanel().getParent());
     }
 
     @When("EastPanel is updated with that player")
@@ -240,63 +229,4 @@ public class UiPanelRenderingAndCompositionSteps {
         assertEquals(Color.LIGHT_GRAY, lineBorder.getLineColor());
     }
 
-    @Given("its inventory is visible")
-    public void itsInventoryIsVisible() {
-        eastPanel.getInventoryPanel().setVisible(true);
-    }
-
-    @Given("its inventory is hidden")
-    public void itsInventoryIsHidden() {
-        eastPanel.getInventoryPanel().setVisible(false);
-    }
-
-    @Given("a restore-game-focus action is registered")
-    public void aRestoreGameFocusActionIsRegistered() {
-        restoreGameFocusInvoked = false;
-        eastPanel.setRestoreGameFocusAction(() -> restoreGameFocusInvoked = true);
-    }
-
-    @When("the menu's cancel action fires")
-    public void theMenusCancelActionFires() {
-        Action cancelAction = eastPanel.getMenuPanel().getActionMap().get(Keybindings.ACTION_MENU_CANCEL);
-        cancelAction.actionPerformed(new ActionEvent(eastPanel, ActionEvent.ACTION_PERFORMED, Keybindings.ACTION_MENU_CANCEL));
-    }
-
-    @Then("the inventory panel is now hidden")
-    public void theInventoryPanelIsNowHidden() {
-        assertFalse(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the restore-game-focus action was invoked")
-    public void theRestoreGameFocusActionWasInvoked() {
-        assertTrue(restoreGameFocusInvoked);
-    }
-
-    @When("the menu's inventory-confirmed action fires")
-    public void theMenusInventoryConfirmedActionFires() {
-        Action confirmAction = eastPanel.getMenuPanel().getActionMap().get(Keybindings.ACTION_MENU_CONFIRM);
-        confirmAction.actionPerformed(new ActionEvent(eastPanel, ActionEvent.ACTION_PERFORMED, Keybindings.ACTION_MENU_CONFIRM));
-    }
-
-    @Then("its inventory panel displays the item {string}")
-    public void itsInventoryPanelDisplaysTheItem(String itemName) {
-        boolean found = false;
-        for (Component c : eastPanel.getInventoryPanel().getComponents()) {
-            if (c instanceof JLabel label && label.getText() != null && label.getText().contains(itemName)) {
-                found = true;
-                break;
-            }
-        }
-        assertTrue(found, "expected inventory panel to display item: " + itemName);
-    }
-
-    @Then("its inventory panel no longer displays the placeholder text {string}")
-    public void itsInventoryPanelNoLongerDisplaysThePlaceholderText(String placeholderText) {
-        for (Component c : eastPanel.getInventoryPanel().getComponents()) {
-            if (c instanceof JLabel label) {
-                assertFalse(placeholderText.equals(label.getText()),
-                        "expected inventory panel not to display placeholder: " + placeholderText);
-            }
-        }
-    }
 }
