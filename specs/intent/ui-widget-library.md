@@ -624,3 +624,43 @@ next screen that needs them.
   metrics at all, comfortably fitting label + border + padding in
   either focus state.
   Affects: none (bug fix, no behavior/scope change).
+
+- Q: Requested a Material Design "outlined text field" look instead:
+  only a bottom border when unfocused, full outline when focused, the
+  field's own label floating on/breaking the top border edge (shown a
+  reference screenshot of this pattern), and the border should be
+  white while the field is empty rather than immediately red (red/
+  green only once there's actual input to judge).
+  A: Implemented using `javax.swing.border.TitledBorder` wrapping a
+  swappable inner border (`BorderFactory.createLineBorder` — full
+  outline — when focused, `createMatteBorder(0,0,width,0,...)` —
+  bottom only — when not) rather than hand-rolling custom
+  gap-cutting/`Border`-painting logic: `TitledBorder` already
+  implements exactly "a label that breaks the wrapped border's line,
+  positioned at its top edge" — it reserves the same label space
+  regardless of the wrapped border's actual drawn edges, so the label
+  only visibly "breaks" a line when one is actually drawn there
+  (focused), and just floats above the field otherwise (unfocused,
+  bottom-only border has no top line to interrupt) — the two states
+  fall out of the same mechanism for free, no separate label-
+  positioning logic needed.
+  Added a new empty/neutral state: `WidgetTheme.NORMAL_TEXT` (white)
+  while `input` is empty, `VALID_HIGHLIGHT`/`INVALID_HIGHLIGHT`
+  (green/red) only once there's at least one character — this doesn't
+  change `patternIsValid()`'s own return value (an empty string still
+  fails most patterns, per the already-approved "empty field defaults
+  to invalid" scenario in `ui-widget-pattern-field.feature`), only the
+  border/label *color* shown for that state.
+  The field's caption is now the widget's own concern (a new
+  `PatternFieldWidget(String pattern, String fieldLabel)` overload,
+  the label text passed straight to `TitledBorder`) rather than a
+  separate external `JLabel` the caller builds and positions above
+  it — `sandbox/PatternFieldSandbox.java` (still throwaway, still
+  unshipped) updated to match, no longer building its own caption.
+  The original single-arg constructor is kept, delegating with a null
+  label (falls back to the plain, unlabeled border from the last few
+  entries) — existing callers (`PatternFieldWidgetTest`,
+  `UiWidgetPatternFieldSteps`) are unaffected.
+  Affects: Desired behavior (pattern-field widget's border/label
+  presentation), a new constructor overload (additive, old one kept),
+  no scope change — still no real consumer.
