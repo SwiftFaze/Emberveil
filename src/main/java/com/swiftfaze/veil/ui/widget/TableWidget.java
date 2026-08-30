@@ -305,12 +305,16 @@ public class TableWidget<T> extends Widget {
     }
 
     /**
-     * Always reserves the same fixed accent-outline thickness around the wrapped inner
-     * border, whether or not an accent color is actually set — otherwise a cell's total
-     * insets differ between the accented and un-accented state, which visibly resizes the
-     * whole table on selection. Same fix shape as RadioGroupWidget's RadioOptionBorder.
+     * Paints an optional accent outline INSIDE the wrapped inner border's existing padding
+     * instead of adding new space for it — insets are always exactly the inner border's own
+     * insets, accented or not. An earlier version reserved extra thickness around every
+     * cell so insets wouldn't change on selection, which did stop the whole table resizing
+     * but shifted the inner border's grid lines inward by that same thickness, opening a
+     * visible gap between adjacent rows/columns that used to sit flush. Drawing within the
+     * existing padding avoids both problems at once — nothing about the layout ever changes.
      */
     private static class AccentableCellBorder extends AbstractBorder {
+        private static final int OFFSET = 1;
         private static final int THICKNESS = 2;
         private final Border inner;
         private final Color accentColor;
@@ -322,21 +326,19 @@ public class TableWidget<T> extends Widget {
 
         @Override
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            inner.paintBorder(c, g, x, y, width, height);
             if (accentColor != null) {
                 g.setColor(accentColor);
-                g.fillRect(x, y, width, THICKNESS);
-                g.fillRect(x, y + height - THICKNESS, width, THICKNESS);
-                g.fillRect(x, y, THICKNESS, height);
-                g.fillRect(x + width - THICKNESS, y, THICKNESS, height);
+                g.fillRect(x + OFFSET, y + OFFSET, width - 2 * OFFSET, THICKNESS);
+                g.fillRect(x + OFFSET, y + height - OFFSET - THICKNESS, width - 2 * OFFSET, THICKNESS);
+                g.fillRect(x + OFFSET, y + OFFSET, THICKNESS, height - 2 * OFFSET);
+                g.fillRect(x + width - OFFSET - THICKNESS, y + OFFSET, THICKNESS, height - 2 * OFFSET);
             }
-            inner.paintBorder(c, g, x + THICKNESS, y + THICKNESS, width - 2 * THICKNESS, height - 2 * THICKNESS);
         }
 
         @Override
         public Insets getBorderInsets(Component c) {
-            Insets innerInsets = inner.getBorderInsets(c);
-            return new Insets(innerInsets.top + THICKNESS, innerInsets.left + THICKNESS,
-                    innerInsets.bottom + THICKNESS, innerInsets.right + THICKNESS);
+            return inner.getBorderInsets(c);
         }
 
         @Override

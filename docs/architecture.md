@@ -151,10 +151,11 @@ replaces one row's data and re-renders just its cells without resetting
 selection, unlike `setRows()`; `setSelectedRowAccentColor()` and
 `setOtherRowsDimmed()` let a consumer flag the selected row as additionally
 "armed" for some other in-progress action, with every other row dimmed to
-match — the accent outline's thickness is always reserved on every cell
-regardless of whether it's currently painted, matching RadioGroupWidget's
-confirmed/unconfirmed border convention below, since reserving it only when
-accented would visibly resize the whole table on selection; used by
+match — the accent outline paints inside each cell's existing padding rather
+than adding new border thickness, so a cell's insets never change between
+accented and un-accented (an earlier version reserved extra space instead,
+which stopped the whole table resizing on selection but shifted the grid
+lines inward and opened a visible gap between rows); used by
 `SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
