@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0-beta](https://github.com/SwiftFaze/Veil/compare/v0.4.0...v0.5.0-beta) (2026-08-30)
+
+
+### Features
+
+* delete MenuPanel, open inventory only via the keyboard toggle ([f721373](https://github.com/SwiftFaze/Veil/commit/f7213731153ad8c8fff8c8595770aa59325f0b3c))
+* Implement terminal-style UI component framework ([2927d50](https://github.com/SwiftFaze/Veil/commit/2927d504dfa70f11e179b49d0f15d989f1ec3ecc))
+* inventory popup's item list stops at the ends instead of wrapping ([b553b8b](https://github.com/SwiftFaze/Veil/commit/b553b8b112fc42561e236b206d892551fe507b9d))
+* keyboard Up/Down navigation in the inventory popup, more items ([b722d0f](https://github.com/SwiftFaze/Veil/commit/b722d0f307def0ff0f736dc2f40711d5067d437a))
+* layer the inventory popup over the game view instead of the sidebar ([d5f5174](https://github.com/SwiftFaze/Veil/commit/d5f5174246d0b1180f35d3d48a0743ac04cd8dbd))
+* scrollable inventory popup with more test items ([32edf47](https://github.com/SwiftFaze/Veil/commit/32edf47aee9d10e2316cd9fc5cf610f0f08f091a))
+* split inventory popup into item list + details pane, style scrollbar ([0d392b6](https://github.com/SwiftFaze/Veil/commit/0d392b6a253678ba535262e2adb070ceae220280))
+* terminal-style UI component framework ([#36](https://github.com/SwiftFaze/Veil/issues/36)) ([f0bcfa3](https://github.com/SwiftFaze/Veil/commit/f0bcfa388640ce90b0e40daa7edf3de93cce7e03))
+
+
+### Bug Fixes
+
+* **ci:** bump build-installers JDK to 21 for jpackage --app-content ([bb91b74](https://github.com/SwiftFaze/Veil/commit/bb91b7468ddc40af63744c912cfdd56417a32c4e))
+* **ci:** bump build-installers JDK to 21 for jpackage --app-content ([3236ec4](https://github.com/SwiftFaze/Veil/commit/3236ec4f7749ea75ef9e73b0716c72456669c590))
+* **ci:** use a PAT for release-please, not GITHUB_TOKEN ([7ac9fbb](https://github.com/SwiftFaze/Veil/commit/7ac9fbb950fd6aeae5e5407ef8d18123b33ddffe))
+* **ci:** use a PAT for release-please, not GITHUB_TOKEN ([0daeda2](https://github.com/SwiftFaze/Veil/commit/0daeda27e09b8e8b00cfdef526e83b10c0b83a97))
+* define missing restore-game-focus assertion step ([3c02edf](https://github.com/SwiftFaze/Veil/commit/3c02edf6d1437964ca8d324ef6899ebec78cb887))
+* make popup modal focus capture actually block the menu ([2478843](https://github.com/SwiftFaze/Veil/commit/2478843f22580d1dd2be244dc85c1ba993cc8a0c))
+
 ## [0.3.0-beta.12](https://github.com/SwiftFaze/Veil/compare/v0.3.0-beta.11...v0.3.0-beta.12) (2026-08-30)
 
 
