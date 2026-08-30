@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -67,11 +68,15 @@ public class UiComponentFrameworkSteps {
             case "Up" -> {
                 if (listWidget != null) {
                     listWidget.moveUp();
+                } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
+                    fireInventoryPopupAction("popup-up");
                 }
             }
             case "Down" -> {
                 if (listWidget != null) {
                     listWidget.moveDown();
+                } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
+                    fireInventoryPopupAction("popup-down");
                 }
             }
             case "Enter" -> {
@@ -87,14 +92,17 @@ public class UiComponentFrameworkSteps {
             }
             case "Escape" -> {
                 if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-                    // Fire the popup's dismiss via Escape key
-                    Action action = eastPanel.getInventoryPanel().getActionMap().get("popup-dismiss");
-                    if (action != null) {
-                        action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel(), ActionEvent.ACTION_PERFORMED, "popup-dismiss"));
-                    }
+                    fireInventoryPopupAction("popup-dismiss");
                 }
             }
             default -> throw new IllegalArgumentException("Unhandled key: " + key);
+        }
+    }
+
+    private void fireInventoryPopupAction(String actionName) {
+        Action action = eastPanel.getInventoryPanel().getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel(), ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -218,10 +226,14 @@ public class UiComponentFrameworkSteps {
         assertTrue(eastPanel.getInventoryPanel().isVisible());
     }
 
-    @Then("none of the inventory popup's items are highlighted as selected")
-    public void noneOfTheInventoryPopupItemsAreHighlighted() {
-        // The inventory list widget has no selection highlighting in the current design
-        assertTrue(true);
+    @Then("the inventory popup's first item is highlighted as selected")
+    public void theInventoryPopupsFirstItemIsHighlightedAsSelected() {
+        assertEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
+    }
+
+    @Then("the inventory popup's selected item is no longer the first item")
+    public void theInventoryPopupsSelectedItemIsNoLongerTheFirstItem() {
+        assertNotEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
     }
 
     @Given("a class sandbox panel is showing")

@@ -67,16 +67,43 @@ public class PopupWidget extends Widget {
         onDismiss.run();
     }
 
+    /**
+     * Hook for a subclass with scrollable/navigable content (e.g. an item
+     * list) to move its own selection. No-op by default, since not every
+     * popup has anything to navigate.
+     */
+    protected void onUp() {
+    }
+
+    protected void onDown() {
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap actionMap = getActionMap();
 
         inputMap.put(Keybindings.MENU_CANCEL, "popup-dismiss");
+        inputMap.put(Keybindings.MENU_UP, "popup-up");
+        inputMap.put(Keybindings.MENU_DOWN, "popup-down");
 
         actionMap.put("popup-dismiss", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dismiss();
+            }
+        });
+
+        actionMap.put("popup-up", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onUp();
+            }
+        });
+
+        actionMap.put("popup-down", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onDown();
             }
         });
     }

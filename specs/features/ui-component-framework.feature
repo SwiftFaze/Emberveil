@@ -64,11 +64,17 @@ Feature: Terminal-style UI component framework
     Then the inventory popup is closed
     And the restore-game-focus action was invoked
 
-  Scenario: The rebuilt inventory popup displays real loaded item data, with no per-item selection
+  Scenario: The rebuilt inventory popup displays real loaded item data with the first item selected
     Given the rebuilt in-game inventory screen
     When the inventory is toggled open
     Then the inventory popup lists the item "Iron Sword"
-    And none of the inventory popup's items are highlighted as selected
+    And the inventory popup's first item is highlighted as selected
+
+  Scenario: Up/Down navigates the inventory popup's item list
+    Given the rebuilt in-game inventory screen
+    And the inventory is toggled open
+    When the "Down" key is pressed
+    Then the inventory popup's selected item is no longer the first item
 
   Scenario: The inventory popup is layered above the game view and sidebar, not inside them
     Given the game window's layered content area
@@ -107,9 +113,13 @@ Feature: Terminal-style UI component framework
   #   - Disabled-widget styling — the shared style/theme constants support
   #     it as a convention hook, but no widget in the rebuilt real screen is
   #     ever disabled, so there's nothing concrete to prove end-to-end.
-  #   - Real keyboard navigation/selection *within* the inventory popup's
-  #     item list — it stays a static, non-interactive display; per-item
-  #     inventory interaction is milestone "6. Intro Quest & UI" (#7)'s job.
+  #   - Confirming/using an inventory item (equip, drop, inspect) — Up/Down
+  #     navigates the popup's item list and highlights a selection (added
+  #     after Step 4.5 playtest: the game is keyboard-only, no mouse, so
+  #     the list had to be keyboard-navigable for scrolling to be usable at
+  #     all — see specs/intent/ui-component-framework.md's Clarifications),
+  #     but Enter/Confirm on a selected item does nothing yet; real
+  #     per-item interaction is milestone "6. Intro Quest & UI" (#7)'s job.
   #   - Table widget, radio group widget, pattern-validated text fields —
   #     tracked separately in #35.
   #   - Any mouse/pointer handling — this game is keyboard-only by design.

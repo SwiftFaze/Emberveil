@@ -40,4 +40,22 @@ public class InventoryPanel extends PopupWidget {
     public void showItems(List<Item> items) {
         itemList.setItems(items);
     }
+
+    public int getSelectedIndex() {
+        return itemList.getSelectedIndex();
+    }
+
+    public Item getSelectedItem() {
+        return itemList.getSelectedItem();
+    }
+
+    @Override
+    protected void onUp() {
+        itemList.moveUp();
+    }
+
+    @Override
+    protected void onDown() {
+        itemList.moveDown();
+    }
 }

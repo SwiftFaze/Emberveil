@@ -308,3 +308,22 @@ resolved in a grilling session; see Clarifications below.
   instead of handing off to a menu that no longer exists.
   Affects: Scope, Desired behavior (menu<->popup transition and modal
   focus capture no longer apply — nothing exists to block).
+
+- Q: (Surfaced testing scroll support in the popup) With enough items to
+  need scrolling, Up/Down didn't move the selection or scroll the list —
+  the popup's real Swing focus sits on its Close button (per the earlier
+  "Confirming Inventory opens the popup and focuses its Close button"
+  Clarification), and the Close button doesn't bind Up/Down. Given this
+  game is keyboard-only with no mouse support at all, how should the item
+  list actually be navigated/scrolled?
+  A: Wire Up/Down to the item list regardless of exactly which popup
+  child has real Swing focus — `PopupWidget` gained `onUp()`/`onDown()`
+  hooks bound at the same ancestor level as its existing Escape handling
+  (`WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`), and `InventoryPanel` overrides
+  them to move its `ListWidget`'s selection, which auto-scrolls the
+  selected row into view. The Close button keeps initial focus (Enter
+  still confirms/dismisses); Up/Down just also works no matter where
+  focus actually is inside the popup.
+  Affects: Desired behavior, Scope (the "stays a static, non-interactive
+  display" framing for the item list no longer holds — see the
+  ui-component-framework.feature Non-goals update).
