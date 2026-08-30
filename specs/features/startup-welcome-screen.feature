@@ -55,11 +55,12 @@ Feature: Startup welcome screen
   #     design.
   #
   # Risks:
-  #   - Depends on issue #35's radio group widget landing for the
-  #     settings screen's Fullscreen/Windowed toggle and font cycle, and
-  #     on ui-widget-slider.feature's slider widget for brightness/
-  #     volume — this screen's own scenarios don't touch either, but the
-  #     Settings navigation target (settings-screen.feature) does.
+  #   - Depends on ui-widget-slider.feature's slider widget landing for
+  #     the settings screen's brightness/volume items — this screen's own
+  #     scenarios don't touch it, but the Settings navigation target
+  #     (settings-screen.feature) does. The radio group widget (issue #35)
+  #     needed for the Fullscreen/Windowed toggle and font cycle is
+  #     already implemented on develop.
   #   - Real Swing focus-transfer and real window launch are not
   #     simulated headlessly, matching this repo's existing Cucumber
   #     precedent (ui-component-framework.feature).

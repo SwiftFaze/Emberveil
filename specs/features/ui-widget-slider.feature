@@ -42,9 +42,8 @@ Feature: Slider widget
   # Risks:
   #   - This widget has no precedent elsewhere in the framework (list/
   #     table/radio-group all wrap; this deliberately doesn't) — the
-  #     no-wrap behavior was an autonomous design call (see
-  #     specs/intent/startup-and-settings-screens.md's Constraints) and
-  #     should be confirmed at Step 3 approval.
+  #     no-wrap behavior was confirmed at Step 3 approval (2026-08-30)
+  #     (see specs/intent/startup-and-settings-screens.md's Constraints).
   #
   # Open questions:
   #   - None for this widget specifically.

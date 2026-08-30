@@ -17,8 +17,8 @@
 ## Status
 
 - [x] Intent drafted
-- [ ] Spec drafted (`.feature` file)
-- [ ] Approved by human
+- [x] Spec drafted (`.feature` file)
+- [x] Approved by human
 - [ ] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [ ] Acceptance tests passing
@@ -168,8 +168,7 @@ or keybinds (none of which exist as real systems yet either).
 
 - Q: Do Apply/Cancel on the keybinds page need to behave differently
   from each other in this visual-only pass?
-  A: (Decided autonomously, no human available — flag for confirmation
-  at Step 3 approval) No — since nothing persists yet (per the issue's
+  A: Confirmed at Step 3 approval (2026-08-30). No — since nothing persists yet (per the issue's
   own out-of-scope note: "no config-persistence changes in this pass"),
   both Apply and Cancel just return to the settings screen identically.
   Differentiating them meaningfully (Cancel discards in-page edits,
@@ -180,8 +179,7 @@ or keybinds (none of which exist as real systems yet either).
 
 - Q: What's the concrete list of font choices for the font cycler, since
   the issue doesn't name any?
-  A: (Decided autonomously, no human available — flag for confirmation
-  at Step 3 approval) Java's built-in logical font families —
+  A: Confirmed at Step 3 approval (2026-08-30). Java's built-in logical font families —
   "Monospaced", "Serif", "SansSerif" — as v1 placeholders. These are
   guaranteed available on any JVM with no new font asset needed, which
   also keeps the font cycler's own scenarios independent of the Delta
@@ -192,8 +190,7 @@ or keybinds (none of which exist as real systems yet either).
 
 - Q: The Delta Corps Priest 1 `.ttf` file can't be fabricated (see Open
   questions) — does that block writing/implementing this feature at all?
-  A: (Decided autonomously, no human available — flag for confirmation
-  at Step 3 approval) No — the font-loading mechanism is built generically
+  A: Confirmed at Step 3 approval (2026-08-30). No — the font-loading mechanism is built generically
   (`Font.createFont(Font.TRUETYPE_FONT, ...)` from a bundled resource
   path, e.g. `src/main/resources/fonts/DeltaCorpsPriest1.ttf`), and falls
   back to the existing plain `Font(Font.MONOSPACED, Font.PLAIN, ...)`

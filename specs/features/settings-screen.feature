@@ -75,15 +75,13 @@ Feature: Settings screen
   #     design.
   #
   # Risks:
-  #   - Depends on issue #35's radio group widget (not yet
-  #     approved/implemented) for the Fullscreen/Windowed toggle and font
-  #     cycle scenarios above, and on ui-widget-slider.feature's slider
-  #     widget for the brightness/volume scenarios — this feature cannot
-  #     be fully implemented until both land.
+  #   - Depends on ui-widget-slider.feature's slider widget landing for
+  #     the brightness/volume scenarios above — the radio group widget
+  #     (issue #35) needed for the Fullscreen/Windowed toggle and font
+  #     cycle is already implemented on develop.
   #   - The font cycle's "Monospaced" -> "Serif" -> "SansSerif" list was
-  #     an autonomous placeholder decision (see
-  #     specs/intent/startup-and-settings-screens.md's Clarifications)
-  #     and should be confirmed at Step 3 approval.
+  #     confirmed at Step 3 approval (2026-08-30) (see
+  #     specs/intent/startup-and-settings-screens.md's Clarifications).
   #   - `Desktop.open` behavior (and mods-directory creation) is not
   #     simulated headlessly here — "the install directory was opened" /
   #     "a mods directory was created" model the action being invoked,
