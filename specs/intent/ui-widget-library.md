@@ -512,3 +512,46 @@ next screen that needs them.
   Open questions).
   Affects: Desired behavior (list/table selected-row rendering), no
   scope change.
+
+- Q: (Fourth round of Step 4.5 playtest) Three more findings: (1) the
+  scrollbar should be gray, not the orange highlight color; (2)
+  scrolling the details pane to the bottom and back to the top still
+  leaves the fields table's header cut off; (3) the drop-confirmation
+  popup's Yes/No radio group still only highlights by text color —
+  "this needs to be a global thing, highlight is the orange background
+  that it currently has." This corrects the immediately preceding
+  entry's claim that `RadioGroupWidget` "has no current real-screen
+  consumer" — it does (`DropConfirmationPopup`'s Yes/No choice, wired
+  up earlier in this same feature); that claim was simply wrong, not a
+  behavior change since then.
+  A: (1) `TerminalScrollBarUI` had two separate places defining the
+  thumb color — the inherited `configureScrollBarColors()` (which set
+  the `thumbColor` field) and a `paintThumb()` override that hardcoded
+  `WidgetTheme.SELECTED_HIGHLIGHT` directly, bypassing that field
+  entirely. Both now use a new `WidgetTheme.SCROLLBAR_THUMB` (gray)
+  constant.
+  (2) `InventoryPanel` now keeps a reference to the details
+  `JScrollPane` and explicitly resets its viewport to `(0, 0)` every
+  time `updateDetails()` rebuilds the pane's content — `JScrollPane`
+  doesn't do this automatically when its view's content changes, so
+  switching items while scrolled down previously left the new item's
+  header starting mid-scroll. Also added a few pixels of top padding to
+  `detailsPanel`'s border, so the header row isn't flush against the
+  viewport's very top edge even if a scroll position lands a pixel or
+  two short. (This is a defensive fix for a bug in a live GUI's real
+  Swing layout/scroll behavior, which the headless Cucumber suite
+  structurally cannot exercise or verify — it doesn't render real
+  Swing frames. Confirming it's fully fixed depends on the next
+  playtest, not `mvn test`.)
+  (3) Rather than duplicating the "background fill, not just text
+  color" highlight logic a third time, added one shared
+  `WidgetTheme.applySelection(JLabel, boolean)` helper and refactored
+  `ListWidget`, `TableWidget`, and now `RadioGroupWidget` to all call
+  it — directly addressing "this needs to be a global thing" by making
+  it structurally impossible for a widget to reinvent its own selected-
+  row look instead of reusing the one shared definition.
+  Affects: Desired behavior (scrollbar color, details-pane scroll
+  reset, radio group highlight), and a small internal refactor
+  (`WidgetTheme.applySelection`) with no scenario-visible behavior
+  change for `ListWidget`/`TableWidget` (same colors as before, just
+  centralized).

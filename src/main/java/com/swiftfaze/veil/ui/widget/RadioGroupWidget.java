@@ -135,9 +135,10 @@ public class RadioGroupWidget<T> extends Widget {
         labels.clear();
         for (T option : options) {
             JLabel label = new JLabel(optionRenderer.apply(option));
-            label.setForeground(WidgetTheme.NORMAL_TEXT);
+            label.setOpaque(true);
             label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
             label.setAlignmentX(LEFT_ALIGNMENT);
+            label.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
             labels.add(label);
             add(label);
         }
@@ -148,8 +149,7 @@ public class RadioGroupWidget<T> extends Widget {
 
     private void refreshHighlight() {
         for (int i = 0; i < labels.size(); i++) {
-            labels.get(i).setForeground(
-                i == highlightedIndex ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.NORMAL_TEXT);
+            WidgetTheme.applySelection(labels.get(i), i == highlightedIndex);
         }
         if (highlightedIndex < labels.size()) {
             scrollRectToVisible(labels.get(highlightedIndex).getBounds());

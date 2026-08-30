@@ -15,7 +15,7 @@ public class TerminalScrollBarUI extends BasicScrollBarUI {
 
     @Override
     protected void configureScrollBarColors() {
-        this.thumbColor = WidgetTheme.SELECTED_HIGHLIGHT;
+        this.thumbColor = WidgetTheme.SCROLLBAR_THUMB;
         this.trackColor = WidgetTheme.BACKGROUND;
     }
 
@@ -40,7 +40,7 @@ public class TerminalScrollBarUI extends BasicScrollBarUI {
         if (thumbBounds.isEmpty()) {
             return;
         }
-        g.setColor(WidgetTheme.SELECTED_HIGHLIGHT);
+        g.setColor(WidgetTheme.SCROLLBAR_THUMB);
         g.fillRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height);
     }
 

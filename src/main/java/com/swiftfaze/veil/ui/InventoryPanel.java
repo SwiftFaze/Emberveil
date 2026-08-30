@@ -30,6 +30,7 @@ public class InventoryPanel extends PopupWidget {
 
     private final ListWidget<Item> itemList;
     private final JPanel detailsPanel;
+    private final JScrollPane detailsScrollPane;
     private final TableWidget<FieldRow> fieldsTable;
     private final JLabel effectsLabel;
     private final TableWidget<Item.Effect> effectsTable;
@@ -48,7 +49,7 @@ public class InventoryPanel extends PopupWidget {
         itemList.setOnSelectionChange(this::updateDetails);
 
         Border detailsDivider = BorderFactory.createMatteBorder(0, 2, 0, 0, Color.LIGHT_GRAY);
-        Border detailsPadding = BorderFactory.createEmptyBorder(0, 10, 0, 0);
+        Border detailsPadding = BorderFactory.createEmptyBorder(4, 10, 0, 0);
         detailsPanel = new JPanel();
         detailsPanel.setBackground(Color.BLACK);
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
@@ -74,7 +75,8 @@ public class InventoryPanel extends PopupWidget {
         dropConfirmationPopup = new DropConfirmationPopup();
         dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
 
-        addContent(buildBody(buildScrollPane(itemList), buildScrollPane(detailsPanel)));
+        detailsScrollPane = buildScrollPane(detailsPanel);
+        addContent(buildBody(buildScrollPane(itemList), detailsScrollPane));
         bindDropKey();
     }
 
@@ -232,6 +234,10 @@ public class InventoryPanel extends PopupWidget {
         }
         detailsPanel.revalidate();
         detailsPanel.repaint();
+        // Reset the viewport to the top on every rebuild — otherwise switching items while
+        // scrolled down leaves the new item's content (and its header row) starting mid-scroll,
+        // since JScrollPane doesn't do this automatically when its view's content changes.
+        detailsScrollPane.getViewport().setViewPosition(new Point(0, 0));
     }
 
     private List<FieldRow> fieldRows(Item item) {

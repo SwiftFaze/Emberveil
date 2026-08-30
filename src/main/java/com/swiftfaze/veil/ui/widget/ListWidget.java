@@ -136,10 +136,7 @@ public class ListWidget<T> extends Widget {
 
     private void refreshHighlight() {
         for (int i = 0; i < labels.size(); i++) {
-            boolean isSelected = i == selectedIndex;
-            JLabel label = labels.get(i);
-            label.setForeground(isSelected ? WidgetTheme.SELECTED_TEXT : WidgetTheme.NORMAL_TEXT);
-            label.setBackground(isSelected ? WidgetTheme.SELECTED_HIGHLIGHT : WidgetTheme.BACKGROUND);
+            WidgetTheme.applySelection(labels.get(i), i == selectedIndex);
         }
         if (selectedIndex < labels.size()) {
             scrollRectToVisible(labels.get(selectedIndex).getBounds());
