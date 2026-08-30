@@ -2,8 +2,12 @@ package com.swiftfaze.veil.ui.widget;
 
 import com.swiftfaze.veil.input.Keybindings;
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +16,15 @@ import java.util.function.Function;
 
 public class RadioGroupWidget<T> extends Widget {
     // Same "bottom border by default, full outline once committed" pattern as PatternFieldWidget
-    // (there: unfocused/focused; here: unconfirmed/confirmed) — accepting the same minor layout
-    // shift between the two states that widget already does, for the same reason.
-    private static final Border CONFIRMED_BORDER = BorderFactory.createLineBorder(WidgetTheme.VALID_HIGHLIGHT, 2);
-    private static final Border UNCONFIRMED_BORDER = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.TABLE_BORDER);
+    // (there: unfocused/focused; here: unconfirmed/confirmed) — but unlike that widget, these
+    // labels get a *fixed* width (see the vertical-alignment block in refresh() below), so the
+    // two states must reserve identical insets regardless of what they actually paint - a plain
+    // line border (4 sides) vs. a matte border (bottom only) don't, which visibly shifted the
+    // label and squeezed its text down to an ellipsis whenever it flipped between them. A custom
+    // Border fixes the insets at the line border's full thickness always, painting only the
+    // bottom edge for the unconfirmed state and leaving the rest of that reserved space blank.
+    private static final Border CONFIRMED_BORDER = new RadioOptionBorder(true);
+    private static final Border UNCONFIRMED_BORDER = new RadioOptionBorder(false);
 
     private final Function<T, String> optionRenderer;
     private final boolean horizontal;
@@ -185,6 +194,42 @@ public class RadioGroupWidget<T> extends Widget {
         }
         if (highlightedIndex < labels.size()) {
             scrollRectToVisible(labels.get(highlightedIndex).getBounds());
+        }
+    }
+
+    /**
+     * Always reserves the same 2px insets on every side, whether it's currently painting a full
+     * outline (confirmed) or just the bottom edge (unconfirmed) — see the field comment above on
+     * why the insets can't be allowed to differ between the two states here.
+     */
+    private static class RadioOptionBorder extends AbstractBorder {
+        private static final int THICKNESS = 2;
+        private final boolean confirmed;
+
+        RadioOptionBorder(boolean confirmed) {
+            this.confirmed = confirmed;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            g.setColor(confirmed ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.TABLE_BORDER);
+            g.fillRect(x, y + height - THICKNESS, width, THICKNESS); // bottom, always drawn
+            if (confirmed) {
+                g.fillRect(x, y, width, THICKNESS); // top
+                g.fillRect(x, y, THICKNESS, height); // left
+                g.fillRect(x + width - THICKNESS, y, THICKNESS, height); // right
+            }
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(THICKNESS, THICKNESS, THICKNESS, THICKNESS);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.set(THICKNESS, THICKNESS, THICKNESS, THICKNESS);
+            return insets;
         }
     }
 }

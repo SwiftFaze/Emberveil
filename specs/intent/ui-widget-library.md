@@ -827,3 +827,28 @@ next screen that needs them.
   Affects: Desired behavior (radio group rendering/timing) — no
   scenario-visible change (color/border/timing aren't asserted on
   headlessly, matching this framework's precedent).
+
+- Q: Confirming an option truncated its text to an ellipsis, and in
+  both orientations the item visibly shifted position — screenshotted
+  as "War..." for "Warrior." Root cause? (This also likely explains
+  the earlier "other elements get dimmer" report — probably the same
+  layout-shift artifact, not an actual color/opacity change; no
+  separate fix needed for that once this one landed.)
+  A: `CONFIRMED_BORDER` (a full line border, 2px on all four sides)
+  and `UNCONFIRMED_BORDER` (bottom-only, 0px on left/right) reserve
+  *different* insets — fine on their own, but the vertical-alignment
+  fix two entries back locks every option to a **fixed** width
+  (`setPreferredSize`/`setMaximumSize`), computed once while every
+  label still had the unconfirmed (0px side insets) border. Once
+  confirmed, the same fixed width now had to fit the full border's
+  extra 2px+2px of left/right insets too — shrinking the actual text
+  area enough to trigger `JLabel`'s default ellipsis truncation, and
+  the geometry change (different insets within the same outer bounds)
+  is what read as the item "moving." Fixed with a custom `Border`
+  (`RadioOptionBorder`) that always reports the same 2px insets on
+  every side regardless of confirmed state, painting only the bottom
+  edge for the unconfirmed look and the full rectangle for the
+  confirmed one within that fixed reserved space — so neither the
+  label's size nor its content area ever changes between the two
+  states.
+  Affects: none (bug fix, no behavior/scope change).
