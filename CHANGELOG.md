@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.0-beta.3](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.2...v0.5.0-beta.3) (2026-08-30)
+
+
+### Features
+
+* add settings and keybinds screens (Phase 3-4) ([658c707](https://github.com/SwiftFaze/Veil/commit/658c70707c50e0b8c9e9371e89f3cd02848614e2))
+* add settings go-back row, uniform widths, keybinds footer/reset/border ([d0e39b5](https://github.com/SwiftFaze/Veil/commit/d0e39b5d18e28eb5c1aeda67d9a2028c22af69b1))
+* add slider widget and startup welcome screen ([97ce965](https://github.com/SwiftFaze/Veil/commit/97ce965271cb3062e75075950d5d71db9858203c))
+* draft Gherkin specs for the startup, settings, keybinds, and slider ([55eeeaa](https://github.com/SwiftFaze/Veil/commit/55eeeaafed301feb6c481935c9995adf12b8c72b))
+* render keybinds actions as a real TableWidget instead of plain labels ([217718a](https://github.com/SwiftFaze/Veil/commit/217718adb39939b537ca7e89366c38b976e3fb01))
+
+
+### Bug Fixes
+
+* dispatch shared "is highlighted"/"popup is shown" steps by active panel ([aba0342](https://github.com/SwiftFaze/Veil/commit/aba03420ede38970ae92363fe1fb0f5f565f0e4f))
+* implement popup and footer for keybinds page, remove reflection hack ([24276bf](https://github.com/SwiftFaze/Veil/commit/24276bfa03d1c7d1d73bc4c10773fd0845c0f2f9))
+* keybinds table had visible row gaps after the jitter fix ([faeaae2](https://github.com/SwiftFaze/Veil/commit/faeaae2bc1560ad733df438e03bc0211fe3e6b18))
+* keybinds table jittered on selection - accent border insets mismatch ([30fd089](https://github.com/SwiftFaze/Veil/commit/30fd089bcecfcf6cd6937eb80523a4dc78033531))
+* restore green build after Phase 3-4 shipped a suite-wide regression ([ea0eba0](https://github.com/SwiftFaze/Veil/commit/ea0eba0ec14a446c42a26cbea795509dbbf70431))
+* wire real keyboard interactivity for settings/keybinds, center menus ([a3a2775](https://github.com/SwiftFaze/Veil/commit/a3a27754a0fdea7da8f7a0a6593a4ee3a2d08196))
+
 ## [0.5.0-beta.2](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.1...v0.5.0-beta.2) (2026-08-30)
 
 
