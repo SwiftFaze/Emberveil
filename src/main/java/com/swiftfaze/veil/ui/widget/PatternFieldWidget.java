@@ -8,12 +8,15 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.DocumentFilter;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
 import java.util.regex.Pattern;
 
 /**
@@ -63,6 +66,7 @@ public class PatternFieldWidget extends Widget {
         textField.setForeground(WidgetTheme.NORMAL_TEXT);
         textField.setBackground(WidgetTheme.BACKGROUND);
         textField.setCaretColor(WidgetTheme.NORMAL_TEXT);
+        textField.setCaret(new BlockCaret());
         textField.setSelectionColor(WidgetTheme.SELECTED_HIGHLIGHT);
         textField.setSelectedTextColor(WidgetTheme.SELECTED_TEXT);
         textField.setBorder(BorderFactory.createEmptyBorder());
@@ -189,6 +193,46 @@ public class PatternFieldWidget extends Widget {
         }
         return BorderFactory.createTitledBorder(
                 padded, fieldLabel, TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, LABEL_FONT, color);
+    }
+
+    /**
+     * A solid block cursor (like a terminal/console) instead of Swing's default thin vertical
+     * line — same blink timing as {@link DefaultCaret}, just a different paint shape.
+     */
+    private static class BlockCaret extends DefaultCaret {
+        @Override
+        public void paint(Graphics g) {
+            if (!isVisible()) {
+                return;
+            }
+            JTextComponent component = getComponent();
+            if (component == null) {
+                return;
+            }
+            try {
+                Rectangle2D caretBounds = component.modelToView2D(getDot());
+                FontMetrics metrics = component.getFontMetrics(component.getFont());
+                g.setColor(component.getCaretColor());
+                g.fillRect((int) caretBounds.getX(), (int) caretBounds.getY(),
+                        metrics.charWidth('M'), (int) caretBounds.getHeight());
+            } catch (BadLocationException ignored) {
+                // Nothing at this position to draw a cursor for.
+            }
+        }
+
+        @Override
+        protected synchronized void damage(Rectangle r) {
+            if (r == null) {
+                return;
+            }
+            JTextComponent component = getComponent();
+            FontMetrics metrics = component.getFontMetrics(component.getFont());
+            x = r.x;
+            y = r.y;
+            width = metrics.charWidth('M');
+            height = r.height;
+            repaint();
+        }
     }
 
     private class AllowedCharacterFilter extends DocumentFilter {

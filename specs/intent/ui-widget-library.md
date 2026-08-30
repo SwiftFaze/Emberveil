@@ -737,3 +737,15 @@ next screen that needs them.
   implementation (JTextField instead of StringBuilder+JLabel — no
   public API removed, only added: none of the four existing methods
   changed signature).
+
+- Q: Wanted the cursor to look more like a console/terminal — a solid
+  block/rectangle instead of Swing's default thin vertical line.
+  A: A custom `Caret` (`DefaultCaret` subclass overriding just
+  `paint()`/`damage()`) rather than anything TableWidget/ListWidget-
+  style — Swing's `Caret` interface is specifically designed for this
+  kind of shape customization, and `DefaultCaret` already handles
+  blink timing correctly, so only the paint shape needed changing:
+  fills a `charWidth('M')`-wide rectangle at the caret's row instead
+  of drawing the default 1px line.
+  Affects: Desired behavior (cursor appearance only, no
+  functional/API change).
