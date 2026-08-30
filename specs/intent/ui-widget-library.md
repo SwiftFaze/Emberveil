@@ -673,3 +673,22 @@ next screen that needs them.
   by the outline shape (full box vs. bottom-only) and color, not by
   extra thickness.
   Affects: none (minor visual tweak).
+
+- Q: Pressing Enter turned the border red — expected, or a bug? If a
+  bug, Enter should probably behave like Tab (move to the next field)
+  instead.
+  A: A real bug, not intended: `Character.isWhitespace('\n')` returns
+  `true`, so Enter's keyTyped character (`\n`/`\r`) satisfied the same
+  "appendable" check a space does and got silently typed into the
+  input as a literal newline — a character no single-line pattern ever
+  matches, turning the field invalid (red) the instant Enter was
+  pressed. Fixed by excluding `\n`/`\r` from the appendable-character
+  check (used by both `keyTyped` and `typeCharacters`), and — matching
+  the suggestion — bound `VK_ENTER` to `transferFocus()`, so Enter now
+  moves to the next field exactly like Tab, rather than doing nothing
+  (previously) or typing an invisible character (the bug).
+  Affects: Desired behavior (Enter now moves focus instead of being
+  silently swallowed as input) — this wasn't covered by any existing
+  scenario (Enter's real-keyboard behavior isn't exercised in headless
+  tests, matching this framework's precedent), so nothing to update
+  there.

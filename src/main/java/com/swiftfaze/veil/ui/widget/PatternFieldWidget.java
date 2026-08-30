@@ -73,7 +73,7 @@ public class PatternFieldWidget extends Widget {
 
     public void typeCharacters(String chars) {
         for (char c : chars.toCharArray()) {
-            if (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c)) {
+            if (isAppendable(c)) {
                 input.append(c);
             }
         }
@@ -91,12 +91,26 @@ public class PatternFieldWidget extends Widget {
         return c != '\n' && c != '\t' && c >= 32 && c <= 126;
     }
 
+    // Enter (\n, \r) satisfies Character.isWhitespace() just like a space does, so without this
+    // exclusion it got silently appended as a literal newline — a character no single-line
+    // pattern ever matches, turning the field red the instant Enter was pressed.
+    private boolean isAppendable(char c) {
+        return c != '\n' && c != '\r'
+                && (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c));
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "delete-char");
         actionMap.put("delete-char", new AbstractAction() {
             public void actionPerformed(ActionEvent e) { deleteLastCharacter(); }
+        });
+        // Enter moves to the next field, like Tab, rather than typing a character - standard
+        // single-line-field behavior.
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "next-field");
+        actionMap.put("next-field", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) { transferFocus(); }
         });
     }
 
@@ -135,7 +149,7 @@ public class PatternFieldWidget extends Widget {
         @Override
         public void keyTyped(KeyEvent e) {
             char c = e.getKeyChar();
-            if (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c)) {
+            if (isAppendable(c)) {
                 input.append(c);
                 updateAppearance();
                 e.consume();
