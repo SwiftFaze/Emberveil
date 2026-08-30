@@ -692,3 +692,48 @@ next screen that needs them.
   scenario (Enter's real-keyboard behavior isn't exercised in headless
   tests, matching this framework's precedent), so nothing to update
   there.
+
+- Q: Requested real cursor support — a visible caret, Left/Right to
+  move it, Ctrl+A to select all. The widget had no cursor concept at
+  all (a `StringBuilder` that only supported appending at the end and
+  removing from the end). Hand-roll caret/selection tracking and
+  rendering on top of that, or a different approach?
+  A: Switched the internal representation from a `StringBuilder` +
+  plain `JLabel` (no cursor/selection rendering capability at all) to
+  a real `javax.swing.JTextField`, styled to match (monospaced font,
+  black background, the shared `WidgetTheme` selection colors reused
+  for the text-selection highlight too) rather than hand-rolling
+  cursor/selection tracking and painting. `JTextField` already
+  implements caret rendering, Left/Right/Home/End movement, Ctrl+A
+  select-all, click-to-position, and selection-replace-on-type
+  correctly and for free — reinventing that would just be re-deriving
+  well-tested Swing behavior with more room for bugs, not a capability
+  gap this framework needed to fill itself. The only custom piece left
+  is a `DocumentFilter` restricting which characters the pattern field
+  will actually accept (reusing the same `isAppendable()` check the
+  removed `KeyListener` used to apply inline), which now also
+  transparently covers `typeCharacters()`'s programmatic insertion,
+  Backspace/Delete, and real interactive typing uniformly, instead of
+  three separate call sites each needing their own filtering.
+  `getInput()`/`patternIsValid()`/`typeCharacters()`/
+  `deleteLastCharacter()` — the four methods the existing tests and
+  `ui-widget-pattern-field.feature`'s step definitions call — keep
+  their exact existing signatures and observable behavior;
+  `deleteLastCharacter()` is now genuinely "delete at the cursor" (or
+  delete the active selection) rather than "always remove the very
+  last character," but the two happen to coincide for every existing
+  scenario, since nothing in them moves the cursor away from the end
+  before deleting.
+  One caret quirk surfaced by the existing unit tests: `DefaultCaret`
+  doesn't reliably auto-advance past a programmatic
+  `replaceSelection()` call on a component that's never been realized/
+  shown (true of every headless unit/Cucumber test here) — fixed by
+  explicitly setting the caret to the document's end after
+  `typeCharacters()`'s insert. Real interactive typing (via the
+  field's own native key handling once it has real focus in an actual
+  window) doesn't hit this, since it isn't going through
+  `replaceSelection()` from outside the component.
+  Affects: Desired behavior (real cursor/selection support), internal
+  implementation (JTextField instead of StringBuilder+JLabel — no
+  public API removed, only added: none of the four existing methods
+  changed signature).

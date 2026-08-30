@@ -3,12 +3,17 @@ package com.swiftfaze.veil.ui.widget;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.regex.Pattern;
 
 /**
@@ -18,6 +23,13 @@ import java.util.regex.Pattern;
  * implements exactly this "label interrupts the border line" look). Border
  * (and label) color tracks state: white while empty, red/green once there's
  * input, matching whether it fails or matches the pattern.
+ * <p>
+ * Backed by a real {@link JTextField} (styled to match, not a plain label)
+ * rather than a hand-rolled StringBuilder + KeyListener, so cursor placement,
+ * Left/Right movement, Home/End, Ctrl+A select-all, click-to-position, and
+ * selection-replace-on-type all come from Swing's own well-tested text
+ * component for free — a {@link DocumentFilter} is the only custom piece,
+ * restricting what characters can actually land in the field.
  */
 public class PatternFieldWidget extends Widget {
     private static final int UNFOCUSED_BORDER_WIDTH = 1;
@@ -33,8 +45,7 @@ public class PatternFieldWidget extends Widget {
     private static final int LABELED_FIELD_HEIGHT = 56;
 
     private final Pattern pattern;
-    private final StringBuilder input;
-    private final JLabel label;
+    private final JTextField textField;
     private final String fieldLabel;
     private boolean hasFocus = false;
 
@@ -43,19 +54,28 @@ public class PatternFieldWidget extends Widget {
     }
 
     public PatternFieldWidget(String pattern, String fieldLabel) {
-        this.input = new StringBuilder();
         this.pattern = Pattern.compile(pattern);
         this.fieldLabel = fieldLabel;
-        this.label = new JLabel();
-        this.label.setForeground(WidgetTheme.NORMAL_TEXT);
-        this.label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        this.textField = new JTextField();
+        setFocusable(false); // the text field is the real focus target, not this outer panel
+
+        textField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        textField.setForeground(WidgetTheme.NORMAL_TEXT);
+        textField.setBackground(WidgetTheme.BACKGROUND);
+        textField.setCaretColor(WidgetTheme.NORMAL_TEXT);
+        textField.setSelectionColor(WidgetTheme.SELECTED_HIGHLIGHT);
+        textField.setSelectedTextColor(WidgetTheme.SELECTED_TEXT);
+        textField.setBorder(BorderFactory.createEmptyBorder());
+        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new AllowedCharacterFilter());
+        textField.getDocument().addDocumentListener(new PatternFieldDocumentListener());
+        textField.addFocusListener(new PatternFieldFocusListener());
+        bindEnterToNextField();
+
         setLayout(new BorderLayout());
         setAlignmentX(LEFT_ALIGNMENT);
-        add(label, BorderLayout.CENTER);
-        bindKeys();
-        addKeyListener(new PatternFieldKeyListener());
-        addFocusListener(new PatternFieldFocusListener());
+        add(textField, BorderLayout.CENTER);
         updateAppearance();
+
         // Stretches to fill whatever width its container offers — matches every other widget's
         // "full width" treatment (ListWidget's rows, TableWidget's row panels).
         int height = fieldLabel != null ? LABELED_FIELD_HEIGHT : FIELD_HEIGHT;
@@ -63,66 +83,92 @@ public class PatternFieldWidget extends Widget {
         setPreferredSize(new Dimension(200, height));
     }
 
+    @Override
+    public boolean requestFocusInWindow() {
+        return textField.requestFocusInWindow();
+    }
+
     public String getInput() {
-        return input.toString();
+        return textField.getText();
     }
 
     public boolean patternIsValid() {
-        return pattern.matcher(input.toString()).matches();
+        return pattern.matcher(textField.getText()).matches();
     }
 
+    /**
+     * Inserts at the current cursor position, replacing any active selection — same as real
+     * typing. Existing callers that type into a fresh/empty field (the common case) see the same
+     * append-at-the-end result as before, since the cursor naturally sits at the end there.
+     */
     public void typeCharacters(String chars) {
-        for (char c : chars.toCharArray()) {
-            if (isAppendable(c)) {
-                input.append(c);
-            }
-        }
-        updateAppearance();
+        textField.replaceSelection(chars);
+        // DefaultCaret doesn't reliably auto-advance past a programmatic replaceSelection() on a
+        // component that's never been realized/shown (as in headless unit/Cucumber tests) - real
+        // interactive typing (via the field's own native key handling once it has real focus in
+        // a real window) doesn't need this, only this programmatic test-helper path does.
+        textField.setCaretPosition(textField.getDocument().getLength());
     }
 
+    /**
+     * Deletes the selection if one is active, else the character immediately before the cursor —
+     * same as a real Backspace press. Called "deleteLastCharacter" for its original meaning
+     * (nothing had moved the cursor away from the end, so backspace-at-cursor and delete-the-
+     * actual-last-character were the same operation); now that the cursor can move, it deletes at
+     * the cursor, matching what Backspace does everywhere else.
+     */
     public void deleteLastCharacter() {
-        if (input.length() > 0) {
-            input.deleteCharAt(input.length() - 1);
+        int selectionStart = textField.getSelectionStart();
+        int selectionEnd = textField.getSelectionEnd();
+        if (selectionStart != selectionEnd) {
+            textField.replaceSelection("");
+            return;
         }
-        updateAppearance();
+        int caret = textField.getCaretPosition();
+        if (caret == 0) {
+            return;
+        }
+        try {
+            textField.getDocument().remove(caret - 1, 1);
+        } catch (BadLocationException ignored) {
+            // caret - 1 is always a valid offset here (caret > 0, just checked)
+        }
+    }
+
+    private boolean isAppendable(char c) {
+        // Enter (\n, \r) satisfies Character.isWhitespace() just like a space does, so without
+        // this exclusion it could be inserted as a literal newline — a character no single-line
+        // pattern ever matches. Real Enter presses never reach here (see bindEnterToNextField),
+        // but the filter guards direct/programmatic insertion too.
+        if (c == '\n' || c == '\r') {
+            return false;
+        }
+        return Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c);
     }
 
     private boolean isPrintableSpecial(char c) {
-        return c != '\n' && c != '\t' && c >= 32 && c <= 126;
+        return c != '\t' && c >= 32 && c <= 126;
     }
 
-    // Enter (\n, \r) satisfies Character.isWhitespace() just like a space does, so without this
-    // exclusion it got silently appended as a literal newline — a character no single-line
-    // pattern ever matches, turning the field red the instant Enter was pressed.
-    private boolean isAppendable(char c) {
-        return c != '\n' && c != '\r'
-                && (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || isPrintableSpecial(c));
-    }
-
-    private void bindKeys() {
-        InputMap inputMap = getInputMap(WHEN_FOCUSED);
-        ActionMap actionMap = getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "delete-char");
-        actionMap.put("delete-char", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { deleteLastCharacter(); }
-        });
-        // Enter moves to the next field, like Tab, rather than typing a character - standard
-        // single-line-field behavior.
+    private void bindEnterToNextField() {
+        InputMap inputMap = textField.getInputMap(WHEN_FOCUSED);
+        ActionMap actionMap = textField.getActionMap();
+        // Enter moves to the next field, like Tab, rather than JTextField's default (fire an
+        // ActionEvent, no focus change) - standard single-line-field behavior.
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "next-field");
         actionMap.put("next-field", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { transferFocus(); }
+            public void actionPerformed(ActionEvent e) { textField.transferFocus(); }
         });
     }
 
     private void updateAppearance() {
-        label.setText(input.toString());
         Color stateColor = stateColor();
-        label.setForeground(input.length() == 0 ? WidgetTheme.NORMAL_TEXT : stateColor);
+        textField.setForeground(getInput().isEmpty() ? WidgetTheme.NORMAL_TEXT : stateColor);
         setBorder(buildBorder(stateColor));
     }
 
     private Color stateColor() {
-        if (input.length() == 0) {
+        if (getInput().isEmpty()) {
             return WidgetTheme.NORMAL_TEXT;
         }
         return patternIsValid() ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.INVALID_HIGHLIGHT;
@@ -145,22 +191,42 @@ public class PatternFieldWidget extends Widget {
                 padded, fieldLabel, TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, LABEL_FONT, color);
     }
 
-    private class PatternFieldKeyListener implements KeyListener {
+    private class AllowedCharacterFilter extends DocumentFilter {
         @Override
-        public void keyTyped(KeyEvent e) {
-            char c = e.getKeyChar();
-            if (isAppendable(c)) {
-                input.append(c);
-                updateAppearance();
-                e.consume();
-            }
+        public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr)
+                throws BadLocationException {
+            super.insertString(fb, offset, filtered(text), attr);
         }
 
         @Override
-        public void keyPressed(KeyEvent e) {}
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                throws BadLocationException {
+            super.replace(fb, offset, length, filtered(text), attrs);
+        }
+
+        private String filtered(String text) {
+            if (text == null) {
+                return "";
+            }
+            StringBuilder allowed = new StringBuilder();
+            for (char c : text.toCharArray()) {
+                if (isAppendable(c)) {
+                    allowed.append(c);
+                }
+            }
+            return allowed.toString();
+        }
+    }
+
+    private class PatternFieldDocumentListener implements DocumentListener {
+        @Override
+        public void insertUpdate(DocumentEvent e) { updateAppearance(); }
 
         @Override
-        public void keyReleased(KeyEvent e) {}
+        public void removeUpdate(DocumentEvent e) { updateAppearance(); }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) { updateAppearance(); }
     }
 
     private class PatternFieldFocusListener implements FocusListener {
