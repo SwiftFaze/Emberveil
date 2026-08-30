@@ -1,13 +1,16 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.items.Item;
+import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
+import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.TerminalScrollBarUI;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.List;
 
 public class InventoryPanel extends PopupWidget {
@@ -16,6 +19,9 @@ public class InventoryPanel extends PopupWidget {
 
     private final ListWidget<Item> itemList;
     private final JPanel detailsPanel;
+    private final TableWidget<Item.Effect> effectsTable;
+    private final DropConfirmationPopup dropConfirmationPopup;
+    private boolean effectsTableHasFocus = false;
 
     public InventoryPanel() {
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
@@ -35,7 +41,17 @@ public class InventoryPanel extends PopupWidget {
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
         detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
 
+        effectsTable = new TableWidget<>(List.of(
+            e -> "+" + e.stat(),
+            e -> "(" + e.calc() + ")"
+        ));
+        effectsTable.setWrapAround(true);
+
+        dropConfirmationPopup = new DropConfirmationPopup();
+        dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
+
         addContent(buildBody(buildScrollPane(itemList), detailsPanel));
+        bindDropKey();
     }
 
     public void showItems(List<Item> items) {
@@ -50,14 +66,44 @@ public class InventoryPanel extends PopupWidget {
         return itemList.getSelectedItem();
     }
 
+    public DropConfirmationPopup getDropConfirmationPopup() {
+        return dropConfirmationPopup;
+    }
+
+    public boolean isEffectsTableFocused() {
+        return effectsTableHasFocus;
+    }
+
     @Override
     protected void onUp() {
-        itemList.moveUp();
+        if (effectsTableHasFocus) {
+            effectsTable.moveUp();
+        } else {
+            itemList.moveUp();
+        }
     }
 
     @Override
     protected void onDown() {
-        itemList.moveDown();
+        if (effectsTableHasFocus) {
+            effectsTable.moveDown();
+        } else {
+            itemList.moveDown();
+        }
+    }
+
+    @Override
+    protected void onLeft() {
+        if (effectsTableHasFocus) {
+            effectsTableHasFocus = false;
+        }
+    }
+
+    @Override
+    protected void onRight() {
+        if (!effectsTableHasFocus && effectsTable.getSelectedRow() != null) {
+            effectsTableHasFocus = true;
+        }
     }
 
     private JLabel makeTitleLabel() {
@@ -92,9 +138,12 @@ public class InventoryPanel extends PopupWidget {
 
     private void updateDetails(Item item) {
         detailsPanel.removeAll();
+        effectsTableHasFocus = false;
         for (String line : detailLines(item)) {
             detailsPanel.add(detailLabel(line));
         }
+        effectsTable.setRows(item == null ? List.of() : item.getEffects());
+        detailsPanel.add(effectsTable);
         detailsPanel.revalidate();
         detailsPanel.repaint();
     }
@@ -112,9 +161,6 @@ public class InventoryPanel extends PopupWidget {
         if (damage.max() > 0) {
             lines.add("Damage: " + damage.min() + "-" + damage.max());
         }
-        for (Item.Effect effect : item.getEffects()) {
-            lines.add("+" + effect.stat() + " (" + effect.calc() + ")");
-        }
         return lines;
     }
 
@@ -124,5 +170,18 @@ public class InventoryPanel extends PopupWidget {
         label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
+    }
+
+    private void bindDropKey() {
+        InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        ActionMap actionMap = getActionMap();
+        inputMap.put(Keybindings.DROP_ITEM, Keybindings.ACTION_DROP_ITEM);
+        actionMap.put(Keybindings.ACTION_DROP_ITEM, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                if (itemList.getSelectedItem() != null) {
+                    dropConfirmationPopup.open();
+                }
+            }
+        });
     }
 }

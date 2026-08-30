@@ -16,13 +16,13 @@
 ## Status
 
 - [x] Intent drafted
-- [ ] Spec drafted (`.feature` file)
-- [ ] Approved by human
-- [ ] Implemented
+- [x] Spec drafted (`.feature` file)
+- [x] Approved by human
+- [x] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
-- [ ] Acceptance tests passing
+- [x] Acceptance tests passing
 - [ ] Mutation testing passed
-- [ ] Documentation updated (`docs/`, and the wiki if player-facing)
+- [x] Documentation updated (`docs/`, and the wiki if player-facing)
 
 ## Problem
 

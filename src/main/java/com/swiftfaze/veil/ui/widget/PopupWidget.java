@@ -78,6 +78,12 @@ public class PopupWidget extends Widget {
     protected void onDown() {
     }
 
+    protected void onLeft() {
+    }
+
+    protected void onRight() {
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap actionMap = getActionMap();
@@ -85,6 +91,8 @@ public class PopupWidget extends Widget {
         inputMap.put(Keybindings.MENU_CANCEL, "popup-dismiss");
         inputMap.put(Keybindings.MENU_UP, "popup-up");
         inputMap.put(Keybindings.MENU_DOWN, "popup-down");
+        inputMap.put(Keybindings.MENU_LEFT, "popup-left");
+        inputMap.put(Keybindings.MENU_RIGHT, "popup-right");
 
         actionMap.put("popup-dismiss", new AbstractAction() {
             @Override
@@ -104,6 +112,20 @@ public class PopupWidget extends Widget {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onDown();
+            }
+        });
+
+        actionMap.put("popup-left", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onLeft();
+            }
+        });
+
+        actionMap.put("popup-right", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onRight();
             }
         });
     }
