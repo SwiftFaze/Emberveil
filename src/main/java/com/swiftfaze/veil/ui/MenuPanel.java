@@ -1,6 +1,7 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.input.Keybindings;
+import com.swiftfaze.veil.ui.widget.FocusManager;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 
 import javax.swing.*;
@@ -17,6 +18,7 @@ public class MenuPanel extends TerminalPanel {
     private final ListWidget<String> listWidget;
     private Runnable onInventoryConfirmed;
     private Runnable onCancel;
+    private FocusManager focusManager;
 
     public MenuPanel() {
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -38,6 +40,14 @@ public class MenuPanel extends TerminalPanel {
         this.onCancel = onCancel;
     }
 
+    public void setFocusManager(FocusManager focusManager) {
+        this.focusManager = focusManager;
+    }
+
+    private boolean isBlockedByModalPopup() {
+        return focusManager != null && focusManager.isPopupFocused();
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();
@@ -50,6 +60,9 @@ public class MenuPanel extends TerminalPanel {
         actionMap.put(Keybindings.ACTION_MENU_UP, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (isBlockedByModalPopup()) {
+                    return;
+                }
                 listWidget.moveUp();
             }
         });
@@ -57,6 +70,9 @@ public class MenuPanel extends TerminalPanel {
         actionMap.put(Keybindings.ACTION_MENU_DOWN, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (isBlockedByModalPopup()) {
+                    return;
+                }
                 listWidget.moveDown();
             }
         });
@@ -64,6 +80,9 @@ public class MenuPanel extends TerminalPanel {
         actionMap.put(Keybindings.ACTION_MENU_CONFIRM, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (isBlockedByModalPopup()) {
+                    return;
+                }
                 confirmSelection(listWidget.getSelectedItem());
             }
         });
@@ -71,6 +90,9 @@ public class MenuPanel extends TerminalPanel {
         actionMap.put(Keybindings.ACTION_MENU_CANCEL, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (isBlockedByModalPopup()) {
+                    return;
+                }
                 if (onCancel != null) {
                     onCancel.run();
                 }

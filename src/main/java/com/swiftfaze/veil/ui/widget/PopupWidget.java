@@ -68,7 +68,7 @@ public class PopupWidget extends Widget {
     }
 
     private void bindKeys() {
-        InputMap inputMap = getInputMap(WHEN_FOCUSED);
+        InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap actionMap = getActionMap();
 
         inputMap.put(Keybindings.MENU_CANCEL, "popup-dismiss");

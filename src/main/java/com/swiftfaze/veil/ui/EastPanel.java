@@ -32,6 +32,7 @@ public class EastPanel extends JPanel implements GameListener {
 
         playerInfoPanel = new PlayerInfoPanel();
         menuPanel = new MenuPanel();
+        menuPanel.setFocusManager(focusManager);
         inventoryPanel = new InventoryPanel();
         inventoryPanel.setFocusManager(focusManager);
         inventoryPanel.showItems(ModLoader.load(java.nio.file.Paths.get("mods")).getAllItems());
@@ -66,8 +67,6 @@ public class EastPanel extends JPanel implements GameListener {
 
     private void openInventory() {
         inventoryPanel.open();
-        inventoryPanel.requestFocusInWindow();
-        inventoryPanel.getCloseButton().requestFocusInWindow();
     }
 
     private void cancelMenu() {
