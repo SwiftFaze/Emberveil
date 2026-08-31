@@ -13,7 +13,7 @@ import java.util.Set;
 public final class WidgetColorTheme {
 
     /**
-     * Every color key a theme must define, matching the 10 colors {@code WidgetTheme} exposes as
+     * Every color key a theme must define, matching the colors {@code WidgetTheme} exposes as
      * static fields. A theme missing any of these fails to load (see {@code ModLoadException}).
      */
     public static final Set<String> REQUIRED_KEYS = Set.of(
@@ -25,8 +25,9 @@ public final class WidgetColorTheme {
             "INVALID_HIGHLIGHT",
             "VALID_HIGHLIGHT",
             "TABLE_HEADER_BACKGROUND",
-            "TABLE_BORDER",
-            "SCROLLBAR_THUMB"
+            "BORDER",
+            "SCROLLBAR_THUMB",
+            "ACCENT"
     );
 
     private final String id;

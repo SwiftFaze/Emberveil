@@ -33,7 +33,7 @@ public class CompactPopupWidget extends PopupWidget {
         // Outer frame around the whole dialog, not just the title — without this the body
         // below the title bar has no border at all and reads as black-on-black against the
         // game view behind it.
-        setBorder(BorderFactory.createLineBorder(WidgetTheme.TABLE_BORDER, 2));
+        setBorder(BorderFactory.createLineBorder(WidgetTheme.BORDER, 2));
 
         // Add a title bar at the top, separated from the body by a divider line rather than
         // its own full box (the outer frame above already closes that box).
@@ -42,7 +42,7 @@ public class CompactPopupWidget extends PopupWidget {
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.TABLE_BORDER),
+            BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER),
             BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         add(titleLabel, BorderLayout.NORTH);

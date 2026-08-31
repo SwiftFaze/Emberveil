@@ -18,11 +18,12 @@ public final class WidgetTheme {
     public static Color INVALID_HIGHLIGHT = Color.decode("#e05a4e");
     public static Color VALID_HIGHLIGHT = Color.decode("#6fcf7d");
     public static Color TABLE_HEADER_BACKGROUND = Color.decode("#1a1a1a");
-    public static Color TABLE_BORDER = Color.LIGHT_GRAY;
+    public static Color BORDER = Color.LIGHT_GRAY;
     public static Color SCROLLBAR_THUMB = Color.GRAY;
+    public static Color ACCENT = Color.decode("#eeb392");
 
     /**
-     * Overwrites all 10 widget colors from a mod-loaded theme. Called once at startup
+     * Overwrites all 11 widget colors from a mod-loaded theme. Called once at startup
      * (see {@code Main.loadGame}) with whichever theme owns ID "core:default" — see
      * {@code WidgetColorTheme.REQUIRED_KEYS} for the key set this reads.
      */
@@ -35,8 +36,9 @@ public final class WidgetTheme {
         INVALID_HIGHLIGHT = theme.color("INVALID_HIGHLIGHT");
         VALID_HIGHLIGHT = theme.color("VALID_HIGHLIGHT");
         TABLE_HEADER_BACKGROUND = theme.color("TABLE_HEADER_BACKGROUND");
-        TABLE_BORDER = theme.color("TABLE_BORDER");
+        BORDER = theme.color("BORDER");
         SCROLLBAR_THUMB = theme.color("SCROLLBAR_THUMB");
+        ACCENT = theme.color("ACCENT");
     }
 
     /**
