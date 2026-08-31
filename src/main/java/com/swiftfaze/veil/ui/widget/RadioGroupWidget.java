@@ -77,6 +77,17 @@ public class RadioGroupWidget<T> extends Widget {
         return horizontal;
     }
 
+    /**
+     * Without this, the group's maximumSize defaults to unbounded (no child label sets one for
+     * the horizontal case), so a vertical BoxLayout parent — e.g. a compact popup's content pane
+     * — stretches it to the parent's full width and packs the options against the left edge
+     * instead of leaving room for the parent's own alignmentX to center them.
+     */
+    @Override
+    public Dimension getMaximumSize() {
+        return getPreferredSize();
+    }
+
     public void moveUp() {
         moveVertical(false);
     }

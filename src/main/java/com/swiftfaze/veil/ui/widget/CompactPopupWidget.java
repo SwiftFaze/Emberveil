@@ -21,13 +21,19 @@ public class CompactPopupWidget extends PopupWidget {
         // Remove the inherited Close button from the layout
         remove(getCloseButton());
 
-        // Add a decorative title bar at the top
+        // Outer frame around the whole dialog, not just the title — without this the body
+        // below the title bar has no border at all and reads as black-on-black against the
+        // game view behind it.
+        setBorder(BorderFactory.createLineBorder(WidgetTheme.TABLE_BORDER, 2));
+
+        // Add a decorative title bar at the top, separated from the body by a divider line
+        // rather than its own full box (the outer frame above already closes that box).
         JLabel titleLabel = new JLabel(">> " + title + " <<");
         titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(WidgetTheme.TABLE_BORDER, 1),
+            BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.TABLE_BORDER),
             BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         add(titleLabel, BorderLayout.NORTH);

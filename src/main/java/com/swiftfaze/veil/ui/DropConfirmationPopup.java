@@ -17,12 +17,14 @@ public class DropConfirmationPopup extends CompactPopupWidget {
         questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         questionLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         addContent(questionLabel);
 
         choice = new RadioGroupWidget<>(s -> s, true);
         choice.setOptions(List.of("No", "Yes"));
         choice.setOnConfirm(selected -> dismiss());
+        choice.setAlignmentX(Component.CENTER_ALIGNMENT);
         addContent(choice);
     }
 
