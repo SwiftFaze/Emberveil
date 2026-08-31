@@ -9,11 +9,13 @@
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` file)
 - [x] Approved by human (approved implementing directly per user request, 2026-08-31 — see Clarifications)
-- [x] Implemented
+- [ ] Implemented — reopened 2026-08-31: scope expanded to all UI colors (see Clarifications); the
+      first implementation pass (10 WidgetTheme colors + Settings screen row only) is done, the
+      wider sweep is not yet
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"; not yet done, still required before this ships
-- [x] Acceptance tests passing
-- [x] Mutation testing passed
-- [x] Documentation updated (`docs/architecture.md`; no wiki update needed — not player-facing game data)
+- [ ] Acceptance tests passing — needs re-verification after the wider sweep
+- [ ] Mutation testing passed — needs re-run after the wider sweep
+- [ ] Documentation updated (`docs/`, and the wiki if player-facing) — needs a pass after the wider sweep
 
 ## Problem
 
@@ -38,27 +40,49 @@ the widget library being the natural next candidate for that same pattern.
     id/collision/`"overrides"` rules as tiles/buildings/classes/items/
     quests (`registerWithCollisionCheck`).
   - A default theme shipped in `mods/core/themes/default.json` (file id
-    `core:default`) defining **all 10**
-    colors currently hardcoded in `WidgetTheme`: `SELECTED_HIGHLIGHT`,
-    `SELECTED_TEXT`, `NORMAL_TEXT`, `DIMMED_TEXT`, `BACKGROUND`,
-    `INVALID_HIGHLIGHT`, `VALID_HIGHLIGHT`, `TABLE_HEADER_BACKGROUND`,
-    `TABLE_BORDER`, `SCROLLBAR_THUMB` — using the same `{r, g, b}` JSON
-    color shape tiles already use (`ModLoader.readColor`). No color may be
-    left hardcoded once this lands; every one of the 10 must have an entry
-    in the default theme.
-    - Note: the originating issue (#106) named only 7 of these — it was
-      filed mid-day on 2026-08-30, before `DIMMED_TEXT`, `VALID_HIGHLIGHT`,
-      and `SCROLLBAR_THUMB` were added to `WidgetTheme` in later commits the
-      same day. Confirmed via grilling session on 2026-08-31: migrate all
-      10 current colors, not just the 7 named in the issue, since the
-      issue's own "no color may be left hardcoded" line only holds if all
-      10 are covered, and the extra 3 keys cost nothing extra in the JSON
-      schema or loader.
+    `core:default`) defining **all 11** colors `WidgetTheme` exposes:
+    `SELECTED_HIGHLIGHT`, `SELECTED_TEXT`, `NORMAL_TEXT`, `DIMMED_TEXT`,
+    `BACKGROUND`, `INVALID_HIGHLIGHT`, `VALID_HIGHLIGHT`,
+    `TABLE_HEADER_BACKGROUND`, `BORDER`, `SCROLLBAR_THUMB`, `ACCENT` —
+    using the same `{r, g, b}` JSON color shape tiles already use
+    (`ModLoader.readColor`). No color may be left hardcoded in any UI file
+    once this lands; every one of the 11 must have an entry in the default
+    theme.
+    - Note: the originating issue (#106) named only 7 colors, all still
+      present under their original names except `TABLE_BORDER` (see the
+      rename below). It was filed mid-day on 2026-08-30, before
+      `DIMMED_TEXT`, `VALID_HIGHLIGHT`, and `SCROLLBAR_THUMB` were added to
+      `WidgetTheme` in later commits the same day. Confirmed via grilling
+      session on 2026-08-31: migrate all 10 colors that existed at
+      implementation time, not just the 7 named in the issue.
+    - **`TABLE_BORDER` renamed to `BORDER`** (2026-08-31, see
+      Clarifications): the color was never table-specific — it's the
+      general widget-library border color, already used by
+      `CompactPopupWidget` and `RadioGroupWidget` before this rename, and
+      now also used across every panel border in scope below. Keeping the
+      name `TABLE_BORDER` while broadening its use this far would be a
+      misleading name.
+    - **`ACCENT` added** (2026-08-31, see Clarifications): the widget
+      library's original `SELECTED_HIGHLIGHT` color (`#eeb392`) before an
+      earlier commit changed selection highlighting to neutral gray. That
+      same `#eeb392` value is still hardcoded as an accent color in two
+      places brought into scope below (`NorthPanel`'s title,
+      `ClassSandboxPanel`'s selected-row color) — this captures it as its
+      own named theme color rather than leaving it as a hardcoded
+      leftover.
+  - **Every hardcoded UI color in `src/main/java/.../ui/**` and
+    `.../ui/widget/**`, plus the dev `ClassSandboxPanel`, is replaced with
+    the matching `WidgetTheme` field** (2026-08-31, see Clarifications —
+    this supersedes the "legacy screen-chrome panels" exclusion
+    originally below). Gameplay/world rendering
+    (`entities/player/Player.java`, `world/WorldScene.java`,
+    `game/GamePanel.java`) is explicitly excluded — those colors are
+    gameplay content, not UI chrome, and stay as they are.
   - `WidgetTheme` is populated from the loaded default theme at startup
-    instead of hardcoding `Color` constants; `ListWidget`, `TableWidget`,
-    `PopupWidget`, and `Widget` keep consuming it exactly as they do today
-    (same static field names/call sites — only where the values come from
-    changes).
+    instead of hardcoding `Color` constants; every consumer keeps
+    referencing its static fields exactly as before (same field names —
+    only where the values come from changes, plus the `TABLE_BORDER` ->
+    `BORDER` rename and new `ACCENT` field above).
   - Any mod (including a user-authored one) can define its own file(s)
     under `themes/` following the same schema, proving the "user can
     create their own theme" pattern end-to-end, even without a way to
@@ -74,10 +98,10 @@ the widget library being the natural next candidate for that same pattern.
     stays out of scope.
 - Out of scope:
   - Fonts — colors only for this issue.
-  - Legacy screen-chrome panels (`EastPanel`, `InventoryPanel`,
-    `NorthPanel`, `PlayerInfoPanel`, `SouthPanel`, `TerminalPanel`) — not
-    part of the widget library; they keep their existing hardcoded colors
-    for now.
+  - Gameplay/world rendering colors (`Player`'s glyph color, `WorldScene`'s
+    fallback tile color, `GamePanel`'s own viewport chrome) — not UI, per
+    the user's 2026-08-31 clarification narrowing "everything" to "UI"
+    specifically.
   - Theme activation/switching (choosing which loaded theme is actually
     applied) — no settings/config system exists yet anywhere in the
     codebase. v1 only needs the default theme to load and render correctly
@@ -95,13 +119,14 @@ On startup, `ModLoader` loads every `*.json` file under each mod's
 building a theme registry keyed by theme id (namespaced like existing
 content, e.g. `core:default`) with the same collision/`overrides`
 semantics as `registerWithCollisionCheck`. The core mod's default theme
-(`mods/core/themes/default.json`, id `core:default`) — defining all 10
-currently-hardcoded widget colors — loads and applies to the widget
-library so rendering is unchanged from today's hardcoded output (a visual
-no-op migration). A second mod could ship its own file under `themes/`
-(same schema, distinct id) and it would load without error, proving
-custom themes are possible, even though nothing yet picks a non-default
-one to actually display.
+(`mods/core/themes/default.json`, id `core:default`) — defining all 11
+widget colors — loads and applies to the widget library so rendering is
+unchanged from today's hardcoded output (a visual no-op migration), and
+every in-scope UI file (see Scope) reads its colors from `WidgetTheme`
+instead of hardcoding a literal. A second mod could ship its own file
+under `themes/` (same schema, distinct id) and it would load without
+error, proving custom themes are possible, even though nothing yet picks
+a non-default one to actually display.
 
 On the Settings screen, a new "Theme" row lists the theme registry's
 entries (initially just `core:default`) via the existing widget library
@@ -124,8 +149,9 @@ budgets).
 
 ## Open questions
 
-None — the only fork (7 vs. 10 colors) was settled via grilling on
-2026-08-31; see the note under Scope.
+None — see the Clarifications section for every fork raised so far
+(color-key set, settings-screen Theme row, theme file layout, and UI
+color-cleanup scope) and how each was resolved.
 
 ## Clarifications
 
@@ -162,3 +188,24 @@ None — the only fork (7 vs. 10 colors) was settled via grilling on
   loadStatRegistry-style single-file check to a loadTiles-style directory
   scan); widget-theming.feature's Given steps and its Risks note about
   the loader shape
+
+- Q: (raised directly by the user, 2026-08-31, after the first
+  implementation pass landed) "All colors need to be replaced ... I still
+  see a lot of Color.BLACK for example" — how far should the hardcoded-
+  color cleanup go? Options ranged from just the widget-library core
+  (`Widget`/`PopupWidget`, which hardcode `Color.BLACK` instead of
+  referencing `WidgetTheme.BACKGROUND`) up to literally every `Color`
+  reference in the codebase, including gameplay/world rendering.
+  A: "Everything that is UI" — every file under `ui/` and `ui/widget/`,
+  plus the dev `ClassSandboxPanel`. Explicitly NOT gameplay/world
+  rendering (`Player`, `WorldScene`, `GamePanel`) when those were named as
+  an example of going too far.
+  Affects: general — this reverses the earlier "legacy screen-chrome
+  panels are out of scope" exclusion above, renames `TABLE_BORDER` to
+  `BORDER` (it was already used well beyond tables —
+  `CompactPopupWidget`, `RadioGroupWidget` — before this change), and adds
+  a new `ACCENT` color (`#eeb392`) to capture a hardcoded leftover from
+  before `SELECTED_HIGHLIGHT` changed to neutral gray, still used by
+  `NorthPanel` and `ClassSandboxPanel`. widget-theming.feature's color
+  count/list and `mods/core/themes/default.json` both move from 10 keys
+  to 11.
