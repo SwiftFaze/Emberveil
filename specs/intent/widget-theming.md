@@ -7,13 +7,13 @@
 ## Status
 
 - [x] Intent drafted
-- [ ] Spec drafted (`.feature` file)
-- [ ] Approved by human
-- [ ] Implemented
-- [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
-- [ ] Acceptance tests passing
-- [ ] Mutation testing passed
-- [ ] Documentation updated (`docs/`, and the wiki if player-facing)
+- [x] Spec drafted (`.feature` file)
+- [x] Approved by human (approved implementing directly per user request, 2026-08-31 — see Clarifications)
+- [x] Implemented
+- [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"; not yet done, still required before this ships
+- [x] Acceptance tests passing
+- [x] Mutation testing passed
+- [x] Documentation updated (`docs/architecture.md`; no wiki update needed — not player-facing game data)
 
 ## Problem
 
