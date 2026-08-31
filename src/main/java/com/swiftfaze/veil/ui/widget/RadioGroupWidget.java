@@ -7,6 +7,7 @@ import javax.swing.border.Border;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class RadioGroupWidget<T> extends Widget {
     private int highlightedIndex = 0;
     private int selectedIndex = -1;
     private boolean wrapAround = true;
+    private boolean fillWidth = false;
     private Consumer<T> onConfirm = t -> {};
 
     public RadioGroupWidget(Function<T, String> optionRenderer, boolean horizontal) {
@@ -52,6 +54,29 @@ public class RadioGroupWidget<T> extends Widget {
 
     public void setWrapAround(boolean wrapAround) {
         this.wrapAround = wrapAround;
+    }
+
+    /**
+     * Stretches a horizontal group to fill its container's width, splitting that width evenly
+     * across the options (e.g. a Yes/No footer spanning a dialog edge-to-edge) instead of each
+     * option sizing to its own text. No effect on a vertical group. Re-applies immediately if
+     * options are already set.
+     */
+    public void setFillWidth(boolean fillWidth) {
+        this.fillWidth = fillWidth;
+        refresh();
+    }
+
+    /**
+     * Re-highlights the first option and clears any confirmed selection, without discarding the
+     * option list — for a popup that reopens with the same fixed options each time (e.g. a
+     * Yes/No confirmation) and shouldn't carry over the previous confirmation's green outline or
+     * highlight into the next time it's shown.
+     */
+    public void resetSelection() {
+        highlightedIndex = 0;
+        selectedIndex = -1;
+        refreshHighlight();
     }
 
     public void setOnConfirm(Consumer<T> onConfirm) {
@@ -81,10 +106,15 @@ public class RadioGroupWidget<T> extends Widget {
      * Without this, the group's maximumSize defaults to unbounded (no child label sets one for
      * the horizontal case), so a vertical BoxLayout parent — e.g. a compact popup's content pane
      * — stretches it to the parent's full width and packs the options against the left edge
-     * instead of leaving room for the parent's own alignmentX to center them.
+     * instead of leaving room for the parent's own alignmentX to center them. A fillWidth group
+     * is the deliberate exception: it's supposed to stretch to the parent's width, just evenly
+     * split across options (see refresh()) rather than packed at one edge.
      */
     @Override
     public Dimension getMaximumSize() {
+        if (fillWidth && horizontal) {
+            return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+        }
         return getPreferredSize();
     }
 
@@ -165,10 +195,19 @@ public class RadioGroupWidget<T> extends Widget {
     private void refresh() {
         removeAll();
         labels.clear();
+
+        // GridLayout, unlike BoxLayout, distributes the container's actual laid-out width evenly
+        // across cells at layout time — exactly what a fillWidth group needs (see setFillWidth)
+        // and something BoxLayout can't do without each label already knowing that width upfront.
+        setLayout(fillWidth && horizontal
+            ? new GridLayout(1, 0, 4, 0)
+            : new BoxLayout(this, horizontal ? BoxLayout.X_AXIS : BoxLayout.Y_AXIS));
+
         for (T option : options) {
             JLabel label = new JLabel(optionRenderer.apply(option));
             label.setOpaque(true);
             label.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 16));
+            label.setHorizontalAlignment(horizontal ? SwingConstants.CENTER : SwingConstants.LEFT);
             label.setAlignmentX(LEFT_ALIGNMENT);
             labels.add(label);
             add(label);

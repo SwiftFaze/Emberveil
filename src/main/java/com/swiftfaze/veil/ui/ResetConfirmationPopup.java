@@ -30,16 +30,21 @@ public class ResetConfirmationPopup extends CompactPopupWidget {
         questionLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         addContent(questionLabel);
 
+        addContent((JComponent) Box.createVerticalGlue());
+
         choice = new RadioGroupWidget<>(s -> s, true);
+        choice.setFillWidth(true);
         choice.setOptions(List.of("No", "Yes"));
         choice.setOnConfirm(selected -> dismiss());
         choice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        choice.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         addContent(choice);
     }
 
     @Override
     public void open() {
         super.open();
+        choice.resetSelection();
         choice.requestFocusInWindow();
     }
 

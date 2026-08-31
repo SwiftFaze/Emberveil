@@ -7,7 +7,7 @@ import java.awt.*;
  * A compact, fixed-size, centered popup variant suitable for smaller dialogs
  * (e.g. Yes/No confirmation). Unlike full-screen popups, this widget:
  * - Has a fixed preferred size (centered when laid out by FillLayout)
- * - Displays a decorative title bar with arrow accents
+ * - Displays a title bar, divided from the body by a line
  * - Has no Close button (dismiss is via content-specific means, e.g. a radio choice)
  * - Reuses PopupWidget's core key-binding mechanism (Escape-to-dismiss, onUp/Down/Left/Right)
  */
@@ -26,9 +26,9 @@ public class CompactPopupWidget extends PopupWidget {
         // game view behind it.
         setBorder(BorderFactory.createLineBorder(WidgetTheme.TABLE_BORDER, 2));
 
-        // Add a decorative title bar at the top, separated from the body by a divider line
-        // rather than its own full box (the outer frame above already closes that box).
-        JLabel titleLabel = new JLabel(">> " + title + " <<");
+        // Add a title bar at the top, separated from the body by a divider line rather than
+        // its own full box (the outer frame above already closes that box).
+        JLabel titleLabel = new JLabel(title);
         titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
