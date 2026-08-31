@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0-beta.5](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.4...v0.5.0-beta.5) (2026-08-31)
+
+
+### Features
+
+* load widget colors from mod-driven theme.json files ([bca6d12](https://github.com/SwiftFaze/Veil/commit/bca6d1261a52241e94b4efda4136465acdf78902))
+* mod-driven color theming for the UI widget library ([822d0b5](https://github.com/SwiftFaze/Veil/commit/822d0b5eb8ca08c7b4037555d2a25fc721f143c3))
+* rename WidgetTheme.TABLE_BORDER to BORDER and add ACCENT color ([b24db97](https://github.com/SwiftFaze/Veil/commit/b24db97e91abad07eb0e82f103b394756e1edd20))
+* replace every hardcoded UI Color literal with WidgetTheme ([f781cad](https://github.com/SwiftFaze/Veil/commit/f781cadf524c29cc97dd0820dc1d355b47011a80))
+
 ## [0.5.0-beta.4](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.3...v0.5.0-beta.4) (2026-08-31)
 
 
