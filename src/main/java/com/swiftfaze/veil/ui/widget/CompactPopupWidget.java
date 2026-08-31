@@ -15,6 +15,8 @@ public class CompactPopupWidget extends PopupWidget {
     private static final int POPUP_WIDTH = 400;
     private static final int POPUP_HEIGHT = 200;
 
+    private final JLabel titleLabel;
+
     public CompactPopupWidget(String title) {
         super();
 
@@ -28,7 +30,7 @@ public class CompactPopupWidget extends PopupWidget {
 
         // Add a title bar at the top, separated from the body by a divider line rather than
         // its own full box (the outer frame above already closes that box).
-        JLabel titleLabel = new JLabel(title);
+        titleLabel = new JLabel(title);
         titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -37,6 +39,15 @@ public class CompactPopupWidget extends PopupWidget {
             BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         add(titleLabel, BorderLayout.NORTH);
+    }
+
+    /**
+     * Lets a subclass update the title after construction (e.g. to name the specific item a
+     * confirmation is about) instead of being stuck with whatever title the constructor was
+     * first given.
+     */
+    protected void setTitleText(String title) {
+        titleLabel.setText(title);
     }
 
     @Override

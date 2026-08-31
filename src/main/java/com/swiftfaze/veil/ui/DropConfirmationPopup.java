@@ -8,12 +8,15 @@ import java.awt.*;
 import java.util.List;
 
 public class DropConfirmationPopup extends CompactPopupWidget {
+    private static final String DEFAULT_ITEM_NAME = "this item";
+
     private final RadioGroupWidget<String> choice;
+    private final JLabel questionLabel;
 
     public DropConfirmationPopup() {
         super("Drop Item");
 
-        JLabel questionLabel = new JLabel("Are you sure you want to drop this item?");
+        questionLabel = new JLabel(questionTextFor(DEFAULT_ITEM_NAME));
         questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -34,6 +37,18 @@ public class DropConfirmationPopup extends CompactPopupWidget {
 
     @Override
     public void open() {
+        open(DEFAULT_ITEM_NAME);
+    }
+
+    /**
+     * Opens the popup naming the specific item being dropped, e.g. "Drop Iron Sword" as the
+     * title and "Are you sure you want to drop Iron Sword?" as the body — the item name isn't
+     * known until an item is actually selected in the inventory, so it can't be baked into the
+     * constructor like the rest of this dialog's static text.
+     */
+    public void open(String itemName) {
+        setTitleText("Drop " + itemName);
+        questionLabel.setText(questionTextFor(itemName));
         super.open();
         choice.resetSelection();
         choice.requestFocusInWindow();
@@ -41,5 +56,9 @@ public class DropConfirmationPopup extends CompactPopupWidget {
 
     public RadioGroupWidget<String> getChoiceWidget() {
         return choice;
+    }
+
+    private static String questionTextFor(String itemName) {
+        return "Are you sure you want to drop " + itemName + "?";
     }
 }

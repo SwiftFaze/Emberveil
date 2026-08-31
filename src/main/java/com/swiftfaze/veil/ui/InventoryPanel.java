@@ -270,8 +270,9 @@ public class InventoryPanel extends PopupWidget {
         inputMap.put(Keybindings.DROP_ITEM, Keybindings.ACTION_DROP_ITEM);
         actionMap.put(Keybindings.ACTION_DROP_ITEM, new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                if (itemList.getSelectedItem() != null) {
-                    dropConfirmationPopup.open();
+                Item selected = itemList.getSelectedItem();
+                if (selected != null) {
+                    dropConfirmationPopup.open(selected.getName());
                 }
             }
         });
