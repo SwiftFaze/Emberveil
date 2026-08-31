@@ -100,10 +100,10 @@ Feature: Radio group widget
   #     #54, then vertical-by-default-with-a-horizontal-option here) —
   #     see specs/intent/ui-widget-library.md's Clarifications for the
   #     full history.
-  #   - The drop-confirmation popup nests a second full-screen
-  #     PopupWidget on top of the already-open inventory popup, rather
-  #     than waiting on #99's smaller/centered variant (not yet
-  #     approved/implemented) — a deliberate choice, not a blocker.
+  #   - The drop-confirmation popup now nests a compact, centered
+  #     CompactPopupWidget (#99's smaller/centered variant) on top of the
+  #     already-open full-screen inventory popup, rather than the
+  #     full-screen PopupWidget it started as before #99 landed.
   #   - "No" as the default-highlighted choice was a low-risk autonomous
   #     UX call (safer default for a destructive-sounding action), not
   #     separately grilled.

@@ -164,12 +164,15 @@ Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
 Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
 — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
 popup child has real Swing focus — let a subclass wire keyboard navigation to
-its own content), `SliderWidget` (a bounded numeric slider with left/right
-adjustment within a [min, max] range by fixed steps, with hard bounds—no
-wrap-around), `FillLayout` (a `LayoutManager` stretching every child to the
-parent's full bounds, for `JLayeredPane` overlays), and `TerminalScrollBarUI`
-(a flat black-track/solid-thumb `BasicScrollBarUI` replacing the platform
-look-and-feel's default scrollbar chrome).
+its own content; `isFullScreen()` returns true by default, but subclasses can
+return false to be centered at their preferred size instead of stretched);
+`SliderWidget` (a bounded numeric slider with left/right adjustment within a
+[min, max] range by fixed steps, with hard bounds—no wrap-around), `FillLayout`
+(a `LayoutManager` stretching every child to the parent's full bounds by
+default, for `JLayeredPane` overlays; now respects `PopupWidget.isFullScreen()`
+to center non-full-screen popups at their preferred size instead), and
+`TerminalScrollBarUI` (a flat black-track/solid-thumb `BasicScrollBarUI`
+replacing the platform look-and-feel's default scrollbar chrome).
 
 **Screen flow** (`Main.java` and screen panels): `Main.loadGame()` uses
 `CardLayout` to manage four screens: title, game, settings, and keybinds,
@@ -202,7 +205,18 @@ discoverable). Left/Right calls `moveLeft()`/`moveRight()` on sliders or
 radio groups directly (bypassing their own now-unused internal key bindings,
 same as `InventoryPanel`'s sub-widgets), which updates the highlighted
 option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
-returns to the title screen.
+returns to the title screen. Its "Reset to Defaults" row opens a
+`ResetConfirmationPopup` (a `CompactPopupWidget` — see above — asking "Reset
+all settings to their defaults?" via a horizontal `RadioGroupWidget<String>`
+defaulting to "No", the same safe-default convention `DropConfirmationPopup`
+uses; choosing either option just dismisses the popup, since no setting
+persists real state yet). `SettingsScreenPanel` doesn't host that popup
+inside its own layout, mirroring `InventoryPanel`/`GameWindow`'s approach:
+`ui/SettingsWindow.buildContentArea(SettingsScreenPanel)` builds a
+`JLayeredPane` with the settings screen at `DEFAULT_LAYER` and the reset
+popup at `POPUP_LAYER` above it, stretched to match via `FillLayout`, and
+`Main.java` wires that layered pane into the settings card instead of adding
+`SettingsScreenPanel` directly.
 
 `SettingsKeybindsPanel` lists every rebindable action (Move up/down/left/
 right, Toggle inventory) and its current key in a real `TableWidget<ActionRow>`
@@ -239,9 +253,10 @@ rendered as a `TableWidget<Item.Effect>` with two columns (stat and value),
 row-highlighted when selected. Navigation can be switched between the item
 list and the effects table via Left/Right keys; Up/Down then navigate within
 the current pane. Pressing D (Drop) from any pane opens a nested
-`DropConfirmationPopup` (a full-screen `PopupWidget` containing a horizontal
-`RadioGroupWidget<String>` asking "Drop item?", defaulting to "No" highlighted),
-which closes on any selection or Escape without actually removing items. It's
+`DropConfirmationPopup` (a `CompactPopupWidget` — see above — containing a
+horizontal `RadioGroupWidget<String>` asking "Drop item?", defaulting to "No"
+highlighted), which closes on any selection or Escape without actually
+removing items. It's
 populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
 constructor) rather than loading mod content itself, mirroring
 `PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
@@ -249,9 +264,10 @@ inside `EastPanel`'s own layout, the popup is promoted to window level:
 `ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a `JLayeredPane`
 with a `mainArea` panel (`GamePanel` + `EastPanel`) at `DEFAULT_LAYER`, the
 inventory popup at `POPUP_LAYER` above it, and the drop-confirmation popup at
-`DRAG_LAYER` (even higher), all stretched to match via `FillLayout` — so
-opening the inventory covers the whole game view and sidebar, and the
-drop-confirmation popup covers that in turn. `Main.java` wires that layered
+`DRAG_LAYER` (even higher) — all positioned by the same `FillLayout`, which
+stretches the full-screen inventory popup to cover the whole game view and
+sidebar, but centers the compact drop-confirmation popup at its preferred
+size on top of that. `Main.java` wires that layered
 pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
 `EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by

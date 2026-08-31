@@ -51,6 +51,15 @@ public class PopupWidget extends Widget {
         return closeButton;
     }
 
+    /**
+     * Returns true if this popup should stretch to fill the parent container,
+     * false if it should be sized and centered at its preferred size.
+     * Subclasses can override to present smaller, compact popups.
+     */
+    public boolean isFullScreen() {
+        return true;
+    }
+
     public void open() {
         setVisible(true);
         if (focusManager != null) {

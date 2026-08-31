@@ -6,6 +6,7 @@ import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.NorthPanel;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
+import com.swiftfaze.veil.ui.SettingsWindow;
 import com.swiftfaze.veil.ui.SouthPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
 import org.slf4j.Logger;
@@ -76,6 +77,8 @@ public class Main {
             Main::openFolder
         );
 
+        JLayeredPane settingsContentArea = SettingsWindow.buildContentArea(settingsScreen);
+
         // Build keybinds card
         SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
             screen -> navigateTo(cardLayout, cardPanel, cards, screen)
@@ -87,7 +90,7 @@ public class Main {
 
         cardPanel.add(titleScreen, "title");
         cardPanel.add(gameCard, "game");
-        cardPanel.add(settingsScreen, "settings");
+        cardPanel.add(settingsContentArea, "settings");
         cardPanel.add(keybindsScreen, "keybinds");
 
         frame.setLayout(new BorderLayout());

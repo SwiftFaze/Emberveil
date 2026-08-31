@@ -20,6 +20,7 @@ public class SettingsScreenPanel extends JPanel {
     private int selectedIndex = 0;
     private final Consumer<String> onBack;
     private final Consumer<String> onOpenFolder;
+    private final ResetConfirmationPopup resetConfirmationPopup;
 
     private static class SettingsRow {
         String name;
@@ -71,6 +72,8 @@ public class SettingsScreenPanel extends JPanel {
         initializeRows();
         refresh();
         bindKeys();
+
+        resetConfirmationPopup = new ResetConfirmationPopup();
     }
 
     private void bindKeys() {
@@ -150,6 +153,10 @@ public class SettingsScreenPanel extends JPanel {
         return rows.get(selectedIndex).name;
     }
 
+    public ResetConfirmationPopup getResetConfirmationPopup() {
+        return resetConfirmationPopup;
+    }
+
     public void moveUp() {
         if (selectedIndex > 0) {
             selectedIndex--;
@@ -191,9 +198,10 @@ public class SettingsScreenPanel extends JPanel {
             case "Open Game Folder" -> onOpenFolder.accept("game");
             case "Open Mod Folder" -> onOpenFolder.accept("mods");
             case "Go Back" -> back();
-            case "About", "Reset to Defaults" -> {
-                // Placeholder actions
+            case "About" -> {
+                // Placeholder action
             }
+            case "Reset to Defaults" -> resetConfirmationPopup.open();
         }
     }
 
