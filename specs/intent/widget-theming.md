@@ -9,13 +9,12 @@
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` file)
 - [x] Approved by human (approved implementing directly per user request, 2026-08-31 — see Clarifications)
-- [ ] Implemented — reopened 2026-08-31: scope expanded to all UI colors (see Clarifications); the
-      first implementation pass (10 WidgetTheme colors + Settings screen row only) is done, the
-      wider sweep is not yet
+- [x] Implemented — the wider sweep (all 11 colors, every hardcoded UI color in ui/, ui/widget/,
+      and ClassSandboxPanel) landed 2026-08-31, on top of the first pass
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"; not yet done, still required before this ships
-- [ ] Acceptance tests passing — needs re-verification after the wider sweep
-- [ ] Mutation testing passed — needs re-run after the wider sweep
-- [ ] Documentation updated (`docs/`, and the wiki if player-facing) — needs a pass after the wider sweep
+- [x] Acceptance tests passing (`mvn verify`: 260 unit/acceptance + 165 Cucumber scenarios + 6 integration tests, 0 failures)
+- [x] Mutation testing passed (851/890 line coverage (96%), 317/446 mutations killed (71%), test strength 75%)
+- [x] Documentation updated (`docs/architecture.md`; no wiki update needed — not player-facing game data)
 
 ## Problem
 
