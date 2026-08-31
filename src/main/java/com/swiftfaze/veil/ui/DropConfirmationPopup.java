@@ -16,12 +16,15 @@ public class DropConfirmationPopup extends CompactPopupWidget {
     public DropConfirmationPopup() {
         super("Drop Item");
 
-        questionLabel = new JLabel(wrapBodyText(questionTextFor(DEFAULT_ITEM_NAME)));
+        questionLabel = new JLabel();
         questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
         questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         questionLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        // Text (and the maximumSize cap it drives) is set last, once font/border are final —
+        // both affect the wrapped HTML's computed preferred size (see setBodyText).
+        setBodyText(questionLabel, questionTextFor(DEFAULT_ITEM_NAME));
         addContent(questionLabel);
 
         addContent((JComponent) Box.createVerticalGlue());
@@ -48,7 +51,7 @@ public class DropConfirmationPopup extends CompactPopupWidget {
      */
     public void open(String itemName) {
         setTitleText("Drop " + itemName);
-        questionLabel.setText(wrapBodyText(questionTextFor(itemName)));
+        setBodyText(questionLabel, questionTextFor(itemName));
         super.open();
         choice.resetSelection();
         choice.requestFocusInWindow();

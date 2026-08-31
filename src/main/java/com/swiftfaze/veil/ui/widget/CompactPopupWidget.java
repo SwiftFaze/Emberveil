@@ -66,6 +66,20 @@ public class CompactPopupWidget extends PopupWidget {
         return "<html><div style='width:" + BODY_TEXT_WIDTH + "px;text-align:center;'>" + text + "</div></html>";
     }
 
+    /**
+     * Sets a body label's text to the wrapped form above and caps its maximumSize to match —
+     * without the cap, the label has no bounded maximumSize of its own (a plain JComponent's
+     * defaults to unbounded), so the popup's vertical BoxLayout content pane stretches it to the
+     * pane's full width and the label's own centered alignment has no narrower block left to
+     * center; capping it lets the parent's alignmentX actually center the (fixed-width) wrapped
+     * text instead. Must be called again whenever the text changes, since a different wrap
+     * (different line count) changes the label's preferred height.
+     */
+    protected static void setBodyText(JLabel label, String text) {
+        label.setText(wrapBodyText(text));
+        label.setMaximumSize(label.getPreferredSize());
+    }
+
     @Override
     public boolean isFullScreen() {
         return false;
