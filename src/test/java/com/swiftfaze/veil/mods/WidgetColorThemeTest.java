@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WidgetColorThemeTest {
 
     @Test
-    void requiredKeysHasExactlyTheTenWidgetThemeColorNames() {
-        assertEquals(10, WidgetColorTheme.REQUIRED_KEYS.size());
+    void requiredKeysHasExactlyTheElevenWidgetThemeColorNames() {
+        assertEquals(11, WidgetColorTheme.REQUIRED_KEYS.size());
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("SELECTED_HIGHLIGHT"));
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("SELECTED_TEXT"));
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("NORMAL_TEXT"));
@@ -23,8 +23,9 @@ class WidgetColorThemeTest {
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("INVALID_HIGHLIGHT"));
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("VALID_HIGHLIGHT"));
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("TABLE_HEADER_BACKGROUND"));
-        assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("TABLE_BORDER"));
+        assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("BORDER"));
         assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("SCROLLBAR_THUMB"));
+        assertTrue(WidgetColorTheme.REQUIRED_KEYS.contains("ACCENT"));
     }
 
     @Test

@@ -31,7 +31,7 @@ class WidgetThemeTest {
     }
 
     @Test
-    void applyThemeOverwritesAllTenStaticsFromTheGivenTheme() {
+    void applyThemeOverwritesAllElevenStaticsFromTheGivenTheme() {
         Map<String, Color> colors = new LinkedHashMap<>();
         colors.put("SELECTED_HIGHLIGHT", new Color(10, 20, 30));
         colors.put("SELECTED_TEXT", new Color(11, 21, 31));
@@ -41,8 +41,9 @@ class WidgetThemeTest {
         colors.put("INVALID_HIGHLIGHT", new Color(15, 25, 35));
         colors.put("VALID_HIGHLIGHT", new Color(16, 26, 36));
         colors.put("TABLE_HEADER_BACKGROUND", new Color(17, 27, 37));
-        colors.put("TABLE_BORDER", new Color(18, 28, 38));
+        colors.put("BORDER", new Color(18, 28, 38));
         colors.put("SCROLLBAR_THUMB", new Color(19, 29, 39));
+        colors.put("ACCENT", new Color(20, 30, 40));
         WidgetColorTheme theme = new WidgetColorTheme("test:theme", colors);
 
         WidgetTheme.applyTheme(theme);
@@ -55,8 +56,9 @@ class WidgetThemeTest {
         assertEquals(new Color(15, 25, 35), WidgetTheme.INVALID_HIGHLIGHT);
         assertEquals(new Color(16, 26, 36), WidgetTheme.VALID_HIGHLIGHT);
         assertEquals(new Color(17, 27, 37), WidgetTheme.TABLE_HEADER_BACKGROUND);
-        assertEquals(new Color(18, 28, 38), WidgetTheme.TABLE_BORDER);
+        assertEquals(new Color(18, 28, 38), WidgetTheme.BORDER);
         assertEquals(new Color(19, 29, 39), WidgetTheme.SCROLLBAR_THUMB);
+        assertEquals(new Color(20, 30, 40), WidgetTheme.ACCENT);
     }
 
     private Map<String, Color> currentColors() {
@@ -69,8 +71,9 @@ class WidgetThemeTest {
         colors.put("INVALID_HIGHLIGHT", WidgetTheme.INVALID_HIGHLIGHT);
         colors.put("VALID_HIGHLIGHT", WidgetTheme.VALID_HIGHLIGHT);
         colors.put("TABLE_HEADER_BACKGROUND", WidgetTheme.TABLE_HEADER_BACKGROUND);
-        colors.put("TABLE_BORDER", WidgetTheme.TABLE_BORDER);
+        colors.put("BORDER", WidgetTheme.BORDER);
         colors.put("SCROLLBAR_THUMB", WidgetTheme.SCROLLBAR_THUMB);
+        colors.put("ACCENT", WidgetTheme.ACCENT);
         return colors;
     }
 }

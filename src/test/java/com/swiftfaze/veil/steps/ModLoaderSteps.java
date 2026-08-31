@@ -205,33 +205,33 @@ public class ModLoaderSteps {
         Files.writeString(modDir.resolve("tiles").resolve("broken.json"), "{ not valid json");
     }
 
-    @Given("a mods directory containing the {string} mod with a theme declaring id {string} and all ten widget colors")
-    public void aModsDirectoryContainingTheModWithAThemeDeclaringIdAndAllTenWidgetColors(String modId, String themeId) {
-        addTheme(modId, themeId, defaultTenColors(), null);
+    @Given("a mods directory containing the {string} mod with a theme declaring id {string} and all eleven widget colors")
+    public void aModsDirectoryContainingTheModWithAThemeDeclaringIdAndAllElevenWidgetColors(String modId, String themeId) {
+        addTheme(modId, themeId, defaultThemeColors(), null);
     }
 
-    @Given("the mods directory also contains mod {string} with a theme declaring id {string} and all ten widget colors")
-    public void theModsDirectoryAlsoContainsModWithAThemeDeclaringIdAndAllTenWidgetColors(String modId, String themeId) {
-        addTheme(modId, themeId, defaultTenColors(), null);
+    @Given("the mods directory also contains mod {string} with a theme declaring id {string} and all eleven widget colors")
+    public void theModsDirectoryAlsoContainsModWithAThemeDeclaringIdAndAllElevenWidgetColors(String modId, String themeId) {
+        addTheme(modId, themeId, defaultThemeColors(), null);
     }
 
     @Given("the mods directory also contains mod {string} with a theme declaring id {string} and no {string} field")
     public void theModsDirectoryAlsoContainsModWithAThemeDeclaringIdAndNoField(String modId, String themeId, String fieldName) {
-        addTheme(modId, themeId, defaultTenColors(), null);
+        addTheme(modId, themeId, defaultThemeColors(), null);
     }
 
-    @Given("the mods directory also contains mod {string} with a theme declaring id {string}, a {string} color of \\({int}, {int}, {int}), and the rest of the ten widget colors, whose {string} field names {string}")
+    @Given("the mods directory also contains mod {string} with a theme declaring id {string}, a {string} color of \\({int}, {int}, {int}), and the rest of the eleven widget colors, whose {string} field names {string}")
     public void theModsDirectoryAlsoContainsModWithAThemeOverridingOneColor(String modId, String themeId, String colorKey,
                                                                              int r, int g, int b,
                                                                              String fieldName, String overriddenId) {
-        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultTenColors());
+        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultThemeColors());
         colors.put(colorKey, new ThemeColorFixture(r, g, b));
         addTheme(modId, themeId, colors, overriddenId);
     }
 
     @Given("a mods directory containing mod {string} with a theme declaring id {string} that omits {string}")
     public void aModsDirectoryContainingModWithAThemeThatOmits(String modId, String themeId, String omittedKey) {
-        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultTenColors());
+        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultThemeColors());
         colors.remove(omittedKey);
         addTheme(modId, themeId, colors, null);
     }
@@ -367,8 +367,9 @@ public class ModLoaderSteps {
             case "INVALID_HIGHLIGHT" -> WidgetTheme.INVALID_HIGHLIGHT;
             case "VALID_HIGHLIGHT" -> WidgetTheme.VALID_HIGHLIGHT;
             case "TABLE_HEADER_BACKGROUND" -> WidgetTheme.TABLE_HEADER_BACKGROUND;
-            case "TABLE_BORDER" -> WidgetTheme.TABLE_BORDER;
+            case "BORDER" -> WidgetTheme.BORDER;
             case "SCROLLBAR_THUMB" -> WidgetTheme.SCROLLBAR_THUMB;
+            case "ACCENT" -> WidgetTheme.ACCENT;
             default -> throw new IllegalArgumentException("Unknown WidgetTheme color key: " + key);
         };
     }
@@ -757,7 +758,7 @@ public class ModLoaderSteps {
                 .add(new ThemeFixture(themeId, colors, overrides));
     }
 
-    private static Map<String, ThemeColorFixture> defaultTenColors() {
+    private static Map<String, ThemeColorFixture> defaultThemeColors() {
         Map<String, ThemeColorFixture> colors = new LinkedHashMap<>();
         colors.put("SELECTED_HIGHLIGHT", new ThemeColorFixture(1, 2, 3));
         colors.put("SELECTED_TEXT", new ThemeColorFixture(4, 5, 6));
@@ -767,8 +768,9 @@ public class ModLoaderSteps {
         colors.put("INVALID_HIGHLIGHT", new ThemeColorFixture(16, 17, 18));
         colors.put("VALID_HIGHLIGHT", new ThemeColorFixture(19, 20, 21));
         colors.put("TABLE_HEADER_BACKGROUND", new ThemeColorFixture(22, 23, 24));
-        colors.put("TABLE_BORDER", new ThemeColorFixture(25, 26, 27));
+        colors.put("BORDER", new ThemeColorFixture(25, 26, 27));
         colors.put("SCROLLBAR_THUMB", new ThemeColorFixture(28, 29, 30));
+        colors.put("ACCENT", new ThemeColorFixture(31, 32, 33));
         return colors;
     }
 
