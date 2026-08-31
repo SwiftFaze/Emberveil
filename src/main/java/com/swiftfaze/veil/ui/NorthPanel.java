@@ -1,5 +1,7 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -11,10 +13,10 @@ public class NorthPanel extends TerminalPanel {
 
     public NorthPanel() {
         setPreferredSize(new Dimension(GAME_WINDOW_WIDTH, 4 * TILE_HEIGHT));
-        setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
+        setBorder(BorderFactory.createLineBorder(WidgetTheme.BORDER, 2));
 
         title = makeLabel("Veil", Component.CENTER_ALIGNMENT);
-        title.setForeground(Color.decode("#eeb392"));
+        title.setForeground(WidgetTheme.ACCENT);
 
         add(Box.createVerticalGlue());
         add(title);

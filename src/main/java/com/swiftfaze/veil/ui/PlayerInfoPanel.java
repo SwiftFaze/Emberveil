@@ -1,6 +1,7 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.player.Player;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -13,7 +14,7 @@ public class PlayerInfoPanel extends TerminalPanel {
     private final JLabel positionLabel;
 
     public PlayerInfoPanel() {
-        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
+        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
 
         setBorder(BorderFactory.createCompoundBorder(bottomLine, padding));

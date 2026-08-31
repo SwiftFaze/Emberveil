@@ -44,7 +44,7 @@ public class TableWidget<T> extends Widget {
         this.columnRenderers = columnRenderers;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setAlignmentX(LEFT_ALIGNMENT);
-        setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, WidgetTheme.TABLE_BORDER));
+        setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, WidgetTheme.BORDER));
         buildHeaderRow();
         bindKeys();
     }
@@ -273,7 +273,7 @@ public class TableWidget<T> extends Widget {
     }
 
     private Border baseCellBorder() {
-        Border cellLine = BorderFactory.createMatteBorder(0, 0, 1, 1, WidgetTheme.TABLE_BORDER);
+        Border cellLine = BorderFactory.createMatteBorder(0, 0, 1, 1, WidgetTheme.BORDER);
         Border padding = BorderFactory.createEmptyBorder(4, 8, 4, 8);
         return BorderFactory.createCompoundBorder(cellLine, padding);
     }

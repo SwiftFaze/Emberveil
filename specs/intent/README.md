@@ -39,3 +39,4 @@ Index table.
 | `ui-widget-library.md` | [#35](https://github.com/SwiftFaze/Veil/issues/35) (split out of [#36](https://github.com/SwiftFaze/Veil/issues/36); builds on its framework) |
 | `startup-and-settings-screens.md` | [#54](https://github.com/SwiftFaze/Veil/issues/54) (depends on [#36](https://github.com/SwiftFaze/Veil/issues/36)'s framework and [#35](https://github.com/SwiftFaze/Veil/issues/35)'s radio group widget) |
 | `confirmation-popup-variant.md` | [#99](https://github.com/SwiftFaze/Veil/issues/99) (deferred from [#36](https://github.com/SwiftFaze/Veil/issues/36)'s playtest; depends on [#35](https://github.com/SwiftFaze/Veil/issues/35)'s radio group widget and [#54](https://github.com/SwiftFaze/Veil/issues/54)'s Reset to Defaults as its trigger) |
+| `widget-theming.md` | [#106](https://github.com/SwiftFaze/Veil/issues/106) |

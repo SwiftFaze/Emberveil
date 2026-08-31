@@ -139,10 +139,54 @@ open/dismiss the inventory popup — this replaced the old direct `GamePanel`
 there is no menu widget in between: **I** calls `toggleInventory()`
 directly.
 
+**Widget theming** (`mods/<modid>/themes/*.json`): a directory of files, one
+theme per file, matching the `tiles/`/`items/`/`quests/` directory-of-many-files
+convention (not the `stats.json` singleton) — each file defining all 11 colors
+`WidgetTheme` (see below) exposes as static fields: `SELECTED_HIGHLIGHT`,
+`SELECTED_TEXT`, `NORMAL_TEXT`, `DIMMED_TEXT`, `BACKGROUND`, `INVALID_HIGHLIGHT`,
+`VALID_HIGHLIGHT`, `TABLE_HEADER_BACKGROUND`, `BORDER`, `SCROLLBAR_THUMB`,
+`ACCENT` (`WidgetColorTheme.REQUIRED_KEYS`), each an `{r, g, b}` object using
+the same color shape tiles already use (`ModLoader.readColor`). `BORDER` was
+named `TABLE_BORDER` until the UI color-cleanup sweep below broadened its use
+well beyond tables (every panel border in `ui/`) — the old name was misleading
+once `CompactPopupWidget`/`RadioGroupWidget` and then general panel chrome all
+started reusing it, so it was renamed to the general-purpose `BORDER`. `ACCENT`
+(`#eeb392`) was added in that same sweep to capture a hardcoded leftover: it's
+the widget library's original `SELECTED_HIGHLIGHT` color from before an earlier
+commit switched selection highlighting to neutral gray, and `NorthPanel`'s
+title and `ClassSandboxPanel`'s selected-row color still used that literal
+directly. Loaded by `ModLoader.loadThemes`/`loadTheme` — shaped like
+`loadTiles`/`loadTile`'s directory scan, still routed through
+`registerWithCollisionCheck` for id/`overrides` parity with every other content
+type — into a `WidgetColorTheme` (id + `Map<String, Color>`,
+`WidgetColorTheme.color(key)`) held in `ModRegistry` (`getTheme`/`getAllThemes`),
+keyed by namespaced ID. The core mod's default theme lives at
+`mods/core/themes/default.json` (id `core:default`); a file's name doesn't need
+to match its id, same as tiles/items/quests. A theme missing a required color
+key, or with a malformed `{r,g,b}` value, throws `ModLoadException` the same as
+any other content type. `Main.loadGame()` loads the mod registry once at
+startup and calls `WidgetTheme.applyTheme(...)` with whichever theme owns ID
+`core:default`, before any screen/widget is constructed (they read
+`WidgetTheme`'s statics at construction time). No settings/config persistence
+system exists yet to pick a non-default theme — the Settings screen's "Theme"
+row (see "Screen flow" below) is a purely visual placeholder, not wired to this
+registry. Theming coverage isn't limited to the original widget-library files
+either: every hardcoded `Color` literal across `ui/`, `ui/widget/`, and the dev
+`sandbox/ClassSandboxPanel` was swept to reference a `WidgetTheme` field instead
+(gameplay/world rendering — `Player`, `WorldScene`, `GamePanel` — stays
+hardcoded, since those colors are game content, not UI chrome). This is the
+widget-theming initiative; see `specs/intent/widget-theming.md`.
+
 A small reusable widget framework lives in `ui/widget/`: `Widget` (base
-`JPanel` — black background, focusable), `FocusManager` (a modal-open
-flag a popup's content can consult), `WidgetTheme` (shared
-selected/normal/dimmed/invalid-error colors), `ListWidget<T>` (a keyboard-navigable,
+`JPanel` — themed background via `WidgetTheme.BACKGROUND`, focusable),
+`FocusManager` (a modal-open flag a popup's content can consult), `WidgetTheme`
+(11 mutable `static Color` fields — `SELECTED_HIGHLIGHT`/`SELECTED_TEXT`/
+`NORMAL_TEXT`/`DIMMED_TEXT`/`BACKGROUND`/`INVALID_HIGHLIGHT`/`VALID_HIGHLIGHT`/
+`TABLE_HEADER_BACKGROUND`/`BORDER`/`SCROLLBAR_THUMB`/`ACCENT` — hardcoded as
+field initializers so any widget built without `ModLoader` ever running still
+gets sane defaults, but overwritten from a loaded `WidgetColorTheme` via
+`applyTheme` at startup; see "Widget theming" above), `ListWidget<T>` (a
+keyboard-navigable,
 optionally non-wrapping list over a pluggable data source, with
 `onConfirm`/`onSelectionChange` callbacks and auto-scroll-into-view of the
 selected row), `ButtonWidget` (an Enter-confirmable label), `TableWidget<T>`
@@ -174,7 +218,9 @@ to center non-full-screen popups at their preferred size instead), and
 `TerminalScrollBarUI` (a flat black-track/solid-thumb `BasicScrollBarUI`
 replacing the platform look-and-feel's default scrollbar chrome).
 
-**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` uses
+**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` first calls
+`loadAndApplyDefaultTheme()` (loads the mod registry and applies `core:default`'s
+theme — see "Widget theming" above) before building any screen, then uses
 `CardLayout` to manage four screens: title, game, settings, and keybinds,
 navigated via a shared `cards` map + `navigateTo()` helper (needed because
 settings and keybinds reference each other - a genuine two-way cycle plain
@@ -192,11 +238,15 @@ navigation.
 monospaced fallback if the font resource is absent) and a centered menu
 (Continue, New, Load, Settings, Exit) — New navigates to the game view and
 starts the game loop. `SettingsScreenPanel` is a centered, bordered, navigable,
-back-able list of ten settings items, every row sharing one width (matching
+back-able list of eleven settings items, every row sharing one width (matching
 the widest row, same convention `RadioGroupWidget`'s vertical mode already
 uses): Brightness and Volume (both sliders, rendered as an actual bar via
 `SliderWidget.getDisplayText()`), Fullscreen (radio toggle: Windowed/
-Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Keybinds (opens
+Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Theme (radio
+cycle: Default/Midnight/Sunrise — a fixed placeholder list built the same way
+as Font's, purely visual and not wired to the real mod-driven theme registry
+described in "Widget theming" above; see `specs/intent/widget-theming.md`'s
+Clarifications), Keybinds (opens
 the dedicated keybinds page), placeholder action items (Open Game Folder,
 Open Mod Folder - both call `Desktop.open`, creating `mods/` next to the
 install if missing; About, Reset to Defaults), and an explicit Go Back item

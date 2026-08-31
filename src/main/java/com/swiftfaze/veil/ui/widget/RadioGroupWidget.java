@@ -262,7 +262,7 @@ public class RadioGroupWidget<T> extends Widget {
 
         @Override
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            g.setColor(confirmed ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.TABLE_BORDER);
+            g.setColor(confirmed ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.BORDER);
             g.fillRect(x, y + height - THICKNESS, width, THICKNESS); // bottom, always drawn
             if (confirmed) {
                 g.fillRect(x, y, width, THICKNESS); // top

@@ -1,5 +1,7 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -10,7 +12,7 @@ public class SouthPanel extends TerminalPanel {
 
     public SouthPanel() {
         setPreferredSize(new Dimension(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT * 4));
-        setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
+        setBorder(BorderFactory.createLineBorder(WidgetTheme.BORDER, 2));
 
         add(Box.createVerticalGlue());
     }

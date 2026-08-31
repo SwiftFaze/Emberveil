@@ -4,15 +4,13 @@ import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.TerminalPanel;
 import com.swiftfaze.veil.ui.widget.ListWidget;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
 public class ClassSandboxPanel extends TerminalPanel {
-
-    private static final Color SELECTED_COLOR = Color.decode("#eeb392");
 
     private final ClassSandboxModel model;
     private final List<String> names;
@@ -81,7 +79,7 @@ public class ClassSandboxPanel extends TerminalPanel {
     private void refresh() {
         int selectedIndex = listWidget.getSelectedIndex();
         for (int i = 0; i < labels.length; i++) {
-            labels[i].setForeground(i == selectedIndex ? SELECTED_COLOR : Color.WHITE);
+            labels[i].setForeground(i == selectedIndex ? WidgetTheme.ACCENT : WidgetTheme.NORMAL_TEXT);
         }
         Stats stats = model.computedStats(names.get(selectedIndex));
         statsLabel.setText(String.format(

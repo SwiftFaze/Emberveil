@@ -4,6 +4,7 @@ import com.swiftfaze.veil.entities.player.Player;
 import com.swiftfaze.veil.game.GameListener;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.ui.widget.FocusManager;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,9 +23,9 @@ public class EastPanel extends JPanel implements GameListener {
 
     public EastPanel() {
         setPreferredSize(new Dimension(500, GAME_WINDOW_HEIGHT * TILE_HEIGHT));
-        setBackground(Color.BLACK);
+        setBackground(WidgetTheme.BACKGROUND);
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2));
+        setBorder(BorderFactory.createLineBorder(WidgetTheme.BORDER, 2));
         setFocusable(false);
 
         focusManager = new FocusManager();

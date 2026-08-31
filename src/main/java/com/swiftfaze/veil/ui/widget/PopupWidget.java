@@ -19,7 +19,7 @@ public class PopupWidget extends Widget {
         setVisible(false);
 
         contentPanel = new JPanel();
-        contentPanel.setBackground(Color.BLACK);
+        contentPanel.setBackground(WidgetTheme.BACKGROUND);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         add(contentPanel, BorderLayout.CENTER);

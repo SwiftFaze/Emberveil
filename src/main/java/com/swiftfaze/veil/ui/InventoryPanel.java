@@ -6,6 +6,7 @@ import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.TerminalScrollBarUI;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -38,7 +39,7 @@ public class InventoryPanel extends PopupWidget {
     private Focus focus = Focus.ITEM_LIST;
 
     public InventoryPanel() {
-        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, Color.LIGHT_GRAY);
+        Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         setBorder(BorderFactory.createCompoundBorder(bottomLine, padding));
 
@@ -48,10 +49,10 @@ public class InventoryPanel extends PopupWidget {
         itemList.setWrapAround(false);
         itemList.setOnSelectionChange(this::updateDetails);
 
-        Border detailsDivider = BorderFactory.createMatteBorder(0, 2, 0, 0, Color.LIGHT_GRAY);
+        Border detailsDivider = BorderFactory.createMatteBorder(0, 2, 0, 0, WidgetTheme.BORDER);
         Border detailsPadding = BorderFactory.createEmptyBorder(4, 10, 0, 0);
         detailsPanel = new JPanel();
-        detailsPanel.setBackground(Color.BLACK);
+        detailsPanel.setBackground(WidgetTheme.BACKGROUND);
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
         detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
 
@@ -181,7 +182,7 @@ public class InventoryPanel extends PopupWidget {
 
     private JLabel makeTitleLabel() {
         JLabel titleLabel = new JLabel("Inventory");
-        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         return titleLabel;
@@ -189,7 +190,7 @@ public class InventoryPanel extends PopupWidget {
 
     private JLabel makeEffectsLabel() {
         JLabel label = new JLabel("Effects:");
-        label.setForeground(Color.WHITE);
+        label.setForeground(WidgetTheme.NORMAL_TEXT);
         label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         label.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
@@ -209,7 +210,7 @@ public class InventoryPanel extends PopupWidget {
 
     private JPanel buildBody(JComponent left, JComponent right) {
         JPanel body = new JPanel(new GridLayout(1, 2, 20, 0));
-        body.setBackground(Color.BLACK);
+        body.setBackground(WidgetTheme.BACKGROUND);
         body.setAlignmentX(Component.LEFT_ALIGNMENT);
         body.setPreferredSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
         body.setMaximumSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
@@ -258,7 +259,7 @@ public class InventoryPanel extends PopupWidget {
 
     private JLabel detailLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(WidgetTheme.NORMAL_TEXT);
         label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;

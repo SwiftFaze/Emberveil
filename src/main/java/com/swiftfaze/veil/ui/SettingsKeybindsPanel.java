@@ -35,15 +35,15 @@ public class SettingsKeybindsPanel extends JPanel {
         this.actions = List.of("Move up", "Move down", "Move left", "Move right", "Toggle inventory");
         this.keyBindings = new HashMap<>();
 
-        setBackground(Color.BLACK);
+        setBackground(WidgetTheme.BACKGROUND);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2),
+                BorderFactory.createLineBorder(WidgetTheme.BORDER, 2),
                 BorderFactory.createEmptyBorder(20, 40, 20, 40)));
         setFocusable(true);
 
         JLabel header = new JLabel("Keybinds");
-        header.setForeground(Color.WHITE);
+        header.setForeground(WidgetTheme.NORMAL_TEXT);
         header.setFont(new Font(Font.MONOSPACED, Font.BOLD, 24));
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -52,7 +52,7 @@ public class SettingsKeybindsPanel extends JPanel {
         actionsTable.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         footerPanel = new JPanel();
-        footerPanel.setBackground(Color.BLACK);
+        footerPanel.setBackground(WidgetTheme.BACKGROUND);
         footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.X_AXIS));
         footerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         footerPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));

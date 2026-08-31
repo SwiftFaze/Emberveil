@@ -50,6 +50,8 @@ public final class ModLoader {
         Map<String, String> owningItemModById = new LinkedHashMap<>();
         Map<String, Quest> questsById = new LinkedHashMap<>();
         Map<String, String> owningQuestModById = new LinkedHashMap<>();
+        Map<String, WidgetColorTheme> themesById = new LinkedHashMap<>();
+        Map<String, String> owningThemeModById = new LinkedHashMap<>();
         List<String> modLoadOrder = new ArrayList<>();
         for (ModManifest manifest : loadOrder) {
             modLoadOrder.add(manifest.id());
@@ -57,9 +59,10 @@ public final class ModLoader {
             loadClasses(modsRoot, manifest, validStatNames, classesById, owningClassModById);
             loadItems(modsRoot, manifest, validStatNames, itemsById, owningItemModById);
             loadQuests(modsRoot, manifest, itemsById, questsById, owningQuestModById);
+            loadThemes(modsRoot, manifest, themesById, owningThemeModById);
         }
 
-        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, questsById, modLoadOrder);
+        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, questsById, themesById, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -477,6 +480,52 @@ public final class ModLoader {
         }
         throw new ModLoadException("Quest '" + questId + "' has unsupported reward type '"
                 + type + "' in file: " + file);
+    }
+
+    private static void loadThemes(Path modsRoot, ModManifest manifest,
+                                    Map<String, WidgetColorTheme> themesById,
+                                    Map<String, String> owningModById) {
+        Path themesDir = modsRoot.resolve(manifest.id()).resolve("themes");
+        if (!Files.isDirectory(themesDir)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(themesDir, "*.json")) {
+            for (Path file : files) {
+                loadTheme(file, manifest.id(), themesById, owningModById);
+            }
+        } catch (IOException e) {
+            throw new ModLoadException("Failed to scan themes for mod: " + manifest.id(), e);
+        }
+    }
+
+    private static void loadTheme(Path file, String modId,
+                                   Map<String, WidgetColorTheme> themesById,
+                                   Map<String, String> owningModById) {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            String id = json.get("id").getAsString();
+            Map<String, Color> colorsByKey = readThemeColors(json.getAsJsonObject("colors"), id, file);
+
+            registerWithCollisionCheck(id, new WidgetColorTheme(id, colorsByKey), modId,
+                    themesById, owningModById, json.has("overrides"), "Theme");
+        } catch (ModLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ModLoadException("Failed to load theme from file: " + file, e);
+        }
+    }
+
+    private static Map<String, Color> readThemeColors(JsonObject colorsJson, String themeId, Path file) {
+        Map<String, Color> colorsByKey = new LinkedHashMap<>();
+        for (String key : WidgetColorTheme.REQUIRED_KEYS) {
+            if (colorsJson == null || !colorsJson.has(key)) {
+                throw new ModLoadException("Theme '" + themeId + "' is missing required color key '"
+                        + key + "' in file: " + file);
+            }
+            colorsByKey.put(key, readColor(colorsJson.getAsJsonObject(key)));
+        }
+        return colorsByKey;
     }
 
     private record ModManifest(String id, List<String> dependsOn) {
