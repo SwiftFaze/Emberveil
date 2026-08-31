@@ -9,6 +9,8 @@ import com.swiftfaze.veil.entities.quests.Quest;
 import com.swiftfaze.veil.exceptions.ModLoadException;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.mods.ModRegistry;
+import com.swiftfaze.veil.mods.WidgetColorTheme;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import com.swiftfaze.veil.world.Tile;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -65,6 +67,12 @@ public class ModLoaderSteps {
                                  List<QuestRewardFixture> rewards, String overrides) {
     }
 
+    private record ThemeColorFixture(int r, int g, int b) {
+    }
+
+    private record ThemeFixture(String id, Map<String, ThemeColorFixture> colors, String overrides) {
+    }
+
     private static final Map<String, Integer> WARRIOR_STATS = Map.of(
             "strength", 15, "dexterity", 10, "constitution", 14, "intelligence", 6,
             "wisdom", 6, "luck", 8, "maxHp", 120, "maxMana", 20);
@@ -76,16 +84,19 @@ public class ModLoaderSteps {
     private final Map<String, List<ClassFixture>> classesByMod = new LinkedHashMap<>();
     private final Map<String, List<ItemFixture>> itemsByMod = new LinkedHashMap<>();
     private final Map<String, List<QuestFixture>> questsByMod = new LinkedHashMap<>();
+    private final Map<String, List<ThemeFixture>> themesByMod = new LinkedHashMap<>();
     private String overriddenBuildingId;
     private String lastCheckedTileId;
     private String lastCheckedClassId;
     private String lastCheckedItemId;
     private String lastCheckedQuestId;
+    private String lastCheckedThemeId;
     private String lastCheckedEntityKind;
     private boolean needsMarkerTiles;
 
     private ModRegistry registry;
     private ModLoadException thrown;
+    private Map<String, Color> widgetThemeSnapshot;
 
     @Before
     public void createModsRoot() throws IOException {
@@ -103,6 +114,22 @@ public class ModLoaderSteps {
                 }
             });
         }
+    }
+
+    // WidgetTheme's fields are mutable statics shared across the whole test JVM, so any
+    // scenario that calls WidgetTheme.applyTheme() (proving the theme actually applies) must
+    // not leak its mutation into unrelated tests that run later in the same fork.
+    @Before
+    public void snapshotWidgetTheme() {
+        widgetThemeSnapshot = new LinkedHashMap<>();
+        for (String key : WidgetColorTheme.REQUIRED_KEYS) {
+            widgetThemeSnapshot.put(key, widgetThemeColor(key));
+        }
+    }
+
+    @After
+    public void restoreWidgetTheme() {
+        WidgetTheme.applyTheme(new WidgetColorTheme("test:snapshot", widgetThemeSnapshot));
     }
 
     @Given("a mods directory containing the {string} mod with a building declaring id {string}")
@@ -178,6 +205,45 @@ public class ModLoaderSteps {
         Files.writeString(modDir.resolve("tiles").resolve("broken.json"), "{ not valid json");
     }
 
+    @Given("a mods directory containing the {string} mod with a theme declaring id {string} and all ten widget colors")
+    public void aModsDirectoryContainingTheModWithAThemeDeclaringIdAndAllTenWidgetColors(String modId, String themeId) {
+        addTheme(modId, themeId, defaultTenColors(), null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a theme declaring id {string} and all ten widget colors")
+    public void theModsDirectoryAlsoContainsModWithAThemeDeclaringIdAndAllTenWidgetColors(String modId, String themeId) {
+        addTheme(modId, themeId, defaultTenColors(), null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a theme declaring id {string} and no {string} field")
+    public void theModsDirectoryAlsoContainsModWithAThemeDeclaringIdAndNoField(String modId, String themeId, String fieldName) {
+        addTheme(modId, themeId, defaultTenColors(), null);
+    }
+
+    @Given("the mods directory also contains mod {string} with a theme declaring id {string}, a {string} color of \\({int}, {int}, {int}), and the rest of the ten widget colors, whose {string} field names {string}")
+    public void theModsDirectoryAlsoContainsModWithAThemeOverridingOneColor(String modId, String themeId, String colorKey,
+                                                                             int r, int g, int b,
+                                                                             String fieldName, String overriddenId) {
+        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultTenColors());
+        colors.put(colorKey, new ThemeColorFixture(r, g, b));
+        addTheme(modId, themeId, colors, overriddenId);
+    }
+
+    @Given("a mods directory containing mod {string} with a theme declaring id {string} that omits {string}")
+    public void aModsDirectoryContainingModWithAThemeThatOmits(String modId, String themeId, String omittedKey) {
+        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>(defaultTenColors());
+        colors.remove(omittedKey);
+        addTheme(modId, themeId, colors, null);
+    }
+
+    @Given("a mods directory containing mod {string} with a malformed theme file")
+    public void aModsDirectoryContainingModWithAMalformedThemeFile(String modId) throws IOException {
+        Path modDir = modsRoot.resolve(modId);
+        Files.createDirectories(modDir.resolve("themes"));
+        Files.writeString(modDir.resolve("mod.json"), "{\"id\":\"" + modId + "\",\"dependsOn\":[]}");
+        Files.writeString(modDir.resolve("themes").resolve("broken.json"), "{ not valid json");
+    }
+
     @When("the mods directory is loaded")
     public void theModsDirectoryIsLoaded() throws IOException {
         writeFixtures();
@@ -251,6 +317,60 @@ public class ModLoaderSteps {
     public void aModLoadExceptionIsThrownWrappingTheUnderlyingCause() {
         assertNotNull(thrown, "expected a ModLoadException to be thrown");
         assertNotNull(thrown.getCause(), "expected the ModLoadException to wrap an underlying cause");
+    }
+
+    @Then("a theme with ID {string} is available")
+    public void aThemeWithIDIsAvailable(String id) {
+        assertNotNull(registry, "loading did not complete: " + (thrown == null ? "unknown" : thrown.getMessage()));
+        assertNotNull(registry.getTheme(id), "expected theme '" + id + "' to be loaded");
+        lastCheckedThemeId = id;
+    }
+
+    @Then("its {string} color is \\({int}, {int}, {int})")
+    public void itsNamedColorIs(String colorKey, int r, int g, int b) {
+        assertEquals(new Color(r, g, b), registry.getTheme(lastCheckedThemeId).color(colorKey));
+    }
+
+    @Then("WidgetTheme's colors match the {string} theme's colors exactly")
+    public void widgetThemesColorsMatchTheThemesColorsExactly(String themeId) {
+        assertWidgetThemeMatches(themeId);
+    }
+
+    @Then("WidgetTheme's colors still match the {string} theme's colors")
+    public void widgetThemesColorsStillMatchTheThemesColors(String themeId) {
+        assertWidgetThemeMatches(themeId);
+    }
+
+    @Then("loading fails with a ModLoadException naming the missing color key {string} and the file for theme {string}")
+    public void loadingFailsWithAModLoadExceptionNamingTheMissingColorKeyAndTheFileForTheme(String colorKey, String themeId) {
+        assertNotNull(thrown, "expected a ModLoadException to be thrown");
+        assertTrue(thrown.getMessage().contains(colorKey), "expected message to name missing color key: " + thrown.getMessage());
+        assertTrue(thrown.getMessage().contains(themeId), "expected message to name theme: " + thrown.getMessage());
+    }
+
+    private void assertWidgetThemeMatches(String themeId) {
+        WidgetColorTheme theme = registry.getTheme(themeId);
+        assertNotNull(theme, "expected theme '" + themeId + "' to be loaded");
+        WidgetTheme.applyTheme(theme);
+        for (String key : WidgetColorTheme.REQUIRED_KEYS) {
+            assertEquals(theme.color(key), widgetThemeColor(key), "mismatch for key " + key);
+        }
+    }
+
+    private Color widgetThemeColor(String key) {
+        return switch (key) {
+            case "SELECTED_HIGHLIGHT" -> WidgetTheme.SELECTED_HIGHLIGHT;
+            case "SELECTED_TEXT" -> WidgetTheme.SELECTED_TEXT;
+            case "NORMAL_TEXT" -> WidgetTheme.NORMAL_TEXT;
+            case "DIMMED_TEXT" -> WidgetTheme.DIMMED_TEXT;
+            case "BACKGROUND" -> WidgetTheme.BACKGROUND;
+            case "INVALID_HIGHLIGHT" -> WidgetTheme.INVALID_HIGHLIGHT;
+            case "VALID_HIGHLIGHT" -> WidgetTheme.VALID_HIGHLIGHT;
+            case "TABLE_HEADER_BACKGROUND" -> WidgetTheme.TABLE_HEADER_BACKGROUND;
+            case "TABLE_BORDER" -> WidgetTheme.TABLE_BORDER;
+            case "SCROLLBAR_THUMB" -> WidgetTheme.SCROLLBAR_THUMB;
+            default -> throw new IllegalArgumentException("Unknown WidgetTheme color key: " + key);
+        };
     }
 
     @Given("a mods directory containing the {string} mod with a class declaring id {string}, name {string}, base strength {int}, dexterity {int}, constitution {int}, intelligence {int}, wisdom {int}, luck {int}, max HP {int}, and max mana {int}")
@@ -631,6 +751,27 @@ public class ModLoaderSteps {
                 .add(new TileFixture(tileId, symbol, r, g, b, walkable, overrides));
     }
 
+    private void addTheme(String modId, String themeId, Map<String, ThemeColorFixture> colors, String overrides) {
+        dependsOnByMod.computeIfAbsent(modId, k -> new ArrayList<>());
+        themesByMod.computeIfAbsent(modId, k -> new ArrayList<>())
+                .add(new ThemeFixture(themeId, colors, overrides));
+    }
+
+    private static Map<String, ThemeColorFixture> defaultTenColors() {
+        Map<String, ThemeColorFixture> colors = new LinkedHashMap<>();
+        colors.put("SELECTED_HIGHLIGHT", new ThemeColorFixture(1, 2, 3));
+        colors.put("SELECTED_TEXT", new ThemeColorFixture(4, 5, 6));
+        colors.put("NORMAL_TEXT", new ThemeColorFixture(7, 8, 9));
+        colors.put("DIMMED_TEXT", new ThemeColorFixture(10, 11, 12));
+        colors.put("BACKGROUND", new ThemeColorFixture(13, 14, 15));
+        colors.put("INVALID_HIGHLIGHT", new ThemeColorFixture(16, 17, 18));
+        colors.put("VALID_HIGHLIGHT", new ThemeColorFixture(19, 20, 21));
+        colors.put("TABLE_HEADER_BACKGROUND", new ThemeColorFixture(22, 23, 24));
+        colors.put("TABLE_BORDER", new ThemeColorFixture(25, 26, 27));
+        colors.put("SCROLLBAR_THUMB", new ThemeColorFixture(28, 29, 30));
+        return colors;
+    }
+
     private void writeFixtures() throws IOException {
         Set<String> allMods = new LinkedHashSet<>();
         allMods.addAll(buildingsByMod.keySet());
@@ -638,6 +779,7 @@ public class ModLoaderSteps {
         allMods.addAll(classesByMod.keySet());
         allMods.addAll(itemsByMod.keySet());
         allMods.addAll(questsByMod.keySet());
+        allMods.addAll(themesByMod.keySet());
         allMods.addAll(dependsOnByMod.keySet());
 
         if (needsMarkerTiles) {
@@ -657,6 +799,7 @@ public class ModLoaderSteps {
             writeClasses(modDir, classesByMod.getOrDefault(modId, List.of()));
             writeItems(modDir, itemsByMod.getOrDefault(modId, List.of()));
             writeQuests(modDir, questsByMod.getOrDefault(modId, List.of()));
+            writeThemes(modDir, themesByMod.getOrDefault(modId, List.of()));
         }
     }
 
@@ -880,6 +1023,41 @@ public class ModLoaderSteps {
         }
 
         return quest.toString();
+    }
+
+    private void writeThemes(Path modDir, List<ThemeFixture> fixtures) throws IOException {
+        if (fixtures.isEmpty()) {
+            return;
+        }
+        Path themesDir = modDir.resolve("themes");
+        Files.createDirectories(themesDir);
+
+        int i = 0;
+        for (ThemeFixture fixture : fixtures) {
+            Files.writeString(themesDir.resolve("theme_" + (i++) + ".json"), themeJson(fixture));
+        }
+    }
+
+    private String themeJson(ThemeFixture fixture) {
+        JsonObject theme = new JsonObject();
+        theme.addProperty("id", fixture.id());
+        theme.add("colors", themeColorsJson(fixture.colors()));
+        if (fixture.overrides() != null) {
+            theme.addProperty("overrides", fixture.overrides());
+        }
+        return theme.toString();
+    }
+
+    private JsonObject themeColorsJson(Map<String, ThemeColorFixture> colors) {
+        JsonObject colorsJson = new JsonObject();
+        for (Map.Entry<String, ThemeColorFixture> entry : colors.entrySet()) {
+            JsonObject color = new JsonObject();
+            color.addProperty("r", entry.getValue().r());
+            color.addProperty("g", entry.getValue().g());
+            color.addProperty("b", entry.getValue().b());
+            colorsJson.add(entry.getKey(), color);
+        }
+        return colorsJson;
     }
 
     private void writeStatsRegistryIfNeeded() throws IOException {

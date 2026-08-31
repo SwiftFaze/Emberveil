@@ -7,6 +7,7 @@ import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.world.Tile;
 import org.junit.jupiter.api.Test;
 
+import java.awt.Color;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,6 +84,18 @@ class ModLoaderIT {
         assertEquals(9, ironSword.getBaseDamage().max());
         assertEquals(1, ironSword.getEffects().size());
         assertEquals("strength", ironSword.getEffects().get(0).stat());
+    }
+
+    @Test
+    void loadsCoreDefaultThemeFromDisk() {
+        ModRegistry registry = ModLoader.load(Paths.get("mods"));
+        WidgetColorTheme theme = registry.getTheme("core:default");
+
+        assertNotNull(theme, "core:default should be loaded from mods/core/themes/default.json");
+        for (String key : WidgetColorTheme.REQUIRED_KEYS) {
+            assertNotNull(theme.color(key), "expected theme to define color '" + key + "'");
+        }
+        assertEquals(new Color(0, 0, 0), theme.color("BACKGROUND"));
     }
 
     private Stats statsAtLevel(PlayerClass playerClass, int level) {

@@ -878,10 +878,11 @@ public class UiComponentFrameworkSteps {
         assertTrue(settingsScreenPanel != null);
     }
 
-    @Then("the settings items are {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}")
+    @Then("the settings items are {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}")
     public void theSettingsItemsAre(String item1, String item2, String item3, String item4, String item5,
-                                    String item6, String item7, String item8, String item9, String item10) {
-        List<String> expected = List.of(item1, item2, item3, item4, item5, item6, item7, item8, item9, item10);
+                                    String item6, String item7, String item8, String item9, String item10,
+                                    String item11) {
+        List<String> expected = List.of(item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11);
         List<String> actual = settingsScreenPanel.getAllItemNames();
         assertEquals(expected, actual);
     }
