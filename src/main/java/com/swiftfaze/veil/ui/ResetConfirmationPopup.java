@@ -22,7 +22,7 @@ public class ResetConfirmationPopup extends CompactPopupWidget {
         super("Confirm Reset");
         this.questionText = "Reset all settings to their defaults?";
 
-        JLabel questionLabel = new JLabel(questionText);
+        JLabel questionLabel = new JLabel(wrapBodyText(questionText));
         questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         questionLabel.setHorizontalAlignment(SwingConstants.CENTER);

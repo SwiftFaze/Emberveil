@@ -15,6 +15,10 @@ public class CompactPopupWidget extends PopupWidget {
     private static final int POPUP_WIDTH = 400;
     private static final int POPUP_HEIGHT = 200;
 
+    // Narrower than POPUP_WIDTH to clear the outer frame plus a body label's own padding
+    // (see e.g. ResetConfirmationPopup/DropConfirmationPopup's question labels).
+    private static final int BODY_TEXT_WIDTH = 340;
+
     private final JLabel titleLabel;
 
     public CompactPopupWidget(String title) {
@@ -48,6 +52,18 @@ public class CompactPopupWidget extends PopupWidget {
      */
     protected void setTitleText(String title) {
         titleLabel.setText(title);
+    }
+
+    /**
+     * Wraps plain text for a body JLabel so it word-wraps and centers within the dialog instead
+     * of running past the border and getting truncated with "..." — a plain JLabel never wraps
+     * on its own, only HTML content does, and only when explicitly given a pixel width to wrap
+     * at (an unconstrained div would just keep growing sideways). The label's own font/color set
+     * via setFont()/setForeground() still apply as the HTML's default, so callers don't need to
+     * repeat that styling in CSS.
+     */
+    protected static String wrapBodyText(String text) {
+        return "<html><div style='width:" + BODY_TEXT_WIDTH + "px;text-align:center;'>" + text + "</div></html>";
     }
 
     @Override

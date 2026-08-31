@@ -16,7 +16,7 @@ public class DropConfirmationPopup extends CompactPopupWidget {
     public DropConfirmationPopup() {
         super("Drop Item");
 
-        questionLabel = new JLabel(questionTextFor(DEFAULT_ITEM_NAME));
+        questionLabel = new JLabel(wrapBodyText(questionTextFor(DEFAULT_ITEM_NAME)));
         questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -48,7 +48,7 @@ public class DropConfirmationPopup extends CompactPopupWidget {
      */
     public void open(String itemName) {
         setTitleText("Drop " + itemName);
-        questionLabel.setText(questionTextFor(itemName));
+        questionLabel.setText(wrapBodyText(questionTextFor(itemName)));
         super.open();
         choice.resetSelection();
         choice.requestFocusInWindow();
