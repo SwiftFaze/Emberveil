@@ -253,9 +253,10 @@ rendered as a `TableWidget<Item.Effect>` with two columns (stat and value),
 row-highlighted when selected. Navigation can be switched between the item
 list and the effects table via Left/Right keys; Up/Down then navigate within
 the current pane. Pressing D (Drop) from any pane opens a nested
-`DropConfirmationPopup` (a full-screen `PopupWidget` containing a horizontal
-`RadioGroupWidget<String>` asking "Drop item?", defaulting to "No" highlighted),
-which closes on any selection or Escape without actually removing items. It's
+`DropConfirmationPopup` (a `CompactPopupWidget` — see above — containing a
+horizontal `RadioGroupWidget<String>` asking "Drop item?", defaulting to "No"
+highlighted), which closes on any selection or Escape without actually
+removing items. It's
 populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
 constructor) rather than loading mod content itself, mirroring
 `PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
@@ -263,9 +264,10 @@ inside `EastPanel`'s own layout, the popup is promoted to window level:
 `ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a `JLayeredPane`
 with a `mainArea` panel (`GamePanel` + `EastPanel`) at `DEFAULT_LAYER`, the
 inventory popup at `POPUP_LAYER` above it, and the drop-confirmation popup at
-`DRAG_LAYER` (even higher), all stretched to match via `FillLayout` — so
-opening the inventory covers the whole game view and sidebar, and the
-drop-confirmation popup covers that in turn. `Main.java` wires that layered
+`DRAG_LAYER` (even higher) — all positioned by the same `FillLayout`, which
+stretches the full-screen inventory popup to cover the whole game view and
+sidebar, but centers the compact drop-confirmation popup at its preferred
+size on top of that. `Main.java` wires that layered
 pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
 `EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by
