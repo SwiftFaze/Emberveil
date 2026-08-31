@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.5.0-beta.4](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.3...v0.5.0-beta.4) (2026-08-31)
+
+
+### Features
+
+* add CompactPopupWidget for smaller centered dialog presentations ([67cc535](https://github.com/SwiftFaze/Veil/commit/67cc535befe192b02b36129d0e5a5ec05cb5b1d9))
+* add isFullScreen() to PopupWidget and update FillLayout to center non-full-screen popups ([c398edd](https://github.com/SwiftFaze/Veil/commit/c398edd604be1e00075d3b763a15b72c89be495d))
+* add ResetConfirmationPopup Yes/No confirmation dialog ([fba6eeb](https://github.com/SwiftFaze/Veil/commit/fba6eeb40fdf843401f434e19f39c7fbc38040de))
+* add SettingsWindow to host settings screen and popups in JLayeredPane ([e35faf2](https://github.com/SwiftFaze/Veil/commit/e35faf20a902e7c2d4febe0114793a103387e948))
+* bold the item name in the drop-confirmation message ([a48d2e0](https://github.com/SwiftFaze/Veil/commit/a48d2e0971936092e922df34c2f0652210512084))
+* draft Gherkin spec for the smaller confirmation popup variant ([9061201](https://github.com/SwiftFaze/Veil/commit/9061201b78cea02d6454112aacbd49e601f2927f))
+* integrate SettingsWindow into Main card layout ([f8c3f53](https://github.com/SwiftFaze/Veil/commit/f8c3f532d20593b9313d7c1761a14dd25f4678bf))
+* parameterize drop-confirmation popup with the item's name ([d580329](https://github.com/SwiftFaze/Veil/commit/d5803293bf2a9d642f1a5bdc42c7025833c5ec63))
+* smaller confirmation-style popup variant (Yes/No dialogs) ([0be98d4](https://github.com/SwiftFaze/Veil/commit/0be98d417e088a6cca9e6baaea6afc8df4952f0e))
+* wire ResetConfirmationPopup to 'Reset to Defaults' action in SettingsScreenPanel ([4df5f07](https://github.com/SwiftFaze/Veil/commit/4df5f07080ea75865eefa08b2169f0c5f351a570))
+
+
+### Bug Fixes
+
+* actually wrap and center compact-popup body text ([0ad54ca](https://github.com/SwiftFaze/Veil/commit/0ad54ca4e83fb4176c62bbc8df018450a48b6f61))
+* center wrapped compact-popup body text ([4a07a81](https://github.com/SwiftFaze/Veil/commit/4a07a81aff4459d0753e912c7ec78f66987b4b7c))
+* disambiguate Yes/No highlight steps from settings-row dispatcher ([d806bbc](https://github.com/SwiftFaze/Veil/commit/d806bbc1670dfe3ae00e995be2d4f5cf98f3a3ca))
+* give compact popups a real border and center their content ([01bec77](https://github.com/SwiftFaze/Veil/commit/01bec77ec6547a16f47ad5e0007829362a16f7a9))
+* polish compact popup title, choice reset, and button layout ([10b841d](https://github.com/SwiftFaze/Veil/commit/10b841d723d44eb5ea6bd9948a5e9a9f2780a157))
+* wrap long compact-popup body text instead of truncating it ([ecfeb08](https://github.com/SwiftFaze/Veil/commit/ecfeb08495d8ebf0425d296474da3e2f0bcd95e7))
+
 ## [0.5.0-beta.3](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.2...v0.5.0-beta.3) (2026-08-30)
 
 
