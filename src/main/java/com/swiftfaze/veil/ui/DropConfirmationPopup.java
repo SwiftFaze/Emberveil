@@ -8,6 +8,8 @@ import java.util.List;
 
 public class DropConfirmationPopup extends CompactPopupWidget {
     private static final String DEFAULT_ITEM_NAME = "this item";
+    private static final String QUESTION_PREFIX = "Are you sure you want to drop ";
+    private static final String QUESTION_SUFFIX = "?";
 
     private final RadioGroupWidget<String> choice;
     private final JTextPane questionLabel;
@@ -16,7 +18,7 @@ public class DropConfirmationPopup extends CompactPopupWidget {
         super("Drop Item");
 
         questionLabel = createBodyLabel();
-        setBodyText(questionLabel, questionTextFor(DEFAULT_ITEM_NAME));
+        setQuestionText(DEFAULT_ITEM_NAME);
         addContent(questionLabel);
 
         addContent((JComponent) Box.createVerticalGlue());
@@ -43,7 +45,7 @@ public class DropConfirmationPopup extends CompactPopupWidget {
      */
     public void open(String itemName) {
         setTitleText("Drop " + itemName);
-        setBodyText(questionLabel, questionTextFor(itemName));
+        setQuestionText(itemName);
         super.open();
         choice.resetSelection();
         choice.requestFocusInWindow();
@@ -53,7 +55,8 @@ public class DropConfirmationPopup extends CompactPopupWidget {
         return choice;
     }
 
-    private static String questionTextFor(String itemName) {
-        return "Are you sure you want to drop " + itemName + "?";
+    private void setQuestionText(String itemName) {
+        String text = QUESTION_PREFIX + itemName + QUESTION_SUFFIX;
+        setBodyText(questionLabel, text, QUESTION_PREFIX.length(), QUESTION_PREFIX.length() + itemName.length());
     }
 }

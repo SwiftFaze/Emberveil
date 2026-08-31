@@ -89,12 +89,27 @@ public class CompactPopupWidget extends PopupWidget {
      * different wrap (different line count) changes the required height.
      */
     protected static void setBodyText(JTextPane pane, String text) {
+        setBodyText(pane, text, -1, -1);
+    }
+
+    /**
+     * Same as {@link #setBodyText(JTextPane, String)}, but renders the [boldStart, boldEnd)
+     * character range in bold — e.g. the specific item name inside an otherwise plain
+     * confirmation sentence — instead of the whole line sharing one weight.
+     */
+    protected static void setBodyText(JTextPane pane, String text, int boldStart, int boldEnd) {
         pane.setText(text);
 
         StyledDocument doc = pane.getStyledDocument();
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
+
+        if (boldStart >= 0 && boldEnd > boldStart) {
+            SimpleAttributeSet bold = new SimpleAttributeSet();
+            StyleConstants.setBold(bold, true);
+            doc.setCharacterAttributes(boldStart, boldEnd - boldStart, bold, false);
+        }
 
         // Once set, getPreferredSize() returns exactly what setPreferredSize() was given,
         // regardless of new text — it stops asking the UI to recompute anything at all. Without
