@@ -1,20 +1,21 @@
 Feature: Settings screen
   A navigable, back-able settings screen reached from the title screen's
-  Settings item, listing ten items with type-specific Left/Right
+  Settings item, listing eleven items with type-specific Left/Right
   interaction: sliders (brightness, volume — see ui-widget-slider.feature),
-  a Fullscreen/Windowed radio toggle and a font cycle (both reusing #35's
-  radio group widget), a dedicated Keybinds sub-page
+  a Fullscreen/Windowed radio toggle, a font cycle, and a theme cycle (all
+  three reusing #35's radio group widget), a dedicated Keybinds sub-page
   (settings-keybinds-page.feature), folder-opening actions, a placeholder
   about/reset entry, and an explicit Go Back item (added after Step 4.5
   playtest found Escape-only back navigation wasn't discoverable). Visual/
-  input shape only — no setting has a real backing system yet. See
+  input shape only — no setting has a real backing system yet, including
+  Theme (see specs/intent/widget-theming.md). See
   specs/intent/startup-and-settings-screens.md.
 
   Background:
     Given the settings screen is shown
 
-  Scenario: The settings screen lists all ten settings items
-    Then the settings items are "Brightness", "Fullscreen", "Font", "Volume", "Keybinds", "Open Game Folder", "Open Mod Folder", "About", "Reset to Defaults", "Go Back"
+  Scenario: The settings screen lists all eleven settings items
+    Then the settings items are "Brightness", "Fullscreen", "Font", "Theme", "Volume", "Keybinds", "Open Game Folder", "Open Mod Folder", "About", "Reset to Defaults", "Go Back"
 
   Scenario: Down moves the highlighted item to the next one
     Given "Brightness" is highlighted
@@ -40,6 +41,11 @@ Feature: Settings screen
     Given "Font" is highlighted with value "Monospaced"
     When the "Right" key is pressed
     Then "Font"'s value is "Serif"
+
+  Scenario: Cycling theme right moves to the next theme choice
+    Given "Theme" is highlighted with value "Default"
+    When the "Right" key is pressed
+    Then "Theme"'s value is "Midnight"
 
   Scenario: Confirming Keybinds opens the keybinds page
     Given "Keybinds" is highlighted
@@ -68,9 +74,12 @@ Feature: Settings screen
     Then the title screen is shown
 
   # Non-goals:
-  #   - Any real mechanism behind brightness, fullscreen, font, volume,
-  #     or keybind rebinding — no rendering/audio/config-persistence
-  #     system exists yet; this screen is visual/input shape only.
+  #   - Any real mechanism behind brightness, fullscreen, font, theme,
+  #     volume, or keybind rebinding — no rendering/audio/config-
+  #     persistence system exists yet; this screen is visual/input shape
+  #     only. Cycling Theme does not change WidgetTheme's actual colors —
+  #     see specs/features/widget-theming.feature and
+  #     specs/intent/widget-theming.md.
   #   - Reset to Defaults actually resetting anything — no setting
   #     persists real state yet.
   #   - About/version info's actual content — a static placeholder
@@ -88,6 +97,14 @@ Feature: Settings screen
   #   - The font cycle's "Monospaced" -> "Serif" -> "SansSerif" list was
   #     confirmed at Step 3 approval (2026-08-30) (see
   #     specs/intent/startup-and-settings-screens.md's Clarifications).
+  #   - The Theme row is a fixed placeholder list ("Default", "Midnight",
+  #     "Sunrise"), built the same way as the Font row — not sourced from
+  #     the real mod-driven theme registry in
+  #     specs/features/widget-theming.feature. That registry only has one
+  #     entry ("core:default") until a second theme mod actually ships, so
+  #     wiring the two together now would make this row's option list
+  #     depend on which mods happen to be installed; deferred to the real
+  #     activation work (out of scope per specs/intent/widget-theming.md).
   #   - `Desktop.open` behavior (and mods-directory creation) is not
   #     simulated headlessly here — "the install directory was opened" /
   #     "a mods directory was created" model the action being invoked,

@@ -46,7 +46,8 @@ that change's definition of done, not separate cleanup.
 | `ui-widget-radio-group.feature` | Single-select radio group widget (vertical by default, optional horizontal); real consumer: the inventory popup's "Drop item?" confirmation |
 | `ui-widget-pattern-field.feature` | Regex-pattern-validated text field widget (valid/invalid state via a new WidgetTheme color) — no real consumer yet, proven in isolation |
 | `startup-welcome-screen.feature` | Title screen shown on launch (VEIL title + Continue/New/Load/Settings/Exit menu), replacing direct-to-world startup |
-| `settings-screen.feature` | Settings screen shell (brightness/fullscreen/font/volume/keybinds/folders/about/reset), visual/input shape only |
+| `settings-screen.feature` | Settings screen shell (brightness/fullscreen/font/theme/volume/keybinds/folders/about/reset), visual/input shape only |
 | `settings-keybinds-page.feature` | Dedicated keybind-rebinding sub-page (action list, press-any-key popup, Apply/Cancel/Go back), display only |
 | `ui-widget-slider.feature` | Bounded-value slider widget (Left/Right adjusts within [min, max], no wrap) — no real backing system, proven in isolation |
 | `confirmation-popup-variant.feature` | Centered, content-sized PopupWidget presentation, proven by a Yes/No confirm dialog on the settings screen's Reset to Defaults |
+| `widget-theming.feature` | Mod-driven `theme.json` loaded via `ModLoader` (id/collision/overrides), populating all 10 `WidgetTheme` colors from `mods/core/theme.json`; a second mod's theme loads without activating |
