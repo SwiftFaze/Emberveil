@@ -81,6 +81,17 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       reviewed, by design" rule in the review table below. The
       orchestrator's handoff prompt should tell the agent to do this
       explicitly, the same as it states the complexity budget.
+    - **If the change touches Swing rendering, layout, sizing, or text
+      content, visually verify it before considering the step done** —
+      compiling and `mvn test` passing only proves the code runs, not that
+      it renders correctly; this project's tests don't assert on pixel
+      layout or actual rendered text. See `docs/ui-verification.md` for
+      the concrete how-to (render the real component to an image via a
+      throwaway diagnostic class, inspect it with the `Read` tool). This
+      is separate from and does not replace the repo-specific Step 4.5
+      manual playtest in `CLAUDE.md` — that's a human verifying real
+      interactive feel, this is the agent verifying its own rendering
+      before handing the step off.
     - See "Context & session management" below for checkpoint guidance —
       this step is the most common place sessions run long.
     - See "Model selection" below — this step uses Claude Haiku 4.5.

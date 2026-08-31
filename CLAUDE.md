@@ -48,6 +48,18 @@ This repo follows the intent → spec → approval → implementation pipeline (
 
 **Step 7 (Documentation) for this repo also covers the player-facing [GitHub wiki](https://github.com/SwiftFaze/Veil/wiki)**, not just `docs/`: any change to a class's base stats, a new class/attribute, a changed combat formula, or other player-visible game data must update the matching wiki page in the same change. See `docs/wiki.md` for what's covered and how to edit it (it's a separate git repo, no PR needed).
 
+### Repo-specific Step 4 addendum — Visual verification (Agent)
+
+Whenever Step 4 (Implementation) touches Swing rendering, layout, sizing,
+or text content, the implementing agent must render the actual component
+and look at it before considering the step done — passing `mvn test`
+only proves the code runs, since none of this project's tests assert on
+pixel layout or rendered text. See `docs/ui-verification.md` for the
+concrete technique (render the real component to an image via a
+throwaway diagnostic class in the scratchpad, inspect it with the `Read`
+tool). This is the agent's own check, done during/after implementation;
+it does not replace the human playtest below.
+
 ### Repo-specific Step 4.5 — Manual playtest (Human)
 
 Inserted between the global pipeline's Step 4 (Implementation) and Step 5
