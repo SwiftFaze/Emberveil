@@ -1,20 +1,43 @@
 package com.swiftfaze.veil.ui.widget;
 
+import com.swiftfaze.veil.mods.WidgetColorTheme;
+
 import javax.swing.JLabel;
 import java.awt.Color;
 
 public final class WidgetTheme {
 
-    public static final Color SELECTED_HIGHLIGHT = Color.LIGHT_GRAY;
-    public static final Color SELECTED_TEXT = Color.BLACK;
-    public static final Color NORMAL_TEXT = Color.WHITE;
-    public static final Color DIMMED_TEXT = Color.GRAY;
-    public static final Color BACKGROUND = Color.BLACK;
-    public static final Color INVALID_HIGHLIGHT = Color.decode("#e05a4e");
-    public static final Color VALID_HIGHLIGHT = Color.decode("#6fcf7d");
-    public static final Color TABLE_HEADER_BACKGROUND = Color.decode("#1a1a1a");
-    public static final Color TABLE_BORDER = Color.LIGHT_GRAY;
-    public static final Color SCROLLBAR_THUMB = Color.GRAY;
+    // Mutable (not `final`) so applyTheme() can repopulate them from a mod-loaded
+    // WidgetColorTheme at startup; the hardcoded values below remain as defaults so any
+    // widget built without ModLoader ever running (e.g. a unit test) still gets sane colors.
+    public static Color SELECTED_HIGHLIGHT = Color.LIGHT_GRAY;
+    public static Color SELECTED_TEXT = Color.BLACK;
+    public static Color NORMAL_TEXT = Color.WHITE;
+    public static Color DIMMED_TEXT = Color.GRAY;
+    public static Color BACKGROUND = Color.BLACK;
+    public static Color INVALID_HIGHLIGHT = Color.decode("#e05a4e");
+    public static Color VALID_HIGHLIGHT = Color.decode("#6fcf7d");
+    public static Color TABLE_HEADER_BACKGROUND = Color.decode("#1a1a1a");
+    public static Color TABLE_BORDER = Color.LIGHT_GRAY;
+    public static Color SCROLLBAR_THUMB = Color.GRAY;
+
+    /**
+     * Overwrites all 10 widget colors from a mod-loaded theme. Called once at startup
+     * (see {@code Main.loadGame}) with whichever theme owns ID "core:default" — see
+     * {@code WidgetColorTheme.REQUIRED_KEYS} for the key set this reads.
+     */
+    public static void applyTheme(WidgetColorTheme theme) {
+        SELECTED_HIGHLIGHT = theme.color("SELECTED_HIGHLIGHT");
+        SELECTED_TEXT = theme.color("SELECTED_TEXT");
+        NORMAL_TEXT = theme.color("NORMAL_TEXT");
+        DIMMED_TEXT = theme.color("DIMMED_TEXT");
+        BACKGROUND = theme.color("BACKGROUND");
+        INVALID_HIGHLIGHT = theme.color("INVALID_HIGHLIGHT");
+        VALID_HIGHLIGHT = theme.color("VALID_HIGHLIGHT");
+        TABLE_HEADER_BACKGROUND = theme.color("TABLE_HEADER_BACKGROUND");
+        TABLE_BORDER = theme.color("TABLE_BORDER");
+        SCROLLBAR_THUMB = theme.color("SCROLLBAR_THUMB");
+    }
 
     /**
      * The one place every widget's "selected" look is defined: a filled background, not just

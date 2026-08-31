@@ -16,16 +16,19 @@ public class ModRegistry {
     private final Map<String, PlayerClass> classesById = new LinkedHashMap<>();
     private final Map<String, Item> itemsById = new LinkedHashMap<>();
     private final Map<String, Quest> questsById = new LinkedHashMap<>();
+    private final Map<String, WidgetColorTheme> themesById = new LinkedHashMap<>();
     private final List<String> modLoadOrder;
 
     ModRegistry(Map<String, Building> buildingsById, Map<String, Tile> tilesById,
                 Map<String, PlayerClass> classesById, Map<String, Item> itemsById,
-                Map<String, Quest> questsById, List<String> modLoadOrder) {
+                Map<String, Quest> questsById, Map<String, WidgetColorTheme> themesById,
+                List<String> modLoadOrder) {
         this.buildingsById.putAll(buildingsById);
         this.tilesById.putAll(tilesById);
         this.classesById.putAll(classesById);
         this.itemsById.putAll(itemsById);
         this.questsById.putAll(questsById);
+        this.themesById.putAll(themesById);
         this.modLoadOrder = List.copyOf(modLoadOrder);
     }
 
@@ -59,6 +62,14 @@ public class ModRegistry {
 
     public List<Quest> getAllQuests() {
         return List.copyOf(questsById.values());
+    }
+
+    public WidgetColorTheme getTheme(String id) {
+        return themesById.get(id);
+    }
+
+    public List<WidgetColorTheme> getAllThemes() {
+        return List.copyOf(themesById.values());
     }
 
     public List<String> getModLoadOrder() {

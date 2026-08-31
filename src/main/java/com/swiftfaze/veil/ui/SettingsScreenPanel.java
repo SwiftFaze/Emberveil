@@ -140,6 +140,11 @@ public class SettingsScreenPanel extends JPanel {
         fontRadio.selectOption(0);
         rows.add(new SettingsRow("Font", fontRadio));
 
+        RadioGroupWidget<String> themeRadio = new RadioGroupWidget<>(s -> s, true);
+        themeRadio.setOptions(List.of("Default", "Midnight", "Sunrise"));
+        themeRadio.selectOption(0);
+        rows.add(new SettingsRow("Theme", themeRadio));
+
         rows.add(new SettingsRow("Volume", new SliderWidget(0, 10, 1, 5)));
         rows.add(new SettingsRow("Keybinds", null));
         rows.add(new SettingsRow("Open Game Folder", null));
