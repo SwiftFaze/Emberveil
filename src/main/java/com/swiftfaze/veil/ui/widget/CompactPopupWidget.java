@@ -1,6 +1,9 @@
 package com.swiftfaze.veil.ui.widget;
 
 import javax.swing.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 
 /**
@@ -55,29 +58,55 @@ public class CompactPopupWidget extends PopupWidget {
     }
 
     /**
-     * Wraps plain text for a body JLabel so it word-wraps and centers within the dialog instead
-     * of running past the border and getting truncated with "..." — a plain JLabel never wraps
-     * on its own, only HTML content does, and only when explicitly given a pixel width to wrap
-     * at (an unconstrained div would just keep growing sideways). The label's own font/color set
-     * via setFont()/setForeground() still apply as the HTML's default, so callers don't need to
-     * repeat that styling in CSS.
+     * Builds a label-styled, word-wrapped, center-aligned body text component. A plain JLabel
+     * never wraps on its own; HTML content in a JLabel promises wrapping via a CSS pixel width
+     * but this JDK's HTML renderer doesn't actually honor that width when computing preferred
+     * size (verified: it comes back *wider* than the unwrapped plain text, never constrained) —
+     * so this uses a JTextPane instead, styled to read as a label (no border/caret/selection,
+     * transparent so the popup's black background shows through, not editable or focusable).
      */
-    protected static String wrapBodyText(String text) {
-        return "<html><div style='width:" + BODY_TEXT_WIDTH + "px;text-align:center;'>" + text + "</div></html>";
+    protected static JTextPane createBodyLabel() {
+        JTextPane pane = new JTextPane();
+        pane.setEditable(false);
+        pane.setFocusable(false);
+        pane.setOpaque(false);
+        pane.setForeground(WidgetTheme.NORMAL_TEXT);
+        pane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+        pane.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        pane.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return pane;
     }
 
     /**
-     * Sets a body label's text to the wrapped form above and caps its maximumSize to match —
-     * without the cap, the label has no bounded maximumSize of its own (a plain JComponent's
-     * defaults to unbounded), so the popup's vertical BoxLayout content pane stretches it to the
-     * pane's full width and the label's own centered alignment has no narrower block left to
-     * center; capping it lets the parent's alignmentX actually center the (fixed-width) wrapped
-     * text instead. Must be called again whenever the text changes, since a different wrap
-     * (different line count) changes the label's preferred height.
+     * Sets a body label's text, center-aligns it, and fixes its size to BODY_TEXT_WIDTH wide by
+     * however tall that many wrapped lines need — a JTextPane has no bounded maximumSize of its
+     * own (a plain JComponent's defaults to unbounded), so without pinning both dimensions here
+     * the popup's vertical BoxLayout content pane would stretch it to the pane's full width, and
+     * its own centered alignment would have no narrower block left to center. The setSize() call
+     * is what makes getPreferredSize() report the real wrapped height instead of an unwrapped
+     * single-line guess — a JTextPane only wraps against a width it's actually been given, not
+     * one just requested of it. Must be called again whenever the text changes, since a
+     * different wrap (different line count) changes the required height.
      */
-    protected static void setBodyText(JLabel label, String text) {
-        label.setText(wrapBodyText(text));
-        label.setMaximumSize(label.getPreferredSize());
+    protected static void setBodyText(JTextPane pane, String text) {
+        pane.setText(text);
+
+        StyledDocument doc = pane.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
+
+        // Once set, getPreferredSize() returns exactly what setPreferredSize() was given,
+        // regardless of new text — it stops asking the UI to recompute anything at all. Without
+        // clearing a prior call's override first, re-measuring here would just read back that
+        // stale (and possibly shorter, e.g. from an earlier one-line default) size instead of
+        // this text's real wrapped height, silently clipping any line past it.
+        pane.setPreferredSize(null);
+        pane.setMaximumSize(null);
+        pane.setSize(BODY_TEXT_WIDTH, Short.MAX_VALUE);
+        Dimension fixed = new Dimension(BODY_TEXT_WIDTH, pane.getPreferredSize().height);
+        pane.setPreferredSize(fixed);
+        pane.setMaximumSize(fixed);
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.ui.widget.CompactPopupWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
-import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -11,19 +10,12 @@ public class DropConfirmationPopup extends CompactPopupWidget {
     private static final String DEFAULT_ITEM_NAME = "this item";
 
     private final RadioGroupWidget<String> choice;
-    private final JLabel questionLabel;
+    private final JTextPane questionLabel;
 
     public DropConfirmationPopup() {
         super("Drop Item");
 
-        questionLabel = new JLabel();
-        questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
-        questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-        questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        questionLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        // Text (and the maximumSize cap it drives) is set last, once font/border are final —
-        // both affect the wrapped HTML's computed preferred size (see setBodyText).
+        questionLabel = createBodyLabel();
         setBodyText(questionLabel, questionTextFor(DEFAULT_ITEM_NAME));
         addContent(questionLabel);
 

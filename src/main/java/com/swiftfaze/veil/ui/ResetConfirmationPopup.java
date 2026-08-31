@@ -2,7 +2,6 @@ package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.ui.widget.CompactPopupWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
-import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,14 +21,7 @@ public class ResetConfirmationPopup extends CompactPopupWidget {
         super("Confirm Reset");
         this.questionText = "Reset all settings to their defaults?";
 
-        JLabel questionLabel = new JLabel();
-        questionLabel.setForeground(WidgetTheme.NORMAL_TEXT);
-        questionLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-        questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        questionLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        // Text (and the maximumSize cap it drives) is set last, once font/border are final —
-        // both affect the wrapped HTML's computed preferred size (see setBodyText).
+        JTextPane questionLabel = createBodyLabel();
         setBodyText(questionLabel, questionText);
         addContent(questionLabel);
 
