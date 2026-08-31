@@ -6,10 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A mod-shaped set of widget colors, loaded from a {@code theme.json} file (see
- * {@code ModLoader.loadThemes}). Mirrors the id/collision/"overrides" model every other content
- * type (tiles, classes, items, quests) already uses, but as a single-file-per-mod registration
- * rather than a directory of many files.
+ * A mod-shaped set of widget colors, loaded from a file under a mod's {@code themes/} directory
+ * (see {@code ModLoader.loadThemes}). Mirrors the id/collision/"overrides" model every other
+ * content type (tiles, classes, items, quests) already uses.
  */
 public final class WidgetColorTheme {
 
