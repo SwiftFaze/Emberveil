@@ -46,20 +46,20 @@ public class SettingsScreenPanel extends JPanel {
         this.onOpenFolder = onOpenFolder;
         this.rows = new ArrayList<>();
 
-        setBackground(Color.BLACK);
+        setBackground(WidgetTheme.BACKGROUND);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2),
+                BorderFactory.createLineBorder(WidgetTheme.BORDER, 2),
                 BorderFactory.createEmptyBorder(20, 40, 20, 40)));
         setFocusable(true);
 
         JLabel header = new JLabel("Settings");
-        header.setForeground(Color.WHITE);
+        header.setForeground(WidgetTheme.NORMAL_TEXT);
         header.setFont(new Font(Font.MONOSPACED, Font.BOLD, 24));
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         rowsPanel = new JPanel();
-        rowsPanel.setBackground(Color.BLACK);
+        rowsPanel.setBackground(WidgetTheme.BACKGROUND);
         rowsPanel.setLayout(new BoxLayout(rowsPanel, BoxLayout.Y_AXIS));
         rowsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 

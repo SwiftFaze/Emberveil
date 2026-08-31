@@ -2,6 +2,7 @@ package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ListWidget;
+import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +24,14 @@ public class TitleScreenPanel extends JPanel {
 
     public TitleScreenPanel(Consumer<String> onMenuSelect) {
         this.onMenuSelect = onMenuSelect;
-        setBackground(Color.BLACK);
+        setBackground(WidgetTheme.BACKGROUND);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setFocusable(true);
 
         // Title
         titleLabel = new JLabel("VEIL");
         titleLabel.setFont(loadTitleFont());
-        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Menu
