@@ -121,6 +121,21 @@
                                     <mainClass>${main.class}</mainClass>
                                 </transformer>
                             </transformers>
+                            <!-- Dependency manifests and multi-release module-info
+                                 variants aren't needed in the fat jar (the
+                                 ManifestResourceTransformer above supplies the real
+                                 one); excluding them stops shade's harmless-but-noisy
+                                 overlapping-resource warnings for these entries. -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
