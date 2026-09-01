@@ -338,8 +338,6 @@ permanently vague policy.
 - Max cyclomatic complexity: 8
 - Max function parameters: 4
 - Minimum line coverage: 85% repo-wide (JaCoCo)
-- No function may call more than one level of abstraction below itself
-  (Single Level of Abstraction principle)
 - Module dependency direction (ArchUnit, `ModuleDependencyTest`, a plain
   JUnit test run via `mvn test`/`mvn verify`): "engine" code (everything
   outside `com.swiftfaze.veil.ui`, excluding the `Main` composition root
@@ -352,7 +350,28 @@ permanently vague policy.
 
 These are enforced by the linter/CI config in this repo, not by asking the
 agent to "try to keep things clean." If a change can't meet these limits,
-stop and flag it rather than disabling the check.
+stop and flag it rather than disabling the check — with one narrow,
+already-practiced exception: a method overriding a JDK/library interface
+whose signature mandates more than 4 parameters (e.g.
+`Border.paintBorder(Component, Graphics, int, int, int, int)`, see
+`RadioGroupWidget.RadioOptionBorder` and `TableWidget.AccentableCellBorder`)
+may suppress PMD's `ExcessiveParameterList` rule with
+`@SuppressWarnings("PMD.ExcessiveParameterList")` plus a comment naming
+the interface — the parameter count isn't a choice the code made, it's
+the contract being implemented. This exception is specific to parameter
+count on an unavoidable interface override; it does not extend to
+complexity, length, coverage, or the module dependency rule, none of
+which have an equivalent "the interface forced it" excuse.
+
+**Not mechanically enforced — self-applied only:** the Single Level of
+Abstraction Principle (SLAP — no function may call more than one level
+of abstraction below itself) has no PMD rule or other tool backing it in
+this repo; there is no off-the-shelf static-analysis check for it.
+Treat it as design guidance applied via the `uncle-bob-craft` skill's
+checklist in Step 4, not a build gate — violating it won't fail
+`mvn verify` the way the constraints above do. Don't describe it as
+enforced elsewhere in this repo's docs; if a mechanical check for it
+becomes practical later, promote it into the list above.
 
 The function-length/complexity/parameter/coverage numbers above are a
 deliberate, adjustable dial for agent-authored code, not a fixed

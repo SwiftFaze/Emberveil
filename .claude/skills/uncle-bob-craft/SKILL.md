@@ -4,7 +4,7 @@ description: Use when performing code review, writing or refactoring code, or di
 ---
 # Uncle Bob Craft
 
-Apply Robert C. Martin (Uncle Bob) criteria for **code review and production**: Clean Code, Clean Architecture, The Clean Coder, Clean Agile, and design-pattern discipline. This skill is complementary to this repo's own linter and to the mechanical constraints already enforced in `.claude/workflow.md` (max function length, cyclomatic complexity, parameter count, coverage, Single Level of Abstraction) — it does not replace them.
+Apply Robert C. Martin (Uncle Bob) criteria for **code review and production**: Clean Code, Clean Architecture, The Clean Coder, Clean Agile, and design-pattern discipline. This skill is complementary to this repo's own linter and to the mechanical constraints already enforced in `.claude/workflow.md` (max function length, cyclomatic complexity, parameter count, coverage, module dependency direction) — it does not replace them. The Single Level of Abstraction Principle (SLAP) is the one exception: `.claude/workflow.md` documents it as a constraint but no tool checks it, so the "When writing or refactoring code" checklist below is the only place it's actually applied, via self-review rather than a build gate.
 
 ## Overview
 
@@ -72,8 +72,9 @@ Full lists (including heuristics C1–T9-style) are in [reference.md](./referenc
 
 1. Prefer **small, single-purpose** functions and classes.
 2. Keep **dependencies pointing inward**; put business rules in the center, adapters at the edges.
-3. Introduce **design patterns** only when duplication or variation justifies them.
-4. Refactor in **small steps** with tests staying green.
+3. Keep each function at a **single level of abstraction** (SLAP) — a function should call functions one level below it, not mix high-level orchestration with low-level detail in the same body. See Example 2 below.
+4. Introduce **design patterns** only when duplication or variation justifies them.
+5. Refactor in **small steps** with tests staying green.
 
 ## Examples
 
