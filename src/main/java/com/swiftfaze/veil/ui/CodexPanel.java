@@ -26,7 +26,7 @@ public class CodexPanel extends PopupWidget {
     private record FieldRow(String field, String value) {
     }
 
-    private record CodexEntry(String name, List<FieldRow> fields) {
+    private record CodexEntry(String name, List<FieldRow> fields, List<Item.Effect> effects) {
     }
 
     public enum Category {
@@ -45,13 +45,14 @@ public class CodexPanel extends PopupWidget {
 
     private enum Focus { ENTRY_LIST, FIELDS }
 
-    private static final int BODY_HEIGHT = 280;
     private static final String NO_ENTRY_TEXT = "(no item selected)";
 
     private final ListWidget<CodexEntry> entryList;
     private final JPanel detailsPanel;
     private final JScrollPane detailsScrollPane;
     private final TableWidget<FieldRow> fieldsTable;
+    private final JLabel effectsLabel;
+    private final TableWidget<Item.Effect> effectsTable;
     private final List<JLabel> tabLabels = new ArrayList<>();
 
     private List<Item> items = List.of();
@@ -87,6 +88,16 @@ public class CodexPanel extends PopupWidget {
         fieldsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
         fieldsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
+        effectsLabel = makeEffectsLabel();
+        effectsTable = new TableWidget<>(
+                List.of("Type", "Stat", "Calc"),
+                List.of(Item.Effect::type, Item.Effect::stat, Item.Effect::calc)
+        );
+        effectsTable.setWrapAround(false);
+        effectsTable.setSelectable(false);
+        effectsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+        effectsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
         detailsScrollPane = buildScrollPane(detailsPanel);
         addContent(buildBody(buildScrollPane(entryList), detailsScrollPane));
         bindTabKeys();
@@ -104,6 +115,7 @@ public class CodexPanel extends PopupWidget {
         getCloseButton().setFocusTraversalKeysEnabled(false);
         entryList.setFocusTraversalKeysEnabled(false);
         fieldsTable.setFocusTraversalKeysEnabled(false);
+        effectsTable.setFocusTraversalKeysEnabled(false);
     }
 
     public void showItems(List<Item> items) {
@@ -225,30 +237,38 @@ public class CodexPanel extends PopupWidget {
     }
 
     private CodexEntry toEntry(Item item) {
-        return new CodexEntry(item.getName(), List.of(
+        List<FieldRow> fields = new ArrayList<>(List.of(
                 new FieldRow("ID", item.getId()),
                 new FieldRow("Name", item.getName()),
                 new FieldRow("Glyph", String.valueOf(item.getGlyph())),
                 new FieldRow("Type", item.getType()),
                 new FieldRow("Slot", item.getSlot())
         ));
+        Item.BaseDamage damage = item.getBaseDamage();
+        if (damage.max() > 0) {
+            fields.add(new FieldRow("Base Damage (Min)", String.valueOf(damage.min())));
+            fields.add(new FieldRow("Base Damage (Max)", String.valueOf(damage.max())));
+        }
+        return new CodexEntry(item.getName(), fields, item.getEffects());
     }
 
     private CodexEntry toEntry(Tile tile) {
         Color c = tile.getColor();
-        return new CodexEntry(tile.getId(), List.of(
+        List<FieldRow> fields = List.of(
                 new FieldRow("ID", tile.getId()),
                 new FieldRow("Symbol", String.valueOf(tile.getSymbol())),
                 new FieldRow("Color", "rgb(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ")"),
                 new FieldRow("Walkable", String.valueOf(tile.isWalkable()))
-        ));
+        );
+        return new CodexEntry(tile.getId(), fields, List.of());
     }
 
     private CodexEntry toEntry(PlayerClass playerClass) {
-        return new CodexEntry(playerClass.getName(), List.of(
+        List<FieldRow> fields = List.of(
                 new FieldRow("ID", playerClass.getId()),
                 new FieldRow("Name", playerClass.getName())
-        ));
+        );
+        return new CodexEntry(playerClass.getName(), fields, List.of());
     }
 
     private void updateDetails(CodexEntry entry) {
@@ -262,6 +282,12 @@ public class CodexPanel extends PopupWidget {
             fieldsTable.setRows(entry.fields());
             fieldsTable.setSelectable(false);
             detailsPanel.add(fieldsTable);
+            if (!entry.effects().isEmpty()) {
+                effectsTable.setRows(entry.effects());
+                effectsTable.setSelectable(false);
+                detailsPanel.add(effectsLabel);
+                detailsPanel.add(effectsTable);
+            }
         }
         detailsPanel.revalidate();
         detailsPanel.repaint();
@@ -293,11 +319,22 @@ public class CodexPanel extends PopupWidget {
         return titleLabel;
     }
 
+    private JLabel makeEffectsLabel() {
+        JLabel label = new JLabel("Effects:");
+        label.setForeground(WidgetTheme.NORMAL_TEXT);
+        label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
+        return label;
+    }
+
     private JPanel buildTabRow() {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 4));
         row.setBackground(WidgetTheme.BACKGROUND);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        row.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(WidgetTheme.BORDER, 1),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         for (Category category : Category.values()) {
             JLabel label = new JLabel(category.getLabel());
             label.setOpaque(true);
@@ -306,6 +343,7 @@ public class CodexPanel extends PopupWidget {
             tabLabels.add(label);
             row.add(label);
         }
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
         return row;
     }
 
@@ -338,8 +376,11 @@ public class CodexPanel extends PopupWidget {
         JPanel body = new JPanel(new GridLayout(1, 2, 20, 0));
         body.setBackground(WidgetTheme.BACKGROUND);
         body.setAlignmentX(Component.LEFT_ALIGNMENT);
-        body.setPreferredSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
-        body.setMaximumSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
+        // No fixed preferred/maximum height: BoxLayout gives every other piece of content
+        // (title, tab row) just what it needs, then hands this component - the only one
+        // with an unbounded maximum height - all the leftover vertical space, so the list
+        // and detail pane actually fill the popup instead of sitting in a fixed-height band.
+        body.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         body.add(left);
         body.add(right);
         return body;
