@@ -229,16 +229,17 @@ public class SettingsKeybindsPanel extends JPanel {
                 pressKey(KeyEvent.getKeyText(e.getKeyCode()));
                 return;
             }
-            switch (e.getKeyCode()) {
+            handleNavigationKey(e.getKeyCode());
+        }
+
+        private void handleNavigationKey(int keyCode) {
+            switch (keyCode) {
                 case KeyEvent.VK_UP -> moveUp();
                 case KeyEvent.VK_DOWN -> moveDown();
                 case KeyEvent.VK_LEFT -> moveFooterLeft();
                 case KeyEvent.VK_RIGHT -> moveFooterRight();
                 case KeyEvent.VK_ENTER -> confirm();
                 case KeyEvent.VK_ESCAPE -> back();
-                default -> {
-                    // No other keys are meaningful outside the popup.
-                }
             }
         }
     }

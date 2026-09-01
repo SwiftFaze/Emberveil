@@ -11,6 +11,15 @@ import java.util.List;
 import java.util.Map;
 
 public class ModRegistry {
+    public record RegistryMaps(
+            Map<String, Building> buildingsById,
+            Map<String, Tile> tilesById,
+            Map<String, PlayerClass> classesById,
+            Map<String, Item> itemsById,
+            Map<String, Quest> questsById,
+            Map<String, WidgetColorTheme> themesById
+    ) {
+    }
     private final Map<String, Building> buildingsById = new LinkedHashMap<>();
     private final Map<String, Tile> tilesById = new LinkedHashMap<>();
     private final Map<String, PlayerClass> classesById = new LinkedHashMap<>();
@@ -19,16 +28,13 @@ public class ModRegistry {
     private final Map<String, WidgetColorTheme> themesById = new LinkedHashMap<>();
     private final List<String> modLoadOrder;
 
-    ModRegistry(Map<String, Building> buildingsById, Map<String, Tile> tilesById,
-                Map<String, PlayerClass> classesById, Map<String, Item> itemsById,
-                Map<String, Quest> questsById, Map<String, WidgetColorTheme> themesById,
-                List<String> modLoadOrder) {
-        this.buildingsById.putAll(buildingsById);
-        this.tilesById.putAll(tilesById);
-        this.classesById.putAll(classesById);
-        this.itemsById.putAll(itemsById);
-        this.questsById.putAll(questsById);
-        this.themesById.putAll(themesById);
+    ModRegistry(RegistryMaps maps, List<String> modLoadOrder) {
+        this.buildingsById.putAll(maps.buildingsById());
+        this.tilesById.putAll(maps.tilesById());
+        this.classesById.putAll(maps.classesById());
+        this.itemsById.putAll(maps.itemsById());
+        this.questsById.putAll(maps.questsById());
+        this.themesById.putAll(maps.themesById());
         this.modLoadOrder = List.copyOf(modLoadOrder);
     }
 

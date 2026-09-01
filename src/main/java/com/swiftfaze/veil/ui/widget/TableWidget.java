@@ -280,16 +280,24 @@ public class TableWidget<T> extends Widget {
 
     private void refreshHighlight() {
         for (int i = 0; i < rowCells.size(); i++) {
-            boolean highlighted = selectable && i == selectedRowIndex;
-            boolean accented = highlighted && selectedRowAccentColor != null;
-            for (JLabel cell : rowCells.get(i)) {
-                WidgetTheme.applySelection(cell, highlighted);
-                cell.setBorder(new AccentableCellBorder(baseCellBorder(), accented ? selectedRowAccentColor : null));
-                if (otherRowsDimmed && !highlighted) {
-                    cell.setForeground(WidgetTheme.DIMMED_TEXT);
-                }
+            updateCellHighlight(i);
+        }
+        scrollToSelectedRow();
+    }
+
+    private void updateCellHighlight(int rowIndex) {
+        boolean highlighted = selectable && rowIndex == selectedRowIndex;
+        boolean accented = highlighted && selectedRowAccentColor != null;
+        for (JLabel cell : rowCells.get(rowIndex)) {
+            WidgetTheme.applySelection(cell, highlighted);
+            cell.setBorder(new AccentableCellBorder(baseCellBorder(), accented ? selectedRowAccentColor : null));
+            if (otherRowsDimmed && !highlighted) {
+                cell.setForeground(WidgetTheme.DIMMED_TEXT);
             }
         }
+    }
+
+    private void scrollToSelectedRow() {
         if (selectable && selectedRowIndex < rowCells.size() && !rowCells.isEmpty()) {
             // scrollRectToVisible scrolls the *minimum* distance needed to reveal exactly the
             // rectangle it's given. The header is a separate component sitting above row 0 that
@@ -325,6 +333,7 @@ public class TableWidget<T> extends Widget {
         }
 
         @Override
+        @SuppressWarnings("PMD.ExcessiveParameterList") // Required by Swing's Border interface
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             inner.paintBorder(c, g, x, y, width, height);
             if (accentColor != null) {

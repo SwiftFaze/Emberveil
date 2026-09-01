@@ -72,3 +72,15 @@ Surefire, then integration tests via Failsafe.
   coverage constraint is easy to satisfy with weak assertions; mutation
   score catches that) — not a substitute for acceptance tests or the
   Step 4.5 manual playtest.
+
+## Code quality gates (PMD and JaCoCo)
+
+- Both gates are bound to `mvn verify` and fail the build if violated.
+- **PMD (maven-pmd-plugin)** enforces design rules via the category/java/design ruleset:
+  - Cyclomatic complexity must not exceed 8 per method.
+  - Method length must not exceed 40 lines.
+  - Parameter count must not exceed 4 per method.
+  - CPD (Copy-Paste Detector) flags duplicate code blocks at 100+ tokens.
+  Pure Swing layout/wiring classes with no branching logic are excluded from these checks (see `pom.xml`'s PMD excludes list).
+- **JaCoCo (jacoco-maven-plugin)** enforces a minimum of 85% line coverage across all non-excluded classes (repo-wide, not per-changed-file). The same exclusion list as PMD applies.
+- See `pom.xml`'s PMD plugin configuration for the full exclusion list and rationale (classes confirmed to be pure construction/layout/wiring with no real logic to unit-test).
