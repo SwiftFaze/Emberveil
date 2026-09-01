@@ -7,4 +7,7 @@ public interface GameListener {
 
     default void toggleInventory() {
     }
+
+    default void toggleCodex() {
+    }
 }

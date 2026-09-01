@@ -323,6 +323,22 @@ pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
 counter `MenuPanel` used to drive) is deleted entirely, superseded by
 `ListWidget`.
 
+`CodexPanel` extends `PopupWidget` and mirrors `InventoryPanel`'s list+detail
+split structure: a tab switcher across Items, Tiles, and Classes (three
+`JLabel`s styled as tabs with selection highlighting) above a 50/50 split body
+with a category-specific entry list on the left (scrollable `ListWidget`,
+non-wrapping) and a field/value detail table on the right (`TableWidget`
+showing ID, Name, Glyph/Symbol/Color, etc. per category). Up/Down/Left/Right
+navigate within the current pane and can switch focus between list and detail
+via Left/Right. Tab and Shift+Tab cycle forward/backward through tabs. Data is
+populated externally from mod content (`showItems`/`showTiles`/`showClasses`)
+same as `InventoryPanel`. Opening Codex via the X key while Inventory is open
+closes Inventory first, and vice versa, so only one popup is ever visible at
+a time — mutual exclusion is handled in `EastPanel.toggleCodex()`/
+`toggleInventory()`. The codex is placed at `POPUP_LAYER` in `GameWindow`'s
+layered pane, same as the inventory. Buildings and Quests tabs are deferred
+(see `specs/intent/codex-ui.md`).
+
 **Class/stats sandbox** (`sandbox/`): a dev-only stat inspector, not
 referenced from `Main.java` and not the packaged/jpackage build's entry
 point (`pom.xml`'s `main.class` stays `com.swiftfaze.veil.Main`). Run it
