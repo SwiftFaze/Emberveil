@@ -90,6 +90,20 @@ public class CodexPanel extends PopupWidget {
         detailsScrollPane = buildScrollPane(detailsPanel);
         addContent(buildBody(buildScrollPane(entryList), detailsScrollPane));
         bindTabKeys();
+        disableFocusTraversalKeys();
+    }
+
+    /**
+     * Without this, Java's default focus-traversal handling consumes Tab/Shift+Tab on
+     * whichever component currently holds keyboard focus (the Close button, in practice)
+     * before bindTabKeys()'s own InputMap bindings ever see the key event - silently
+     * kicking keyboard focus out of the popup entirely instead of switching tabs.
+     */
+    private void disableFocusTraversalKeys() {
+        setFocusTraversalKeysEnabled(false);
+        getCloseButton().setFocusTraversalKeysEnabled(false);
+        entryList.setFocusTraversalKeysEnabled(false);
+        fieldsTable.setFocusTraversalKeysEnabled(false);
     }
 
     public void showItems(List<Item> items) {

@@ -77,3 +77,16 @@ way you'd inspect a user-supplied screenshot.
 Re-run this after every attempted fix, not just once per bug — a plausible
 explanation for what's wrong is not the same as having verified the new
 code actually renders correctly.
+
+## Relaying "done" up the chain
+
+Producing the PNG and looking at it satisfies the *implementing* agent's
+own obligation for this step (see "When to do this" above). It does not
+by itself let anyone downstream treat "visual verification passed" as a
+fact without checking — an orchestrating session handing the result to
+another agent or to a human, or a human being told the step is complete.
+A subagent's self-report ("I rendered it and it looked correct") is a
+claim, not evidence. Before relaying this step as done, open the actual
+PNG yourself (regenerate it if it was already cleaned up) and look — the
+same "trust but verify" rule that applies to any other subagent output,
+not a special case for this step.
