@@ -84,3 +84,13 @@ Surefire, then integration tests via Failsafe.
   Pure Swing layout/wiring classes with no branching logic are excluded from these checks (see `pom.xml`'s PMD excludes list).
 - **JaCoCo (jacoco-maven-plugin)** enforces a minimum of 85% line coverage across all non-excluded classes (repo-wide, not per-changed-file). The same exclusion list as PMD applies.
 - See `pom.xml`'s PMD plugin configuration for the full exclusion list and rationale (classes confirmed to be pure construction/layout/wiring with no real logic to unit-test).
+
+## Module dependency gate (ArchUnit)
+
+- `ModuleDependencyTest` (`src/test/java/com/swiftfaze/veil/ModuleDependencyTest.java`) is a plain JUnit 5 test using ArchUnit (`archunit-junit5`), run by Surefire via `mvn test`/`mvn verify` like any other unit test — no separate command needed.
+- Rules enforced:
+  - "Engine" code — everything outside `com.swiftfaze.veil.ui`, excluding the `Main` composition root and the `sandbox` package — must not depend on `com.swiftfaze.veil.ui` at all.
+  - Classes in `com.swiftfaze.veil.ui.widget` must not depend on screen classes that sit directly in `com.swiftfaze.veil.ui` (screens may depend on widgets, not the reverse).
+- `Main` is excluded because it's the composition root that assembles the `JFrame` from UI panels — that wiring role requires depending on `ui` by definition. `sandbox` is excluded because `ClassSandboxPanel` is itself a UI panel (it extends `TerminalPanel` and reuses `ui/widget/ListWidget`) that just happens to live outside the `ui` package as a dev-only tool — it is UI code, not engine code that should be isolated from UI.
+- This mirrors the engine/widgets/screens layering `docs/architecture.md`, `docs/ui-widgets.md`, and `docs/screens.md` already describe conceptually — it's the first mechanical check of that layering at the package level (previously only enforced by the function-level SLAP guidance in `.claude/workflow.md`).
+- A violation fails the build with ArchUnit's own violation report naming the offending class and rule, the same way a PMD violation does.

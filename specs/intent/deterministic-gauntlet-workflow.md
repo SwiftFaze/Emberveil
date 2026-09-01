@@ -10,11 +10,11 @@
 - [x] Intent drafted
 - [x] Spec drafted (`.feature` file)
 - [x] Approved by human
-- [ ] Implemented
-- [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
-- [ ] Acceptance tests passing
-- [ ] Mutation testing passed
-- [ ] Documentation updated (`docs/`, and the wiki if player-facing)
+- [x] Implemented
+- [x] Manually playtested (human) — N/A, no game behavior changed
+- [x] Acceptance tests passing — N/A by design (`.feature` file tagged `@manual-verification`, same as `pmd-jacoco-quality-gates.feature`)
+- [x] Mutation testing passed — mutation score 76% (344/450 mutations killed, unaffected by this change)
+- [x] Documentation updated (`docs/testing.md`, `docs/architecture.md`, `.claude/workflow.md`, `CLAUDE.md`, `specs/intent/README.md`; no wiki update needed)
 
 ## Problem
 

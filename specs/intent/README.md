@@ -1,23 +1,36 @@
 # Intent docs
 
-One `<feature-slug>.md` file per feature, written by a human before any spec
-or code exists. This is the source of truth for *why* a feature exists and
-what it must do — `/specs/features/<feature-slug>.feature` is generated from
-it and never the other way around.
+One `<feature-slug>.md` file per feature, written by a human (or derived
+from a GitHub issue via the `spec-intent` skill) before implementation
+starts. This is the source of *why* a feature exists and what it must do.
+
+See `.claude/workflow.md` for the high-risk vs. standard path split: on
+the high-risk path (auth/payments/data-integrity/public API),
+`/specs/features/<feature-slug>.feature` is generated from this doc and
+reviewed/approved before any code is written. On the standard path, this
+doc still gets written first, but feeds directly into an agile
+implementation loop instead — no fully-approved `.feature` file is
+required before code exists.
 
 Intent is not written once and frozen: clarifying answers gathered while
-drafting the `.feature` file get appended back here, then the `.feature` file
-is regenerated from the updated intent.
+drafting or implementing get appended back here.
 
 Copy `TEMPLATE.md` to `<feature-slug>.md` to start a new one. See
 `default-player-class.md` for a worked (if retroactive) example filled in.
 
+These docs are a starting point for implementation, not a permanently
+maintained artifact. Unlike `specs/features/*.feature` — which stays a
+real, executable check via Cucumber — an intent doc has no equivalent
+once a feature is built: the code itself, and its `.feature` file where
+one exists, are what actually persist. The Index below is a best-effort
+historical map, not something every future change is required to keep
+current.
+
 ## Index
 
-Browsable map of which GitHub issue(s) motivated each intent doc.
-**Whoever adds, removes, or renames an intent doc updates this table in
-the same change** — same convention as `specs/features/README.md`'s own
-Index table.
+Browsable map of which GitHub issue(s) motivated each intent doc that
+happened to get indexed. Adding a row here is optional, not a required
+part of any change.
 
 | File | Related issue(s) |
 |---|---|

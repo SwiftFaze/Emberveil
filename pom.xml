@@ -31,6 +31,15 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Module dependency gate (Constraints in .claude/workflow.md): ModuleDependencyTest
+             enforces the engine/widgets/screens layering docs/architecture.md documents. -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Acceptance tests (Step 5): runs .feature files from /specs/features via RunCucumberTest -->
         <dependency>
             <groupId>org.junit.platform</groupId>
