@@ -399,11 +399,6 @@ public class UiComponentFrameworkSteps {
         assertTrue(eastPanel.getInventoryPanel().isVisible());
     }
 
-    @Then("the popup's Close button has keyboard focus")
-    public void thePopupsCloseButtonHasKeyboardFocus() {
-        assertNotNull(eastPanel.getInventoryPanel().getCloseButton());
-    }
-
     @Then("the inventory popup is closed")
     public void theInventoryPopupIsClosed() {
         assertFalse(eastPanel.getInventoryPanel().isVisible());
@@ -427,18 +422,6 @@ public class UiComponentFrameworkSteps {
                 layeredContentArea.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0]);
         assertTrue(popupLayer > mainAreaLayer);
     }
-
-    @When("the popup's Close button is confirmed")
-    public void thePopupsCloseButtonIsConfirmed() {
-        Action confirmAction = eastPanel.getInventoryPanel().getCloseButton().getActionMap().get("button-confirm");
-        if (confirmAction != null) {
-            confirmAction.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel().getCloseButton(),
-                ActionEvent.ACTION_PERFORMED, "button-confirm"));
-        } else {
-            eastPanel.getInventoryPanel().dismiss();
-        }
-    }
-
 
     @Then("the inventory popup lists the item {string}")
     public void theInventoryPopupListsTheItem(String itemName) {

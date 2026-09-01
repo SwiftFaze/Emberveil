@@ -203,11 +203,13 @@ lines inward and opened a visible gap between rows); used by
 `SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
-caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
-Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
-Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
-— bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
-popup child has real Swing focus — let a subclass wire keyboard navigation to
+caller-supplied regex pattern), `PopupWidget` (a dismissible overlay,
+keyboard-only like the rest of this game — no Close button, since it never
+responded to anything but a click; `open()`/`dismiss()` manage visibility and
+focus, Escape dismisses it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()`
+hooks — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire whether
+the popup itself or a descendant has real Swing focus — let a subclass wire
+keyboard navigation to
 its own content; `isFullScreen()` returns true by default, but subclasses can
 return false to be centered at their preferred size instead of stretched);
 `SliderWidget` (a bounded numeric slider with left/right adjustment within a

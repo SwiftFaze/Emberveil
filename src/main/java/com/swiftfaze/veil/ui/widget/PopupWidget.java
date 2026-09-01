@@ -9,7 +9,6 @@ import java.awt.event.ActionEvent;
 public class PopupWidget extends Widget {
 
     private final JPanel contentPanel;
-    private final ButtonWidget closeButton;
     private Runnable onDismiss = () -> {
     };
     private FocusManager focusManager;
@@ -23,10 +22,6 @@ public class PopupWidget extends Widget {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         add(contentPanel, BorderLayout.CENTER);
-
-        closeButton = new ButtonWidget("Close");
-        closeButton.setOnConfirm(() -> dismiss());
-        add(closeButton, BorderLayout.SOUTH);
 
         bindKeys();
     }
@@ -47,10 +42,6 @@ public class PopupWidget extends Widget {
         contentPanel.removeAll();
     }
 
-    public ButtonWidget getCloseButton() {
-        return closeButton;
-    }
-
     /**
      * Returns true if this popup should stretch to fill the parent container,
      * false if it should be sized and centered at its preferred size.
@@ -65,7 +56,7 @@ public class PopupWidget extends Widget {
         if (focusManager != null) {
             focusManager.captureModally();
         }
-        closeButton.requestFocusInWindow();
+        requestFocusInWindow();
     }
 
     public void dismiss() {

@@ -112,7 +112,6 @@ public class CodexPanel extends PopupWidget {
      */
     private void disableFocusTraversalKeys() {
         setFocusTraversalKeysEnabled(false);
-        getCloseButton().setFocusTraversalKeysEnabled(false);
         entryList.setFocusTraversalKeysEnabled(false);
         fieldsTable.setFocusTraversalKeysEnabled(false);
         effectsTable.setFocusTraversalKeysEnabled(false);
@@ -329,17 +328,19 @@ public class CodexPanel extends PopupWidget {
     }
 
     private JPanel buildTabRow() {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 4));
+        Category[] categories = Category.values();
+        JPanel row = new JPanel(new GridLayout(1, categories.length));
         row.setBackground(WidgetTheme.BACKGROUND);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(WidgetTheme.BORDER, 1),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
-        for (Category category : Category.values()) {
-            JLabel label = new JLabel(category.getLabel());
+        row.setBorder(BorderFactory.createLineBorder(WidgetTheme.BORDER, 1));
+        for (int i = 0; i < categories.length; i++) {
+            boolean isLast = i == categories.length - 1;
+            JLabel label = new JLabel(categories[i].getLabel(), SwingConstants.CENTER);
             label.setOpaque(true);
             label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-            label.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+            Border padding = BorderFactory.createEmptyBorder(6, 8, 6, 8);
+            label.setBorder(isLast ? padding : BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 0, 1, WidgetTheme.BORDER), padding));
             tabLabels.add(label);
             row.add(label);
         }

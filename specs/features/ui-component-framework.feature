@@ -44,23 +44,15 @@ Feature: Terminal-style UI component framework
     When the "Enter" key is pressed
     Then the button's action was invoked
 
-  Scenario: Toggling the inventory open focuses the popup's Close button
+  Scenario: Toggling the inventory open makes the popup visible
     Given the rebuilt in-game inventory screen
     When the inventory is toggled open
     Then the inventory popup is open
-    And the popup's Close button has keyboard focus
 
   Scenario: Dismissing the popup with Escape closes it and restores game focus
     Given the rebuilt in-game inventory screen
     And the inventory is toggled open
     When the "Escape" key is pressed
-    Then the inventory popup is closed
-    And the restore-game-focus action was invoked
-
-  Scenario: Confirming the popup's Close button closes it and restores game focus
-    Given the rebuilt in-game inventory screen
-    And the inventory is toggled open
-    When the popup's Close button is confirmed
     Then the inventory popup is closed
     And the restore-game-focus action was invoked
 
@@ -185,3 +177,23 @@ Feature: Terminal-style UI component framework
   # Open questions:
   #   - None outstanding — see
   #     specs/intent/ui-component-framework.md's Clarifications section.
+  #
+  # Post-merge amendment (2026-09-01, during codex-ui's #113 build):
+  #   - PopupWidget's Close button was removed (from PopupWidget itself, and
+  #     the now-dead `remove(getCloseButton())` call in CompactPopupWidget,
+  #     which never had one visible anyway) — it never responded to a click
+  #     in this keyboard-only game, and Escape already dismisses every
+  #     popup, so it was a purely decorative element that looked
+  #     interactive but wasn't. `open()` now focuses the popup itself
+  #     instead of a Close button child. The two scenarios above that
+  #     exercised it were updated/removed to match: "Toggling the inventory
+  #     open focuses the popup's Close button" lost its now-nonexistent
+  #     assertion (renamed to describe what it still proves), and
+  #     "Confirming the popup's Close button closes it and restores game
+  #     focus" was deleted outright — its only replacement would be a
+  #     verbatim duplicate of the Escape scenario already above it.
+  #     ButtonWidget itself (and its own standalone "Confirming a button
+  #     widget invokes its action" scenario above) is untouched — it's a
+  #     generic framework primitive, not exclusively tied to the Close
+  #     button's former role, and is proven directly rather than through
+  #     any popup now.
