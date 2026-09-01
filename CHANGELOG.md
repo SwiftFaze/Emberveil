@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.8](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.7...v0.5.0-beta.8) (2026-09-01)
+
+
+### Features
+
+* add ArchUnit module dependency gate and align workflow with deterministic-gauntlet approach ([80f2acb](https://github.com/SwiftFaze/Veil/commit/80f2acbb04d77b66eabbd321c89361e72514d55d))
+* align agentic workflow with Uncle Bob's deterministic-gauntlet approach ([3db6485](https://github.com/SwiftFaze/Veil/commit/3db64850854b93fd6e19813bdf6aa661e7a92762))
+
 ## [0.5.0-beta.7](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.6...v0.5.0-beta.7) (2026-09-01)
 
 
