@@ -42,3 +42,4 @@ Index table.
 | `widget-theming.md` | [#106](https://github.com/SwiftFaze/Veil/issues/106) |
 | `codex-ui.md` | [#113](https://github.com/SwiftFaze/Veil/issues/113) (follow-ups split into [#112](https://github.com/SwiftFaze/Veil/issues/112) discovery gating, [#121](https://github.com/SwiftFaze/Veil/issues/121) Enemies/Biomes) |
 | `pmd-jacoco-quality-gates.md` | [#123](https://github.com/SwiftFaze/Veil/issues/123) |
+| `deterministic-gauntlet-workflow.md` | [#128](https://github.com/SwiftFaze/Veil/issues/128) (builds on [#123](https://github.com/SwiftFaze/Veil/issues/123)) |
