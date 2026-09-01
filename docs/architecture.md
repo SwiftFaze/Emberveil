@@ -114,7 +114,10 @@ see `specs/intent/data-driven-quest.md`.
 glyph/color/`render`) is what `GamePanel` iterates over in `entitiesToDraw`
 to draw non-scene entities (currently just `Player`); `WorldScene` itself
 also implements `DrawableAsciiEntity` but is rendered specially (via
-`renderWorld`), not through the generic entity loop.
+`renderWorld`), not through the generic entity loop. The same
+self-describing principle applies to list/table/detail Swing UI (Codex,
+Inventory, and future panels like a player stats screen) — see
+`docs/components.md` for that contract.
 
 **Keyboard input** (`input/Keybindings.java`, `GamePanel.bindKeys`): all
 keyboard input goes through Swing Key Bindings (`InputMap`/`ActionMap`,
