@@ -52,3 +52,4 @@ that change's definition of done, not separate cleanup.
 | `confirmation-popup-variant.feature` | Centered, content-sized PopupWidget presentation, proven by a Yes/No confirm dialog on the settings screen's Reset to Defaults |
 | `widget-theming.feature` | Mod-driven `theme.json` loaded via `ModLoader` (id/collision/overrides), populating all 10 `WidgetTheme` colors from `mods/core/theme.json`; a second mod's theme loads without activating |
 | `codex-ui.feature` | In-game Codex overlay (X key) with a tab switcher across Items/Tiles/Classes, each tab a list+detail split mirroring InventoryPanel; no locking/gating |
+| `pmd-jacoco-quality-gates.feature` | `mvn verify` fails on PMD complexity/length/parameter/duplication violations or sub-85% repo-wide JaCoCo coverage, with pure-layout Swing classes excluded from both; build-pipeline concern, no Java code path (`@manual-verification`) |

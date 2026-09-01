@@ -10,6 +10,9 @@ public class Item {
     public record Effect(String type, String stat, String calc) {
     }
 
+    public record ItemAttributes(char glyph, String type, String slot, BaseDamage baseDamage, List<Effect> effects) {
+    }
+
     private final String id;
     private final String name;
     private final char glyph;
@@ -18,15 +21,14 @@ public class Item {
     private final BaseDamage baseDamage;
     private final List<Effect> effects;
 
-    public Item(String id, String name, char glyph, String type, String slot,
-                BaseDamage baseDamage, List<Effect> effects) {
+    public Item(String id, String name, ItemAttributes attributes) {
         this.id = id;
         this.name = name;
-        this.glyph = glyph;
-        this.type = type;
-        this.slot = slot;
-        this.baseDamage = baseDamage;
-        this.effects = effects;
+        this.glyph = attributes.glyph();
+        this.type = attributes.type();
+        this.slot = attributes.slot();
+        this.baseDamage = attributes.baseDamage();
+        this.effects = attributes.effects();
     }
 
     public String getId() {

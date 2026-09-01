@@ -24,29 +24,35 @@ public class CalcExpressionParser {
             if (pos >= input.length()) {
                 return null;
             }
-
             char ch = input.charAt(pos);
-            if (ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '*' || ch == '/') {
-                return String.valueOf(input.charAt(pos++));
-            }
-
-            if (Character.isLetter(ch)) {
-                int start = pos;
-                while (pos < input.length() && Character.isLetterOrDigit(input.charAt(pos))) {
-                    pos++;
-                }
-                return input.substring(start, pos);
-            }
-
-            if (Character.isDigit(ch) || ch == '.') {
-                int start = pos;
-                while (pos < input.length() && (Character.isDigit(input.charAt(pos)) || input.charAt(pos) == '.')) {
-                    pos++;
-                }
-                return input.substring(start, pos);
-            }
-
+            if (isSingleCharOperator(ch)) return consumeOperator();
+            if (Character.isLetter(ch)) return consumeIdentifier();
+            if (Character.isDigit(ch) || ch == '.') return consumeNumber();
             throw new IllegalArgumentException("Unexpected character: " + ch);
+        }
+
+        private boolean isSingleCharOperator(char ch) {
+            return ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '*' || ch == '/';
+        }
+
+        private String consumeOperator() {
+            return String.valueOf(input.charAt(pos++));
+        }
+
+        private String consumeIdentifier() {
+            int start = pos;
+            while (pos < input.length() && Character.isLetterOrDigit(input.charAt(pos))) {
+                pos++;
+            }
+            return input.substring(start, pos);
+        }
+
+        private String consumeNumber() {
+            int start = pos;
+            while (pos < input.length() && (Character.isDigit(input.charAt(pos)) || input.charAt(pos) == '.')) {
+                pos++;
+            }
+            return input.substring(start, pos);
         }
 
         private void skipWhitespace() {
@@ -90,30 +96,32 @@ public class CalcExpressionParser {
         }
 
         private double parseFactor() {
-            if (currentToken == null) {
-                throw new IllegalArgumentException("Unexpected end of expression");
-            }
+            if (currentToken == null) throw new IllegalArgumentException("Unexpected end of expression");
+            if (currentToken.equals("-")) return parseNegation();
+            if (currentToken.equals("(")) return parseParenthesizedExpression();
+            if (currentToken.equals("level")) return parseLevel();
+            return parseNumber();
+        }
 
-            if (currentToken.equals("-")) {
-                currentToken = tokenizer.nextToken();
-                return -parseFactor();
-            }
+        private double parseNegation() {
+            currentToken = tokenizer.nextToken();
+            return -parseFactor();
+        }
 
-            if (currentToken.equals("(")) {
-                currentToken = tokenizer.nextToken();
-                double result = parseExpression();
-                if (!currentToken.equals(")")) {
-                    throw new IllegalArgumentException("Expected ')'");
-                }
-                currentToken = tokenizer.nextToken();
-                return result;
-            }
+        private double parseParenthesizedExpression() {
+            currentToken = tokenizer.nextToken();
+            double result = parseExpression();
+            if (!currentToken.equals(")")) throw new IllegalArgumentException("Expected ')'");
+            currentToken = tokenizer.nextToken();
+            return result;
+        }
 
-            if (currentToken.equals("level")) {
-                currentToken = tokenizer.nextToken();
-                return level;
-            }
+        private double parseLevel() {
+            currentToken = tokenizer.nextToken();
+            return level;
+        }
 
+        private double parseNumber() {
             try {
                 double result = Double.parseDouble(currentToken);
                 currentToken = tokenizer.nextToken();

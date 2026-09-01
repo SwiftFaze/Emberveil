@@ -5,7 +5,6 @@ import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
-import com.swiftfaze.veil.ui.widget.TerminalScrollBarUI;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
@@ -47,35 +46,19 @@ public class InventoryPanel extends PopupWidget {
         itemList.setWrapAround(false);
         itemList.setOnSelectionChange(this::updateDetails);
 
-        Border detailsDivider = BorderFactory.createMatteBorder(0, 2, 0, 0, WidgetTheme.BORDER);
-        Border detailsPadding = BorderFactory.createEmptyBorder(4, 10, 0, 0);
-        detailsPanel = new JPanel();
-        detailsPanel.setBackground(WidgetTheme.BACKGROUND);
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBorder(BorderFactory.createCompoundBorder(detailsDivider, detailsPadding));
+        detailsPanel = ListDetailLayoutUtility.buildDetailsPanel();
 
         fieldsTable = new TableWidget<>(List.of("Field", "Value"), List.of(FieldRow::field, FieldRow::value));
-        fieldsTable.setWrapAround(false);
-        fieldsTable.setSelectable(false);
-        fieldsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
-        fieldsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        ListDetailLayoutUtility.configureDetailsTable(fieldsTable);
 
-        effectsLabel = makeEffectsLabel();
-
-        effectsTable = new TableWidget<>(
-                List.of("Type", "Stat", "Calc"),
-                List.of(e -> e.type(), Item.Effect::stat, Item.Effect::calc)
-        );
-        effectsTable.setWrapAround(false);
-        effectsTable.setSelectable(false);
-        effectsTable.setAlignmentX(Component.LEFT_ALIGNMENT);
-        effectsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        effectsLabel = ListDetailLayoutUtility.makeEffectsLabel();
+        effectsTable = ListDetailLayoutUtility.buildEffectsTable();
 
         dropConfirmationPopup = new DropConfirmationPopup();
         dropConfirmationPopup.setOnDismiss(this::requestFocusInWindow);
 
-        detailsScrollPane = buildScrollPane(detailsPanel);
-        addContent(buildBody(buildScrollPane(itemList), detailsScrollPane));
+        detailsScrollPane = ListDetailLayoutUtility.buildScrollPane(detailsPanel);
+        addContent(ListDetailLayoutUtility.buildBody(ListDetailLayoutUtility.buildScrollPane(itemList), detailsScrollPane));
         bindDropKey();
     }
 
@@ -184,39 +167,6 @@ public class InventoryPanel extends PopupWidget {
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         return titleLabel;
-    }
-
-    private JLabel makeEffectsLabel() {
-        JLabel label = new JLabel("Effects:");
-        label.setForeground(WidgetTheme.NORMAL_TEXT);
-        label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
-        return label;
-    }
-
-    private JScrollPane buildScrollPane(JComponent view) {
-        JScrollPane scrollPane = new JScrollPane(view);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getVerticalScrollBar().setUI(new TerminalScrollBarUI());
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
-        return scrollPane;
-    }
-
-    private JPanel buildBody(JComponent left, JComponent right) {
-        JPanel body = new JPanel(new GridLayout(1, 2, 20, 0));
-        body.setBackground(WidgetTheme.BACKGROUND);
-        body.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // No fixed preferred/maximum height: BoxLayout gives the title label just what it
-        // needs, then hands this component - the only one with an unbounded maximum height -
-        // all the leftover vertical space, so the list and detail pane fill the popup.
-        body.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        body.add(left);
-        body.add(right);
-        return body;
     }
 
     private void updateDetails(Item item) {

@@ -644,9 +644,10 @@ public class UiComponentFrameworkSteps {
             String calc = parenIndex >= 0 ? stripped.substring(parenIndex + 2, stripped.length() - 1) : "";
             effects.add(new com.swiftfaze.veil.entities.items.Item.Effect("stat_bonus", stat, calc));
         }
-        return new com.swiftfaze.veil.entities.items.Item(
-                "test:fake_item", "Fake Item", '?', "misc", "none",
-                new com.swiftfaze.veil.entities.items.Item.BaseDamage(0, 0), effects);
+        com.swiftfaze.veil.entities.items.Item.ItemAttributes attributes =
+                new com.swiftfaze.veil.entities.items.Item.ItemAttributes('?', "misc", "none",
+                        new com.swiftfaze.veil.entities.items.Item.BaseDamage(0, 0), effects);
+        return new com.swiftfaze.veil.entities.items.Item("test:fake_item", "Fake Item", attributes);
     }
 
     @Then("the details pane shows an effects table with {int} rows")

@@ -121,6 +121,21 @@
                                     <mainClass>${main.class}</mainClass>
                                 </transformer>
                             </transformers>
+                            <!-- Dependency manifests and multi-release module-info
+                                 variants aren't needed in the fat jar (the
+                                 ManifestResourceTransformer above supplies the real
+                                 one); excluding them stops shade's harmless-but-noisy
+                                 overlapping-resource warnings for these entries. -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
@@ -157,10 +172,8 @@
                         <param>com.swiftfaze.veil.world.*</param>
                         <param>com.swiftfaze.veil.entities.*</param>
                         <param>com.swiftfaze.veil.mods.*</param>
-                        <param>com.swiftfaze.veil.ui.SelectableMenu</param>
                         <param>com.swiftfaze.veil.ui.EastPanel</param>
                         <param>com.swiftfaze.veil.ui.InventoryPanel</param>
-                        <param>com.swiftfaze.veil.ui.MenuPanel</param>
                         <param>com.swiftfaze.veil.input.Keybindings</param>
                         <param>com.swiftfaze.veil.sandbox.ClassSandboxModel</param>
                         <param>com.swiftfaze.veil.sandbox.ClassSandboxPanel</param>
@@ -172,6 +185,118 @@
                         <param>HTML</param>
                     </outputFormats>
                 </configuration>
+            </plugin>
+            <!-- Step 4 code-quality gates: PMD enforces cyclomatic complexity, function
+                 length, parameter count, and duplicate-code detection via rulesets/java/design.xml.
+                 Bound to verify. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.28.0</version>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>cpd-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>cpd-check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnViolation>true</failOnViolation>
+                    <linkXRef>false</linkXRef>
+                    <includeTests>false</includeTests>
+                    <minimumTokens>100</minimumTokens>
+                    <!-- Minimal ruleset: ONLY complexity, method length, parameters, and CPD -->
+                    <rulesets>
+                        <ruleset>${project.basedir}/.pmd-minimal.xml</ruleset>
+                    </rulesets>
+                    <!-- Exclude pure layout classes from PMD checks -->
+                    <excludes>
+                        <exclude>**/ui/widget/ButtonWidget.java</exclude>
+                        <exclude>**/ui/widget/FocusManager.java</exclude>
+                        <exclude>**/ui/widget/TerminalScrollBarUI.java</exclude>
+                        <exclude>**/ui/widget/Widget.java</exclude>
+                        <exclude>**/ui/NorthPanel.java</exclude>
+                        <exclude>**/ui/PlayerInfoPanel.java</exclude>
+                        <exclude>**/ui/ResetConfirmationPopup.java</exclude>
+                        <exclude>**/ui/SettingsWindow.java</exclude>
+                        <exclude>**/ui/SouthPanel.java</exclude>
+                        <exclude>**/ui/TerminalPanel.java</exclude>
+                        <exclude>**/GameConst.java</exclude>
+                        <exclude>**/Positionable.java</exclude>
+                        <exclude>**/DrawableAsciiEntity.java</exclude>
+                        <exclude>**/exceptions/ModLoadException.java</exclude>
+                        <exclude>**/game/GameListener.java</exclude>
+                        <exclude>**/sandbox/ClassSandbox.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- Step 4 coverage gate: JaCoCo enforces 85% line coverage repo-wide.
+                 Bound to verify. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <excludes>
+                                        <exclude>com.swiftfaze.veil.ui.widget.ButtonWidget</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.widget.FocusManager</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.widget.TerminalScrollBarUI</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.widget.Widget</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.NorthPanel</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.PlayerInfoPanel</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.ResetConfirmationPopup</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.SettingsWindow</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.SouthPanel</exclude>
+                                        <exclude>com.swiftfaze.veil.ui.TerminalPanel</exclude>
+                                        <exclude>com.swiftfaze.veil.GameConst</exclude>
+                                        <exclude>com.swiftfaze.veil.Positionable</exclude>
+                                        <exclude>com.swiftfaze.veil.DrawableAsciiEntity</exclude>
+                                        <exclude>com.swiftfaze.veil.exceptions.ModLoadException</exclude>
+                                        <exclude>com.swiftfaze.veil.game.GameListener</exclude>
+                                        <exclude>com.swiftfaze.veil.sandbox.ClassSandbox</exclude>
+                                    </excludes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

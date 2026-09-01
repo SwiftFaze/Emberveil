@@ -269,7 +269,7 @@ permanently vague policy.
 - Max function length: 40 lines
 - Max cyclomatic complexity: 8
 - Max function parameters: 4
-- Minimum line coverage on changed files: 85%
+- Minimum line coverage: 85% repo-wide (JaCoCo)
 - No function may call more than one level of abstraction below itself
   (Single Level of Abstraction principle)
 

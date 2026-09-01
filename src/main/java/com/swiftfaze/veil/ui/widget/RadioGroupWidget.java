@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,14 +196,20 @@ public class RadioGroupWidget<T> extends Widget {
     private void refresh() {
         removeAll();
         labels.clear();
+        setLayout(buildLayout());
+        createLabels();
+        refreshHighlight();
+        if (!horizontal) uniformizeVerticalLabelWidths();
+        revalidate();
+        repaint();
+    }
 
-        // GridLayout, unlike BoxLayout, distributes the container's actual laid-out width evenly
-        // across cells at layout time — exactly what a fillWidth group needs (see setFillWidth)
-        // and something BoxLayout can't do without each label already knowing that width upfront.
-        setLayout(fillWidth && horizontal
-            ? new GridLayout(1, 0, 4, 0)
-            : new BoxLayout(this, horizontal ? BoxLayout.X_AXIS : BoxLayout.Y_AXIS));
+    private LayoutManager buildLayout() {
+        if (fillWidth && horizontal) return new GridLayout(1, 0, 4, 0);
+        return new BoxLayout(this, horizontal ? BoxLayout.X_AXIS : BoxLayout.Y_AXIS);
+    }
 
+    private void createLabels() {
         for (T option : options) {
             JLabel label = new JLabel(optionRenderer.apply(option));
             label.setOpaque(true);
@@ -212,24 +219,14 @@ public class RadioGroupWidget<T> extends Widget {
             labels.add(label);
             add(label);
         }
-        refreshHighlight();
-        if (!horizontal) {
-            // Vertical options share one width by default (matching the widest option's
-            // rendered size, border and all) instead of each sizing to its own text — same "full
-            // width" convention ListWidget's rows and TableWidget's row panels already use.
-            // Horizontal options stay sized to their own content; stretching those to fill the
-            // row's width wouldn't read as a set of side-by-side choices anymore.
-            int maxWidth = 0;
-            for (JLabel label : labels) {
-                maxWidth = Math.max(maxWidth, label.getPreferredSize().width);
-            }
-            for (JLabel label : labels) {
-                label.setMaximumSize(new Dimension(maxWidth, label.getPreferredSize().height));
-                label.setPreferredSize(new Dimension(maxWidth, label.getPreferredSize().height));
-            }
+    }
+
+    private void uniformizeVerticalLabelWidths() {
+        int maxWidth = labels.stream().mapToInt(l -> l.getPreferredSize().width).max().orElse(0);
+        for (JLabel label : labels) {
+            label.setMaximumSize(new Dimension(maxWidth, label.getPreferredSize().height));
+            label.setPreferredSize(new Dimension(maxWidth, label.getPreferredSize().height));
         }
-        revalidate();
-        repaint();
     }
 
     private void refreshHighlight() {
@@ -261,6 +258,7 @@ public class RadioGroupWidget<T> extends Widget {
         }
 
         @Override
+        @SuppressWarnings("PMD.ExcessiveParameterList") // Required by Swing's Border interface
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             g.setColor(confirmed ? WidgetTheme.VALID_HIGHLIGHT : WidgetTheme.BORDER);
             g.fillRect(x, y + height - THICKNESS, width, THICKNESS); // bottom, always drawn

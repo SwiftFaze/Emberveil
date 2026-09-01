@@ -26,6 +26,14 @@ import java.util.Map;
 import java.util.Set;
 
 public final class ModLoader {
+    public record RegistrationContext<T>(
+            Map<String, T> registry,
+            Map<String, String> owningModById,
+            boolean overrides,
+            String contentType
+    ) {
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ModLoader.class);
 
     private ModLoader() {
@@ -62,7 +70,8 @@ public final class ModLoader {
             loadThemes(modsRoot, manifest, themesById, owningThemeModById);
         }
 
-        return new ModRegistry(buildingsById, tilesById, classesById, itemsById, questsById, themesById, modLoadOrder);
+        ModRegistry.RegistryMaps maps = new ModRegistry.RegistryMaps(buildingsById, tilesById, classesById, itemsById, questsById, themesById);
+        return new ModRegistry(maps, modLoadOrder);
     }
 
     private static List<ModManifest> readManifests(Path modsRoot) {
@@ -160,8 +169,8 @@ public final class ModLoader {
             Color color = readColor(json.getAsJsonObject("color"));
             boolean walkable = json.get("walkable").getAsBoolean();
 
-            registerWithCollisionCheck(id, new Tile(id, symbol, color, walkable), modId,
-                    tilesById, owningModById, json.has("overrides"), "Tile");
+            RegistrationContext<Tile> tileContext = new RegistrationContext<>(tilesById, owningModById, json.has("overrides"), "Tile");
+            registerWithCollisionCheck(id, new Tile(id, symbol, color, walkable), modId, tileContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
@@ -200,8 +209,8 @@ public final class ModLoader {
             String id = json.get("id").getAsString();
             Tile[][] blueprint = readBlueprint(json.getAsJsonArray("tiles"), tilesById, id);
 
-            registerWithCollisionCheck(id, new Building(blueprint), modId,
-                    buildingsById, owningModById, json.has("overrides"), "Building");
+            RegistrationContext<Building> buildingContext = new RegistrationContext<>(buildingsById, owningModById, json.has("overrides"), "Building");
+            registerWithCollisionCheck(id, new Building(blueprint), modId, buildingContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
@@ -231,23 +240,21 @@ public final class ModLoader {
     }
 
     private static <T> void registerWithCollisionCheck(String id, T value, String modId,
-                                                         Map<String, T> registry,
-                                                         Map<String, String> owningModById,
-                                                         boolean overrides, String contentType) {
-        if (registry.containsKey(id) && !overrides) {
-            throw new ModLoadException(contentType + " ID '" + id + "' from mod '" + modId
-                    + "' collides with existing content from mod '" + owningModById.get(id)
+                                                         RegistrationContext<T> context) {
+        if (context.registry().containsKey(id) && !context.overrides()) {
+            throw new ModLoadException(context.contentType() + " ID '" + id + "' from mod '" + modId
+                    + "' collides with existing content from mod '" + context.owningModById().get(id)
                     + "'; add an \"overrides\" field to confirm this is intentional.");
         }
 
-        if (registry.containsKey(id)) {
+        if (context.registry().containsKey(id)) {
             logger.info("Mod '{}' overrides {} '{}' previously provided by mod '{}'",
-                    modId, contentType.toLowerCase(), id, owningModById.get(id));
+                    modId, context.contentType().toLowerCase(), id, context.owningModById().get(id));
         }
 
-        registry.put(id, value);
-        owningModById.put(id, modId);
-        logger.info("Loaded {} '{}' from mod '{}'", contentType.toLowerCase(), id, modId);
+        context.registry().put(id, value);
+        context.owningModById().put(id, modId);
+        logger.info("Loaded {} '{}' from mod '{}'", context.contentType().toLowerCase(), id, modId);
     }
 
     private static Set<String> loadStatRegistry(Path modsRoot) {
@@ -297,29 +304,31 @@ public final class ModLoader {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             String id = json.get("id").getAsString();
             String name = json.get("name").getAsString();
-
-            Map<String, PlayerClass.StatCurve> statsByName = new LinkedHashMap<>();
-            if (json.has("stats")) {
-                JsonObject statsObj = json.getAsJsonObject("stats");
-                for (String statName : statsObj.keySet()) {
-                    if (!validStatNames.contains(statName)) {
-                        throw new ModLoadException("Class '" + id + "' references unregistered stat '"
-                                + statName + "' in file: " + file);
-                    }
-                    JsonObject statObj = statsObj.getAsJsonObject(statName);
-                    int base = statObj.has("base") ? statObj.get("base").getAsInt() : 0;
-                    String growthCalc = statObj.has("growth") ? statObj.get("growth").getAsString() : null;
-                    statsByName.put(statName, new PlayerClass.StatCurve(base, growthCalc));
-                }
-            }
-
-            registerWithCollisionCheck(id, new PlayerClass(id, name, statsByName), modId,
-                    classesById, owningModById, json.has("overrides"), "PlayerClass");
+            Map<String, PlayerClass.StatCurve> statsByName = parseClassStats(json, id, validStatNames, file);
+            RegistrationContext<PlayerClass> classContext = new RegistrationContext<>(classesById, owningModById, json.has("overrides"), "PlayerClass");
+            registerWithCollisionCheck(id, new PlayerClass(id, name, statsByName), modId, classContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
             throw new ModLoadException("Failed to load class from file: " + file, e);
         }
+    }
+
+    private static Map<String, PlayerClass.StatCurve> parseClassStats(JsonObject json, String id, Set<String> validStatNames, Path file) {
+        Map<String, PlayerClass.StatCurve> statsByName = new LinkedHashMap<>();
+        if (json.has("stats")) {
+            JsonObject statsObj = json.getAsJsonObject("stats");
+            for (String statName : statsObj.keySet()) {
+                if (!validStatNames.contains(statName)) {
+                    throw new ModLoadException("Class '" + id + "' references unregistered stat '" + statName + "' in file: " + file);
+                }
+                JsonObject statObj = statsObj.getAsJsonObject(statName);
+                int base = statObj.has("base") ? statObj.get("base").getAsInt() : 0;
+                String growthCalc = statObj.has("growth") ? statObj.get("growth").getAsString() : null;
+                statsByName.put(statName, new PlayerClass.StatCurve(base, growthCalc));
+            }
+        }
+        return statsByName;
     }
 
     private static void loadItems(Path modsRoot, ModManifest manifest,
@@ -351,45 +360,46 @@ public final class ModLoader {
             char glyph = json.get("glyph").getAsString().charAt(0);
             String type = json.get("type").getAsString();
             String slot = json.get("slot").getAsString();
-
-            Item.BaseDamage baseDamage = new Item.BaseDamage(0, 0);
-            if (json.has("baseDamage")) {
-                JsonObject bd = json.getAsJsonObject("baseDamage");
-                int min = bd.has("min") ? bd.get("min").getAsInt() : 0;
-                int max = bd.has("max") ? bd.get("max").getAsInt() : 0;
-                baseDamage = new Item.BaseDamage(min, max);
-            }
-
-            List<Item.Effect> effects = new ArrayList<>();
-            if (json.has("effects")) {
-                for (var element : json.getAsJsonArray("effects")) {
-                    JsonObject effectObj = element.getAsJsonObject();
-                    String effectType = effectObj.get("type").getAsString();
-                    String stat = effectObj.get("stat").getAsString();
-                    String calc = effectObj.get("calc").getAsString();
-
-                    if (!validStatNames.contains(stat)) {
-                        throw new ModLoadException("Item '" + id + "' references unregistered stat '"
-                                + stat + "' in file: " + file);
-                    }
-
-                    try {
-                        CalcExpressionParser.evaluate(calc, 0);
-                    } catch (IllegalArgumentException e) {
-                        throw new ModLoadException("Item '" + id
-                                + "' has an invalid calc expression in file: " + file, e);
-                    }
-
-                    effects.add(new Item.Effect(effectType, stat, calc));
-                }
-            }
-
-            registerWithCollisionCheck(id, new Item(id, name, glyph, type, slot, baseDamage, effects), modId,
-                    itemsById, owningModById, json.has("overrides"), "Item");
+            Item.BaseDamage baseDamage = parseItemBaseDamage(json);
+            List<Item.Effect> effects = parseItemEffects(json, id, validStatNames, file);
+            Item.ItemAttributes attributes = new Item.ItemAttributes(glyph, type, slot, baseDamage, effects);
+            RegistrationContext<Item> itemContext = new RegistrationContext<>(itemsById, owningModById, json.has("overrides"), "Item");
+            registerWithCollisionCheck(id, new Item(id, name, attributes), modId, itemContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
             throw new ModLoadException("Failed to load item from file: " + file, e);
+        }
+    }
+
+    private static Item.BaseDamage parseItemBaseDamage(JsonObject json) {
+        if (!json.has("baseDamage")) return new Item.BaseDamage(0, 0);
+        JsonObject bd = json.getAsJsonObject("baseDamage");
+        int min = bd.has("min") ? bd.get("min").getAsInt() : 0;
+        int max = bd.has("max") ? bd.get("max").getAsInt() : 0;
+        return new Item.BaseDamage(min, max);
+    }
+
+    private static List<Item.Effect> parseItemEffects(JsonObject json, String id, Set<String> validStatNames, Path file) {
+        List<Item.Effect> effects = new ArrayList<>();
+        if (!json.has("effects")) return effects;
+        for (var element : json.getAsJsonArray("effects")) {
+            JsonObject effectObj = element.getAsJsonObject();
+            String effectType = effectObj.get("type").getAsString();
+            String stat = effectObj.get("stat").getAsString();
+            String calc = effectObj.get("calc").getAsString();
+            if (!validStatNames.contains(stat)) throw new ModLoadException("Item '" + id + "' references unregistered stat '" + stat + "' in file: " + file);
+            validateCalcExpression(calc, id, file);
+            effects.add(new Item.Effect(effectType, stat, calc));
+        }
+        return effects;
+    }
+
+    private static void validateCalcExpression(String calc, String itemId, Path file) {
+        try {
+            CalcExpressionParser.evaluate(calc, 0);
+        } catch (IllegalArgumentException e) {
+            throw new ModLoadException("Item '" + itemId + "' has an invalid calc expression in file: " + file, e);
         }
     }
 
@@ -424,8 +434,8 @@ public final class ModLoader {
             Quest.Objective objective = readQuestObjective(json.getAsJsonObject("objective"), id, file);
             List<Quest.Reward> rewards = readQuestRewards(json, id, file, itemsById);
 
-            registerWithCollisionCheck(id, new Quest(id, name, objective, rewards), modId,
-                    questsById, owningModById, json.has("overrides"), "Quest");
+            RegistrationContext<Quest> questContext = new RegistrationContext<>(questsById, owningModById, json.has("overrides"), "Quest");
+            registerWithCollisionCheck(id, new Quest(id, name, objective, rewards), modId, questContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {
@@ -459,27 +469,26 @@ public final class ModLoader {
     private static Quest.Reward readQuestReward(JsonObject rewardObj, String questId, Path file,
                                                   Map<String, Item> itemsById) {
         String type = rewardObj.get("type").getAsString();
-        if ("item".equals(type)) {
-            String itemId = rewardObj.get("id").getAsString();
-            int count = rewardObj.has("count") ? rewardObj.get("count").getAsInt() : 1;
-            if (!itemsById.containsKey(itemId)) {
-                throw new ModLoadException("Quest '" + questId + "' references unknown item '"
-                        + itemId + "' in file: " + file);
-            }
-            return new Quest.Reward(type, itemId, count, null);
+        if ("item".equals(type)) return parseItemReward(rewardObj, questId, file, itemsById);
+        if ("xp".equals(type)) return parseXpReward(rewardObj, questId, file);
+        throw new ModLoadException("Quest '" + questId + "' has unsupported reward type '" + type + "' in file: " + file);
+    }
+
+    private static Quest.Reward parseItemReward(JsonObject rewardObj, String questId, Path file, Map<String, Item> itemsById) {
+        String itemId = rewardObj.get("id").getAsString();
+        int count = rewardObj.has("count") ? rewardObj.get("count").getAsInt() : 1;
+        if (!itemsById.containsKey(itemId)) throw new ModLoadException("Quest '" + questId + "' references unknown item '" + itemId + "' in file: " + file);
+        return new Quest.Reward("item", itemId, count, null);
+    }
+
+    private static Quest.Reward parseXpReward(JsonObject rewardObj, String questId, Path file) {
+        String calc = rewardObj.get("calc").getAsString();
+        try {
+            CalcExpressionParser.evaluate(calc, 0);
+        } catch (IllegalArgumentException e) {
+            throw new ModLoadException("Quest '" + questId + "' has an invalid calc expression in file: " + file, e);
         }
-        if ("xp".equals(type)) {
-            String calc = rewardObj.get("calc").getAsString();
-            try {
-                CalcExpressionParser.evaluate(calc, 0);
-            } catch (IllegalArgumentException e) {
-                throw new ModLoadException("Quest '" + questId
-                        + "' has an invalid calc expression in file: " + file, e);
-            }
-            return new Quest.Reward(type, null, null, calc);
-        }
-        throw new ModLoadException("Quest '" + questId + "' has unsupported reward type '"
-                + type + "' in file: " + file);
+        return new Quest.Reward("xp", null, null, calc);
     }
 
     private static void loadThemes(Path modsRoot, ModManifest manifest,
@@ -507,8 +516,8 @@ public final class ModLoader {
             String id = json.get("id").getAsString();
             Map<String, Color> colorsByKey = readThemeColors(json.getAsJsonObject("colors"), id, file);
 
-            registerWithCollisionCheck(id, new WidgetColorTheme(id, colorsByKey), modId,
-                    themesById, owningModById, json.has("overrides"), "Theme");
+            RegistrationContext<WidgetColorTheme> themeContext = new RegistrationContext<>(themesById, owningModById, json.has("overrides"), "Theme");
+            registerWithCollisionCheck(id, new WidgetColorTheme(id, colorsByKey), modId, themeContext);
         } catch (ModLoadException e) {
             throw e;
         } catch (Exception e) {

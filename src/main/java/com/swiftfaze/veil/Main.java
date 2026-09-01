@@ -38,79 +38,64 @@ public class Main {
         JFrame frame = new JFrame("Veil");
         CardLayout cardLayout = new CardLayout();
         JPanel cardPanel = new JPanel(cardLayout);
-
         loadAndApplyDefaultTheme();
-
-        // Populated as each screen is built below; every screen's navigation callback captures
-        // this same map reference, so forward references between screens built later (settings
-        // <-> keybinds is a genuine two-way cycle) resolve fine at runtime, once the map is full
-        // and before the frame is ever shown - only the map reference itself needs to exist yet
-        // when each lambda is written, not its final contents.
         Map<String, JComponent> cards = new HashMap<>();
 
-        // Build game view components (for the game card)
+        GamePanel gamePanel = buildGameCard(cardPanel, cards);
+        buildUIScreens(cardLayout, cardPanel, cards, gamePanel);
+        configureAndShowFrame(frame, cardPanel, cardLayout);
+    }
+
+    private static GamePanel buildGameCard(JPanel cardPanel, Map<String, JComponent> cards) {
         NorthPanel northPanel = new NorthPanel();
         SouthPanel southPanel = new SouthPanel();
         EastPanel eastPanel = new EastPanel();
         GamePanel gamePanel = new GamePanel();
-
         gamePanel.addGameListener(eastPanel);
         eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
-
         JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
-
-        // Build game card: North + South + Center layout
         JPanel gameCard = new JPanel(new BorderLayout());
         gameCard.add(northPanel, BorderLayout.NORTH);
         gameCard.add(southPanel, BorderLayout.SOUTH);
         gameCard.add(gameContentArea, BorderLayout.CENTER);
+        cardPanel.add(gameCard, "game");
+        return gamePanel;
+    }
 
-        // Build title screen card
-        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> {
-            switch (menuItem) {
-                case "New" -> {
-                    cardLayout.show(cardPanel, "game");
-                    gamePanel.requestFocusInWindow();
-                    gamePanel.startGameLoop();
-                }
-                case "Settings" -> navigateTo(cardLayout, cardPanel, cards, "settings");
-                // Continue, Load, Exit: placeholders, do nothing
-            }
-        });
-
-        // Build settings card
-        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
-            screen -> navigateTo(cardLayout, cardPanel, cards, screen),
-            Main::openFolder
-        );
-
-        JLayeredPane settingsContentArea = SettingsWindow.buildContentArea(settingsScreen);
-
-        // Build keybinds card
-        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
-            screen -> navigateTo(cardLayout, cardPanel, cards, screen)
-        );
-
+    private static void buildUIScreens(CardLayout cardLayout, JPanel cardPanel,
+                                       Map<String, JComponent> cards, GamePanel gamePanel) {
+        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> handleMenuSelection(menuItem, cardLayout, cardPanel, cards, gamePanel));
+        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder);
+        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(screen -> navigateTo(cardLayout, cardPanel, cards, screen));
         cards.put("title", titleScreen);
         cards.put("settings", settingsScreen);
         cards.put("keybinds", keybindsScreen);
-
         cardPanel.add(titleScreen, "title");
-        cardPanel.add(gameCard, "game");
-        cardPanel.add(settingsContentArea, "settings");
+        cardPanel.add(SettingsWindow.buildContentArea(settingsScreen), "settings");
         cardPanel.add(keybindsScreen, "keybinds");
+    }
 
+    private static void handleMenuSelection(String menuItem, CardLayout cardLayout, JPanel cardPanel,
+                                           Map<String, JComponent> cards, GamePanel gamePanel) {
+        if ("New".equals(menuItem)) {
+            cardLayout.show(cardPanel, "game");
+            gamePanel.requestFocusInWindow();
+            gamePanel.startGameLoop();
+        } else if ("Settings".equals(menuItem)) {
+            navigateTo(cardLayout, cardPanel, cards, "settings");
+        }
+    }
+
+    private static void configureAndShowFrame(JFrame frame, JPanel cardPanel, CardLayout cardLayout) {
         frame.setLayout(new BorderLayout());
         frame.add(cardPanel, BorderLayout.CENTER);
-
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
         cardLayout.show(cardPanel, "title");
-        titleScreen.requestFocusInWindow();
+        ((JComponent) cardPanel.getComponent(0)).requestFocusInWindow();
         keyListen(frame);
     }
 
