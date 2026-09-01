@@ -11,8 +11,8 @@
 ## Status
 
 - [ ] Intent drafted
-- [ ] Spec drafted (`.feature` file)
-- [ ] Approved by human
+- [ ] Spec drafted (`.feature` file) — high-risk path only, see `.claude/workflow.md`
+- [ ] Approved by human — high-risk path only
 - [ ] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [ ] Acceptance tests passing
