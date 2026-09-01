@@ -203,11 +203,13 @@ lines inward and opened a visible gap between rows); used by
 `SettingsKeybindsPanel` below), `RadioGroupWidget<T>`
 (a single-select radio group, vertical by default or horizontal on demand),
 `PatternFieldWidget` (a text-input field validating its content against a
-caller-supplied regex pattern), `PopupWidget` (a dismissible overlay with a
-Close button; `open()`/`dismiss()` manage visibility and focus, Escape or the
-Close button dismiss it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()` hooks
-— bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire no matter which
-popup child has real Swing focus — let a subclass wire keyboard navigation to
+caller-supplied regex pattern), `PopupWidget` (a dismissible overlay,
+keyboard-only like the rest of this game — no Close button, since it never
+responded to anything but a click; `open()`/`dismiss()` manage visibility and
+focus, Escape dismisses it, and `onUp()`/`onDown()`/`onLeft()`/`onRight()`
+hooks — bound at `WHEN_ANCESTOR_OF_FOCUSED_COMPONENT`, so they fire whether
+the popup itself or a descendant has real Swing focus — let a subclass wire
+keyboard navigation to
 its own content; `isFullScreen()` returns true by default, but subclasses can
 return false to be centered at their preferred size instead of stretched);
 `SliderWidget` (a bounded numeric slider with left/right adjustment within a
@@ -322,6 +324,22 @@ pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
 `EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by
 `ListWidget`.
+
+`CodexPanel` extends `PopupWidget` and mirrors `InventoryPanel`'s list+detail
+split structure: a tab switcher across Items, Tiles, and Classes (three
+`JLabel`s styled as tabs with selection highlighting) above a 50/50 split body
+with a category-specific entry list on the left (scrollable `ListWidget`,
+non-wrapping) and a field/value detail table on the right (`TableWidget`
+showing ID, Name, Glyph/Symbol/Color, etc. per category). Up/Down/Left/Right
+navigate within the current pane and can switch focus between list and detail
+via Left/Right. Tab and Shift+Tab cycle forward/backward through tabs. Data is
+populated externally from mod content (`showItems`/`showTiles`/`showClasses`)
+same as `InventoryPanel`. Opening Codex via the X key while Inventory is open
+closes Inventory first, and vice versa, so only one popup is ever visible at
+a time — mutual exclusion is handled in `EastPanel.toggleCodex()`/
+`toggleInventory()`. The codex is placed at `POPUP_LAYER` in `GameWindow`'s
+layered pane, same as the inventory. Buildings and Quests tabs are deferred
+(see `specs/intent/codex-ui.md`).
 
 **Class/stats sandbox** (`sandbox/`): a dev-only stat inspector, not
 referenced from `Main.java` and not the packaged/jpackage build's entry

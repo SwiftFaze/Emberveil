@@ -3,6 +3,7 @@ package com.swiftfaze.veil.ui;
 import com.swiftfaze.veil.entities.player.Player;
 import com.swiftfaze.veil.game.GameListener;
 import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.ui.widget.FocusManager;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
@@ -17,6 +18,7 @@ public class EastPanel extends JPanel implements GameListener {
 
     private final PlayerInfoPanel playerInfoPanel;
     private final InventoryPanel inventoryPanel;
+    private final CodexPanel codexPanel;
     private final FocusManager focusManager;
     private Runnable restoreGameFocus = () -> {
     };
@@ -32,18 +34,23 @@ public class EastPanel extends JPanel implements GameListener {
 
         playerInfoPanel = new PlayerInfoPanel();
         inventoryPanel = new InventoryPanel();
+        codexPanel = new CodexPanel();
+
+        ModRegistry mods = ModLoader.load(java.nio.file.Paths.get("mods"));
+
         inventoryPanel.setFocusManager(focusManager);
-        inventoryPanel.showItems(ModLoader.load(java.nio.file.Paths.get("mods")).getAllItems());
+        inventoryPanel.showItems(mods.getAllItems());
         inventoryPanel.setOnDismiss(this::onInventoryDismissed);
+
+        codexPanel.setFocusManager(focusManager);
+        codexPanel.showItems(mods.getAllItems());
+        codexPanel.showTiles(mods.getAllTiles());
+        codexPanel.showClasses(mods.getAllPlayerClasses());
+        codexPanel.setOnDismiss(this::onCodexDismissed);
 
         add(playerInfoPanel, BorderLayout.NORTH);
     }
 
-    /**
-     * Lets GamePanel reclaim keyboard focus once the popup is dismissed —
-     * InventoryPanel only knows how to give focus up via a callback, never a
-     * direct GamePanel reference.
-     */
     public void setRestoreGameFocusAction(Runnable restoreGameFocus) {
         this.restoreGameFocus = restoreGameFocus;
     }
@@ -53,7 +60,22 @@ public class EastPanel extends JPanel implements GameListener {
         if (inventoryPanel.isVisible()) {
             inventoryPanel.dismiss();
         } else {
+            if (codexPanel.isVisible()) {
+                codexPanel.dismiss();
+            }
             inventoryPanel.open();
+        }
+    }
+
+    @Override
+    public void toggleCodex() {
+        if (codexPanel.isVisible()) {
+            codexPanel.dismiss();
+        } else {
+            if (inventoryPanel.isVisible()) {
+                inventoryPanel.dismiss();
+            }
+            codexPanel.open();
         }
     }
 
@@ -61,8 +83,16 @@ public class EastPanel extends JPanel implements GameListener {
         restoreGameFocus.run();
     }
 
+    private void onCodexDismissed() {
+        restoreGameFocus.run();
+    }
+
     public InventoryPanel getInventoryPanel() {
         return inventoryPanel;
+    }
+
+    public CodexPanel getCodexPanel() {
+        return codexPanel;
     }
 
     @Override

@@ -40,6 +40,10 @@ public class ModRegistry {
         return tilesById.get(id);
     }
 
+    public List<Tile> getAllTiles() {
+        return List.copyOf(tilesById.values());
+    }
+
     public PlayerClass getPlayerClass(String id) {
         return classesById.get(id);
     }

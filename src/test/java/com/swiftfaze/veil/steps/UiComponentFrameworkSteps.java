@@ -3,8 +3,11 @@ package com.swiftfaze.veil.steps;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
+import com.swiftfaze.veil.mods.ModLoader;
+import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.sandbox.ClassSandboxModel;
 import com.swiftfaze.veil.sandbox.ClassSandboxPanel;
+import com.swiftfaze.veil.ui.CodexPanel;
 import com.swiftfaze.veil.ui.EastPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.ResetConfirmationPopup;
@@ -117,6 +120,10 @@ public class UiComponentFrameworkSteps {
             case "Enter" -> fireEnterKey();
             case "Escape" -> fireEscapeKey();
             case "D" -> fireDropKey();
+            case "X" -> fireCodexToggleKey();
+            case "I" -> fireInventoryToggleKey();
+            case "Tab" -> fireTabKey();
+            case "Shift+Tab" -> fireShiftTabKey();
             default -> throw new IllegalArgumentException("Unhandled key: " + key);
         }
     }
@@ -136,6 +143,8 @@ public class UiComponentFrameworkSteps {
             radioGroupWidget.moveUp();
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-up");
+        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction("popup-up");
         }
     }
 
@@ -154,6 +163,8 @@ public class UiComponentFrameworkSteps {
             radioGroupWidget.moveDown();
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-down");
+        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction("popup-down");
         }
     }
 
@@ -172,6 +183,8 @@ public class UiComponentFrameworkSteps {
             fireDropChoiceAction("radio-left");
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-left");
+        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction("popup-left");
         }
     }
 
@@ -190,6 +203,8 @@ public class UiComponentFrameworkSteps {
             fireDropChoiceAction("radio-right");
         } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
             fireInventoryPopupAction("popup-right");
+        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction("popup-right");
         }
     }
 
@@ -273,6 +288,8 @@ public class UiComponentFrameworkSteps {
                 fireInventoryPopupDropAction("popup-dismiss");
             } else if (eastPanel.getInventoryPanel().isVisible()) {
                 fireInventoryPopupAction("popup-dismiss");
+            } else if (eastPanel.getCodexPanel().isVisible()) {
+                fireCodexPopupAction("popup-dismiss");
             }
         }
     }
@@ -287,6 +304,13 @@ public class UiComponentFrameworkSteps {
         Action action = eastPanel.getInventoryPanel().getActionMap().get(actionName);
         if (action != null) {
             action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel(), ActionEvent.ACTION_PERFORMED, actionName));
+        }
+    }
+
+    private void fireCodexPopupAction(String actionName) {
+        Action action = eastPanel.getCodexPanel().getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(eastPanel.getCodexPanel(), ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -359,19 +383,20 @@ public class UiComponentFrameworkSteps {
         eastPanel.toggleInventory();
     }
 
-    @Then("the inventory popup is open")
+    @Given("the inventory popup is open")
     public void theInventoryPopupIsOpen() {
+        if (eastPanel == null) {
+            theRebuiltInGameInventoryScreen();
+        }
+        if (!eastPanel.getInventoryPanel().isVisible()) {
+            eastPanel.toggleInventory();
+        }
         assertTrue(eastPanel.getInventoryPanel().isVisible());
     }
 
     @Then("the inventory popup is shown")
     public void theInventoryPopupIsShown() {
         assertTrue(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the popup's Close button has keyboard focus")
-    public void thePopupsCloseButtonHasKeyboardFocus() {
-        assertNotNull(eastPanel.getInventoryPanel().getCloseButton());
     }
 
     @Then("the inventory popup is closed")
@@ -397,18 +422,6 @@ public class UiComponentFrameworkSteps {
                 layeredContentArea.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0]);
         assertTrue(popupLayer > mainAreaLayer);
     }
-
-    @When("the popup's Close button is confirmed")
-    public void thePopupsCloseButtonIsConfirmed() {
-        Action confirmAction = eastPanel.getInventoryPanel().getCloseButton().getActionMap().get("button-confirm");
-        if (confirmAction != null) {
-            confirmAction.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel().getCloseButton(),
-                ActionEvent.ACTION_PERFORMED, "button-confirm"));
-        } else {
-            eastPanel.getInventoryPanel().dismiss();
-        }
-    }
-
 
     @Then("the inventory popup lists the item {string}")
     public void theInventoryPopupListsTheItem(String itemName) {
@@ -1045,5 +1058,154 @@ public class UiComponentFrameworkSteps {
     @Then("the confirmation popup is closed")
     public void theConfirmationPopupIsClosed() {
         assertFalse(settingsScreenPanel.getResetConfirmationPopup().isVisible());
+    }
+
+    @Given("the game world is running")
+    public void theGameWorldIsRunning() {
+        theRebuiltInGameInventoryScreen();
+    }
+
+    @Given("the codex overlay is open")
+    public void theCodexOverlayIsOpen() {
+        if (eastPanel == null) {
+            theRebuiltInGameInventoryScreen();
+        }
+        if (!eastPanel.getCodexPanel().isVisible()) {
+            eastPanel.toggleCodex();
+        }
+    }
+
+    @Then("the codex overlay is shown")
+    public void theCodexOverlayIsShown() {
+        assertTrue(eastPanel.getCodexPanel().isVisible());
+    }
+
+    @Then("the codex overlay is not shown")
+    public void theCodexOverlayIsNotShown() {
+        assertFalse(eastPanel.getCodexPanel().isVisible());
+    }
+
+    @Then("a tab switcher for {string}, {string}, {string} is shown")
+    public void aTabSwitcherForIsShown(String first, String second, String third) {
+        assertEquals(List.of(first, second, third), eastPanel.getCodexPanel().getTabLabels());
+    }
+
+    @Then("the {string} tab is selected")
+    public void theTabIsSelected(String label) {
+        assertEquals(label, eastPanel.getCodexPanel().getSelectedCategory().getLabel());
+    }
+
+    @Given("the {string} tab is opened")
+    public void theTabIsOpened(String label) {
+        CodexPanel codex = eastPanel.getCodexPanel();
+        int guard = 0;
+        while (!codex.getSelectedCategory().getLabel().equals(label) && guard < 10) {
+            codex.nextTab();
+            guard++;
+        }
+        assertEquals(label, codex.getSelectedCategory().getLabel());
+    }
+
+    @Then("the detail pane shows the first {word} entry's data")
+    public void theDetailPaneShowsTheFirstEntrysData(String category) {
+        CodexPanel codex = eastPanel.getCodexPanel();
+        assertFalse(codex.isShowingPlaceholder());
+        assertEquals(expectedFirstEntryName(category), codex.getSelectedEntryName());
+    }
+
+    @Then("the codex list shows one entry per mod-defined {word}")
+    public void theCodexListShowsOneEntryPerModDefined(String category) {
+        ModRegistry mods = ModLoader.load(java.nio.file.Paths.get("mods"));
+        int expected = switch (category) {
+            case "Items" -> mods.getAllItems().size();
+            case "Tiles" -> mods.getAllTiles().size();
+            case "Classes" -> mods.getAllPlayerClasses().size();
+            default -> throw new IllegalArgumentException("Unhandled category: " + category);
+        };
+        assertEquals(expected, eastPanel.getCodexPanel().getEntryCount());
+    }
+
+    @When("an entry is selected from the list")
+    public void anEntryIsSelectedFromTheList() {
+        fireCodexPopupAction("popup-down");
+    }
+
+    @Then("the detail pane shows that entry's data")
+    public void theDetailPaneShowsThatEntrysData() {
+        CodexPanel codex = eastPanel.getCodexPanel();
+        assertFalse(codex.isShowingPlaceholder());
+        assertNotNull(codex.getSelectedEntryName());
+    }
+
+    @Given("no mods define any {word}")
+    public void noModsDefineAny(String category) {
+        CodexPanel codex = eastPanel.getCodexPanel();
+        switch (category) {
+            case "Items" -> codex.showItems(List.of());
+            case "Tiles" -> codex.showTiles(List.of());
+            case "Classes" -> codex.showClasses(List.of());
+            default -> throw new IllegalArgumentException("Unhandled category: " + category);
+        }
+    }
+
+    @Then("the codex list is empty")
+    public void theCodexListIsEmpty() {
+        assertEquals(0, eastPanel.getCodexPanel().getEntryCount());
+    }
+
+    @Then("the detail pane shows {string}")
+    public void theDetailPaneShows(String text) {
+        assertEquals(text, eastPanel.getCodexPanel().getDetailPlaceholderText());
+    }
+
+    @Given("the codex overlay was previously closed while showing the {string} tab")
+    public void theCodexOverlayWasPreviouslyClosedWhileShowingTheTab(String label) {
+        if (eastPanel == null) {
+            theRebuiltInGameInventoryScreen();
+        }
+        CodexPanel codex = eastPanel.getCodexPanel();
+        if (!codex.isVisible()) {
+            eastPanel.toggleCodex();
+        }
+        int guard = 0;
+        while (!codex.getSelectedCategory().getLabel().equals(label) && guard < 10) {
+            codex.nextTab();
+            guard++;
+        }
+        eastPanel.toggleCodex();
+    }
+
+    private String expectedFirstEntryName(String category) {
+        ModRegistry mods = ModLoader.load(java.nio.file.Paths.get("mods"));
+        return switch (category) {
+            case "Items" -> mods.getAllItems().get(0).getName();
+            case "Tiles" -> mods.getAllTiles().get(0).getId();
+            case "Classes" -> mods.getAllPlayerClasses().get(0).getName();
+            default -> throw new IllegalArgumentException("Unhandled category: " + category);
+        };
+    }
+
+    private void fireCodexToggleKey() {
+        if (eastPanel != null) {
+            eastPanel.toggleCodex();
+        }
+    }
+
+    private void fireInventoryToggleKey() {
+        if (eastPanel != null) {
+            eastPanel.toggleInventory();
+        }
+    }
+
+    private void fireTabKey() {
+        if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction(Keybindings.ACTION_NEXT_TAB);
+        }
+    }
+
+    private void fireShiftTabKey() {
+        if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
+            fireCodexPopupAction(Keybindings.ACTION_PREV_TAB);
+        }
     }
 }

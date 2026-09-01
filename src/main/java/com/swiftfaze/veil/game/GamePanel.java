@@ -52,12 +52,14 @@ public class GamePanel extends JPanel {
         inputMap.put(Keybindings.MOVE_RIGHT_D, Keybindings.ACTION_MOVE_RIGHT);
         inputMap.put(Keybindings.MOVE_RIGHT_ARROW, Keybindings.ACTION_MOVE_RIGHT);
         inputMap.put(Keybindings.TOGGLE_INVENTORY, Keybindings.ACTION_TOGGLE_INVENTORY);
+        inputMap.put(Keybindings.TOGGLE_CODEX, Keybindings.ACTION_TOGGLE_CODEX);
 
         actionMap.put(Keybindings.ACTION_MOVE_UP, new MoveAction(player::moveUp));
         actionMap.put(Keybindings.ACTION_MOVE_DOWN, new MoveAction(player::moveDown));
         actionMap.put(Keybindings.ACTION_MOVE_LEFT, new MoveAction(player::moveLeft));
         actionMap.put(Keybindings.ACTION_MOVE_RIGHT, new MoveAction(player::moveRight));
         actionMap.put(Keybindings.ACTION_TOGGLE_INVENTORY, new ToggleInventoryAction());
+        actionMap.put(Keybindings.ACTION_TOGGLE_CODEX, new ToggleCodexAction());
     }
 
     private void notifyPlayerUpdated() {
@@ -131,6 +133,15 @@ public class GamePanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             for (GameListener l : listeners) {
                 l.toggleInventory();
+            }
+        }
+    }
+
+    private class ToggleCodexAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for (GameListener l : listeners) {
+                l.toggleCodex();
             }
         }
     }

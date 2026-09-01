@@ -27,8 +27,6 @@ public class InventoryPanel extends PopupWidget {
      */
     private enum Focus { ITEM_LIST, FIELDS, EFFECTS }
 
-    private static final int BODY_HEIGHT = 280;
-
     private final ListWidget<Item> itemList;
     private final JPanel detailsPanel;
     private final JScrollPane detailsScrollPane;
@@ -74,7 +72,7 @@ public class InventoryPanel extends PopupWidget {
         effectsTable.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         dropConfirmationPopup = new DropConfirmationPopup();
-        dropConfirmationPopup.setOnDismiss(() -> getCloseButton().requestFocusInWindow());
+        dropConfirmationPopup.setOnDismiss(this::requestFocusInWindow);
 
         detailsScrollPane = buildScrollPane(detailsPanel);
         addContent(buildBody(buildScrollPane(itemList), detailsScrollPane));
@@ -212,8 +210,10 @@ public class InventoryPanel extends PopupWidget {
         JPanel body = new JPanel(new GridLayout(1, 2, 20, 0));
         body.setBackground(WidgetTheme.BACKGROUND);
         body.setAlignmentX(Component.LEFT_ALIGNMENT);
-        body.setPreferredSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
-        body.setMaximumSize(new Dimension(Integer.MAX_VALUE, BODY_HEIGHT));
+        // No fixed preferred/maximum height: BoxLayout gives the title label just what it
+        // needs, then hands this component - the only one with an unbounded maximum height -
+        // all the leftover vertical space, so the list and detail pane fill the popup.
+        body.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         body.add(left);
         body.add(right);
         return body;

@@ -14,6 +14,9 @@ public final class Keybindings {
     public static final KeyStroke MOVE_RIGHT_D = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
     public static final KeyStroke MOVE_RIGHT_ARROW = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0);
     public static final KeyStroke TOGGLE_INVENTORY = KeyStroke.getKeyStroke(KeyEvent.VK_I, 0);
+    public static final KeyStroke TOGGLE_CODEX = KeyStroke.getKeyStroke(KeyEvent.VK_X, 0);
+    public static final KeyStroke NEXT_TAB = KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0);
+    public static final KeyStroke PREV_TAB = KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.SHIFT_DOWN_MASK);
 
     public static final KeyStroke MENU_UP = KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0);
     public static final KeyStroke MENU_DOWN = KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0);
@@ -28,6 +31,9 @@ public final class Keybindings {
     public static final String ACTION_MOVE_LEFT = "move-left";
     public static final String ACTION_MOVE_RIGHT = "move-right";
     public static final String ACTION_TOGGLE_INVENTORY = "toggle-inventory";
+    public static final String ACTION_TOGGLE_CODEX = "toggle-codex";
+    public static final String ACTION_NEXT_TAB = "next-tab";
+    public static final String ACTION_PREV_TAB = "prev-tab";
 
     public static final String ACTION_MENU_UP = "menu-up";
     public static final String ACTION_MENU_DOWN = "menu-down";

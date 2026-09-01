@@ -51,3 +51,4 @@ that change's definition of done, not separate cleanup.
 | `ui-widget-slider.feature` | Bounded-value slider widget (Left/Right adjusts within [min, max], no wrap) — no real backing system, proven in isolation |
 | `confirmation-popup-variant.feature` | Centered, content-sized PopupWidget presentation, proven by a Yes/No confirm dialog on the settings screen's Reset to Defaults |
 | `widget-theming.feature` | Mod-driven `theme.json` loaded via `ModLoader` (id/collision/overrides), populating all 10 `WidgetTheme` colors from `mods/core/theme.json`; a second mod's theme loads without activating |
+| `codex-ui.feature` | In-game Codex overlay (X key) with a tab switcher across Items/Tiles/Classes, each tab a list+detail split mirroring InventoryPanel; no locking/gating |

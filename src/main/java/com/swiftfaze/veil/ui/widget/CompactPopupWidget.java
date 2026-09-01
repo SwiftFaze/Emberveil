@@ -27,9 +27,6 @@ public class CompactPopupWidget extends PopupWidget {
     public CompactPopupWidget(String title) {
         super();
 
-        // Remove the inherited Close button from the layout
-        remove(getCloseButton());
-
         // Outer frame around the whole dialog, not just the title — without this the body
         // below the title bar has no border at all and reads as black-on-black against the
         // game view behind it.
@@ -138,6 +135,6 @@ public class CompactPopupWidget extends PopupWidget {
     public void open() {
         super.open();
         // Subclasses should override to focus their own content (e.g. a radio choice)
-        // instead of the Close button (which is no longer visible)
+        // instead of the popup itself
     }
 }
