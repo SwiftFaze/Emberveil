@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0-beta.7](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.6...v0.5.0-beta.7) (2026-09-01)
+
+
+### Features
+
+* add PMD and JaCoCo as CI-enforced quality gates ([03fda8a](https://github.com/SwiftFaze/Veil/commit/03fda8a5577df3df4eb973e3a67ebbf8ac60c90b))
+* add PMD and JaCoCo as CI-enforced quality gates ([80edfc3](https://github.com/SwiftFaze/Veil/commit/80edfc3acc28a9764bc5e4f85e536baa22cb60ad)), closes [#123](https://github.com/SwiftFaze/Veil/issues/123)
+
+
+### Bug Fixes
+
+* bump maven-pmd-plugin to 3.28.0 to clear plugin validation warnings ([c2a6686](https://github.com/SwiftFaze/Veil/commit/c2a6686a67262c91a7da953f3992708058cc1d65))
+* exclude dependency manifests and module-info from shaded jar ([b7ae1d0](https://github.com/SwiftFaze/Veil/commit/b7ae1d0d42e1b84ab903775ef9ad6d5ca93dd405))
+
 ## [0.5.0-beta.6](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.5...v0.5.0-beta.6) (2026-09-01)
 
 
