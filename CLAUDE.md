@@ -35,7 +35,7 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 
 ## Architecture
 
-See `docs/architecture.md` for the full write-up (entry point/window assembly, the `GamePanel` render loop, the flat single-layer `WorldScene`/`Tile` world model, JSON building blueprints, player movement, Key Bindings-based input, the `TerminalPanel`/`SelectableMenu` UI shell, JSON-driven player classes/stats, the class/stats sandbox, and the `DrawableAsciiEntity` rendering contracts) and `docs/components.md` for the self-describing list/table/detail UI contract (`Identifiable`/`DetailDescribable`/`CodexInspectable`) that any new Swing panel or mod-loaded content type should follow.
+See `docs/README.md` for the full docs index. In short: `docs/architecture.md` covers the game engine and data model (entry point/window assembly, the `GamePanel` render loop, the flat single-layer `WorldScene`/`Tile` world model, JSON building blueprints, player movement, Key Bindings-based input, JSON-driven player classes/stats, the class/stats sandbox, and the `DrawableAsciiEntity` rendering contracts); `docs/ui-widgets.md` covers the reusable Swing widget framework and theming; `docs/screens.md` covers how those widgets compose into the game's actual screens (title, settings, keybinds, inventory, Codex); and `docs/components.md` covers the self-describing list/table/detail UI contract (`Identifiable`/`DetailDescribable`/`Inspectable`) that any new Swing panel or mod-loaded content type should follow.
 
 ## Spec-first workflow layout
 
