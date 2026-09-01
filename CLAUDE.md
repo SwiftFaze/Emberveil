@@ -39,7 +39,7 @@ See `docs/README.md` for the full docs index. In short: `docs/architecture.md` c
 
 ## Spec-first workflow layout
 
-This repo follows the intent → spec → approval → implementation pipeline (see `.claude/workflow.md` for the step-by-step mechanics — this section only covers repo-specific file locations and extensions):
+This repo follows a risk-gated agentic pipeline (see `.claude/workflow.md` for the step-by-step mechanics, including the high-risk vs. standard path split — this section only covers repo-specific file locations and extensions):
 
 - `/specs/intent/<feature-slug>.md` — copy `specs/intent/TEMPLATE.md` to start one by hand, use the `spec-intent` skill to derive one from an existing GitHub issue, or `brainstorm-issue` for an idea that isn't ready to be an intent doc yet.
 - `/specs/features/<feature-slug>.feature` — wired to Cucumber via `mvn test` (see `RunCucumberTest`). **One `.feature` file per distinct concept** — an intent covering multiple unrelated things (a new class *and* a new biome) produces multiple `.feature` files (`class-warrior.feature`, `biome-jungle.feature`), never one bundled file. See `specs/features/README.md`.

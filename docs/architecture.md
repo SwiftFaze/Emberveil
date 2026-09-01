@@ -11,6 +11,12 @@ compose into the game's actual screens, and `docs/components.md` covers
 the self-describing list/detail data contract screens use to feed those
 widgets. See `docs/README.md` for the full doc index.
 
+This engine/widgets/screens layering is mechanically enforced, not just
+documented: `ModuleDependencyTest` (ArchUnit) fails the build if engine
+code depends on the UI layer, or if a widget depends on a screen. See
+`docs/testing.md`'s "Module dependency gate" section for the exact rule
+and why `Main` and `sandbox` are excluded.
+
 **Entry point / window assembly** (`Main.java`): builds a `JFrame` with
 `NorthPanel`/`SouthPanel`/`EastPanel`/`GamePanel` in a `BorderLayout`. There
 is no game loop/ticker — the world only repaints in response to key events

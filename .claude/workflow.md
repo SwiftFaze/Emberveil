@@ -1,8 +1,28 @@
 # Development workflow (Uncle Bob-style agentic pipeline)
 
-This project uses a spec-first, constraint-first workflow for AI-assisted
-development. Follow this order for every non-trivial feature. Do not skip
-steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
+This project uses a constraint-first workflow for AI-assisted development,
+gated by feature risk rather than one fixed process for everything. Two
+paths exist:
+
+- **High-risk path** — auth, payments, data integrity, or public APIs.
+  Follow Steps 1-3 below in full before any implementation code is
+  written: a written intent doc, a human-approved Gherkin spec, and an
+  explicit human approval gate. Do not skip these for this category of
+  feature.
+- **Standard path** — everything else (the default). Still write a short
+  intent doc (Step 1), but skip the blocking Steps 2-3 approval gate —
+  go straight into Step 4's agile implementation loop instead: implement
+  a slice, look at the result, reconcile the intent doc with what was
+  actually built, continue. A `.feature` file is still required by
+  Step 5 before the feature is done, it just doesn't have to exist,
+  complete and approved, before implementation starts.
+
+This split exists because requiring a fully pre-approved spec before any
+code exists, for every feature, doesn't survive contact with
+implementation: plans made before an agent starts working reliably
+diverge from what actually gets built. Paying that approval-latency cost
+is reserved for the class of change where getting it wrong is genuinely
+expensive.
 
 ## Step order
 
@@ -15,14 +35,31 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       to in-progress, and derives `intent.md` from the issue's own
       description.
     - Intent is not written once and frozen — clarifying answers gathered
-      during Step 2 get appended back here (see the `spec-feature`
-      skill's Clarifications section). `.feature` is always derived from
-      the current state of this file, never the other way around.
-    - See "Model selection" below — this step uses Claude Sonnet 5.
-2. **Spec** — generate a Gherkin feature file from the intent doc and save
-   it to `/specs/features/<feature-slug>.feature`. Use the `spec-feature`
-   skill (`.claude/skills/spec-feature/`) for this. Do not write
-   implementation code in this step.
+      while drafting the spec (high-risk path) or while implementing
+      (standard path) get appended back here. `.feature` is always
+      derived from the current state of this file, never the other way
+      around.
+    - **Standard path** (the default — anything not auth/payments/
+      data-integrity/public-API): this intent doc is a starting point
+      for Step 4, not a permanently maintained artifact — it isn't
+      required to be indexed or kept up to date long-term (see
+      `specs/intent/README.md`). Skip Steps 2-3's blocking approval gate
+      entirely; go straight to Step 4 with an agile loop: implement a
+      slice, look at the result, reconcile this doc with what was
+      actually built, continue with the next slice. Write or regenerate
+      the `.feature` file during Step 4/5 as behavior stabilizes, rather
+      than requiring it complete and approved before code exists — it
+      still must exist, be wired, and pass before the feature is marked
+      done.
+    - **High-risk path** (auth/payments/data-integrity/public API):
+      continue to Step 2 below — this is unchanged from before.
+    - See "Model selection" below — this step uses Claude Sonnet 5 for
+      both paths.
+2. **Spec (high-risk path only)** — generate a Gherkin feature file from
+   the intent doc and save it to `/specs/features/<feature-slug>.feature`.
+   Use the `spec-feature` skill (`.claude/skills/spec-feature/`) for this.
+   Do not write implementation code in this step. The standard path skips
+   this step — see Step 1's "Standard path" note above.
     - This step loops with Step 1: every clarifying answer updates
       `intent.md` first, then regenerates the `.feature` file from the
       updated intent, before asking what's still open. See the
@@ -31,8 +68,11 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       round of revision, especially once the spec settles.
     - See "Model selection" below — this step uses Claude Sonnet 5 (or
       Claude Opus 5 for auth/payments/data-integrity/public-API specs).
-3. **Human approval** — stop and wait for the human to approve the `.feature`
-   file before writing any implementation code. Do not proceed on your own.
+3. **Human approval (high-risk path only)** — stop and wait for the human
+   to approve the `.feature` file before writing any implementation code.
+   Do not proceed on your own. The standard path skips this step — see
+   Step 1's "Standard path" note above; there is no blocking approval
+   gate before implementation begins.
     - See "Context & session management" below — checkpoint right after
       approval, since that's a clean boundary worth starting Step 4 from.
     - See "Model selection" below — this step is a human decision, no
@@ -69,8 +109,33 @@ steps 1-3 for anything touching auth, payments, data integrity, or public APIs.
       being implemented in parallel across separate worktrees, where a
       fork's shared-context model isn't appropriate anyway. Same
       excerpt-pasting rule applies.
+    - **Run independent Step 4 implementations in parallel as a normal
+      option, not only as an edge-case exception.** When more than one
+      ticket is ready at once, launch a separate fresh Haiku agent per
+      ticket, each in its own git worktree — this is the default way to
+      work through multiple ready tickets, not a fallback reserved for
+      unusual circumstances, since each ticket's Step 4 agent is already
+      isolated and disposable by design.
     - Keep every function within the complexity budget below. These are
       enforced by CI, not by your judgment alone.
+    - **Close the PMD loop before moving to Step 5.** After implementing,
+      run `mvn verify` (or `mvn org.apache.maven.plugins:maven-pmd-plugin:check`
+      and `:cpd-check` directly for a faster inner loop), fix every
+      violation it reports, and rerun until it's clean. This is a
+      deterministic loop the agent must satisfy — not a one-time
+      self-check against the `uncle-bob-craft` checklist below — because
+      PMD is a CI-enforced gate (see `pom.xml`): an implementation that
+      hasn't closed this loop isn't done, no matter how clean the code
+      looks by eye.
+    - **Respect the module dependency direction.** `ModuleDependencyTest`
+      (a plain JUnit test using ArchUnit — see Constraints below) fails
+      `mvn verify`/`mvn test` if "engine" code (everything outside
+      `com.swiftfaze.veil.ui`, excluding the `Main` composition root and
+      the `sandbox` package) depends on `com.swiftfaze.veil.ui`, or if a
+      class in `com.swiftfaze.veil.ui.widget` depends on a screen class
+      that sits directly in `com.swiftfaze.veil.ui`. Fix a violation by
+      inverting the dependency, extracting an interface, or moving the
+      offending class — not by weakening the rule.
     - Before considering a file or logical unit done, self-apply the
       `uncle-bob-craft` skill's "writing or refactoring code" checklist
       (small single-purpose functions, dependencies pointing inward,
@@ -232,23 +297,26 @@ Not every step needs the same model. Pin concrete models per step rather
 than leaving it to whoever happens to be running the session — this keeps
 cost predictable and avoids under-provisioning judgment-heavy steps.
 
-- **Steps 1-2 (Intent, Spec)** — Claude Sonnet 5. Writing the intent doc
-  and generating the Gherkin spec involves judgment calls and ambiguity
-  resolution that a human will review, so use the balanced model, not the
-  cheapest one. Bump to Claude Opus 5 for specs touching auth, payments,
-  data integrity, or public APIs — the same class of feature Step 3
-  won't let skip human approval.
-- **Extended thinking for Steps 1-2** — a separate lever from model choice.
-  Use it for the judgment-heavy parts of these steps: resolving scope
-  boundaries, deciding what's in/out per the intent doc, designing
-  scenarios that actually catch bugs (e.g. an asymmetric fixture to catch
-  an x/y transposition, not a symmetric one that would pass either way).
-  Trigger it with "think hard" / "think harder" in the prompt, or a
-  session-wide thinking setting. Skip it for the mechanical parts of these
-  steps (reading files, running `gh` commands) — no ambiguity to reason
-  through, so it's just added latency.
-- **Step 3 (Human approval)** — no model. This is a human decision gate,
-  not agent work.
+- **Step 1 (Intent)** — Claude Sonnet 5, for both paths. Even a short
+  standard-path intent doc involves enough judgment (scope boundaries,
+  what's worth writing down) to warrant the balanced model over the
+  cheapest one.
+- **Step 2 (Spec, high-risk path only)** — Claude Sonnet 5, or Claude
+  Opus 5 for specs touching auth, payments, data integrity, or public
+  APIs — the same class of feature Step 3 won't let skip human approval.
+  The standard path skips this step entirely; no model is spent on it.
+- **Extended thinking for Step 1, and Step 2 on the high-risk path** — a
+  separate lever from model choice. Use it for the judgment-heavy parts
+  of these steps: resolving scope boundaries, deciding what's in/out per
+  the intent doc, designing scenarios that actually catch bugs (e.g. an
+  asymmetric fixture to catch an x/y transposition, not a symmetric one
+  that would pass either way). Trigger it with "think hard" / "think
+  harder" in the prompt, or a session-wide thinking setting. Skip it for
+  the mechanical parts of these steps (reading files, running `gh`
+  commands) — no ambiguity to reason through, so it's just added latency.
+- **Step 3 (Human approval, high-risk path only)** — no model. This is a
+  human decision gate, not agent work. The standard path has no
+  equivalent blocking gate.
 - **Steps 4-5 (Implementation, Acceptance tests)** — Claude Haiku 4.5, via
   a fresh, non-fork agent with a self-contained, excerpt-rich prompt — see
   Step 4 above and "Context handoff rule" above for the full default vs.
@@ -270,12 +338,52 @@ permanently vague policy.
 - Max cyclomatic complexity: 8
 - Max function parameters: 4
 - Minimum line coverage: 85% repo-wide (JaCoCo)
-- No function may call more than one level of abstraction below itself
-  (Single Level of Abstraction principle)
+- Module dependency direction (ArchUnit, `ModuleDependencyTest`, a plain
+  JUnit test run via `mvn test`/`mvn verify`): "engine" code (everything
+  outside `com.swiftfaze.veil.ui`, excluding the `Main` composition root
+  and the `sandbox` package — see `docs/testing.md`'s "Module dependency
+  gate" section for why those two are excluded) must not depend on
+  `com.swiftfaze.veil.ui` at all; classes in `com.swiftfaze.veil.ui.widget`
+  must not depend on screen classes that sit directly in
+  `com.swiftfaze.veil.ui` (screens may depend on widgets, not the
+  reverse).
 
 These are enforced by the linter/CI config in this repo, not by asking the
 agent to "try to keep things clean." If a change can't meet these limits,
-stop and flag it rather than disabling the check.
+stop and flag it rather than disabling the check — with one narrow,
+already-practiced exception: a method overriding a JDK/library interface
+whose signature mandates more than 4 parameters (e.g.
+`Border.paintBorder(Component, Graphics, int, int, int, int)`, see
+`RadioGroupWidget.RadioOptionBorder` and `TableWidget.AccentableCellBorder`)
+may suppress PMD's `ExcessiveParameterList` rule with
+`@SuppressWarnings("PMD.ExcessiveParameterList")` plus a comment naming
+the interface — the parameter count isn't a choice the code made, it's
+the contract being implemented. This exception is specific to parameter
+count on an unavoidable interface override; it does not extend to
+complexity, length, coverage, or the module dependency rule, none of
+which have an equivalent "the interface forced it" excuse.
+
+**Not mechanically enforced — self-applied only:** the Single Level of
+Abstraction Principle (SLAP — no function may call more than one level
+of abstraction below itself) has no PMD rule or other tool backing it in
+this repo; there is no off-the-shelf static-analysis check for it.
+Treat it as design guidance applied via the `uncle-bob-craft` skill's
+checklist in Step 4, not a build gate — violating it won't fail
+`mvn verify` the way the constraints above do. Don't describe it as
+enforced elsewhere in this repo's docs; if a mechanical check for it
+becomes practical later, promote it into the list above.
+
+The function-length/complexity/parameter/coverage numbers above are a
+deliberate, adjustable dial for agent-authored code, not a fixed
+constant. Robert C. Martin has described moving his own CRAP
+(complexity x coverage) threshold from 4 — tuned for human-authored code
+— toward 6-8 for agent-authored code, and says he hasn't found the
+ceiling yet: agents have a larger and more reliable short-term memory
+than humans, so they can hold more local complexity without getting
+lost the way a human would. If these numbers change in this repo, treat
+it as a deliberate, documented experiment (record the new value and the
+reasoning here), not silent drift — don't loosen a threshold casually
+just because one change doesn't fit under it.
 
 ## What gets reviewed vs. not
 
@@ -289,8 +397,20 @@ stop and flag it rather than disabling the check.
 | Mutation test results            | Tooling    | Human skims summary only                                          |
 | Codebase docs (docs/, CHANGELOG) | Agent      | Spot check — rigor scales with how public/critical the surface is |
 
+On the standard path, no Gherkin spec exists ahead of implementation, so
+the "always, before implementation starts" review timing above applies
+to the high-risk path only — the `.feature` file the standard path
+produces during Step 4/5 is still reviewed, just after the fact rather
+than as a blocking gate.
+
 ## Notes for the agent
 
+- Classify a feature as high-risk (auth, payments, data integrity, or
+  public APIs) before choosing a path — one matching characteristic is
+  enough to require the full high-risk path, not all of them. If
+  genuinely unsure which path applies, default to the high-risk path:
+  the cost of an unnecessary approval gate is much lower than skipping
+  one that was actually warranted.
 - If the intent doc is missing or ambiguous, use the `grilling` skill
   (`.claude/skills/grilling/`) to ask what's unclear rather than inventing
   scope — it batches every open question into dependency-ordered rounds
