@@ -1,0 +1,143 @@
+# Screens
+
+How `Main.java` assembles and navigates between the game's screens, and
+how the individual screen panels compose the reusable widgets from
+`docs/ui-widgets.md` into player-facing UI. For the shared list/detail
+data contract Inventory and Codex use to display domain content, see
+`docs/components.md`.
+
+**UI shell** (`ui/`): `NorthPanel`, `SouthPanel`, and `PlayerInfoPanel`
+extend `TerminalPanel`, a shared `JPanel` base centralizing the black
+background, monospaced label styling, and a `makeLabel` helper — each
+panel still sets its own border/layout specifics that genuinely differ
+(e.g. `PlayerInfoPanel`'s bottom-line border, `NorthPanel`'s centered
+title). `EastPanel` composes just `PlayerInfoPanel` (in `BorderLayout.NORTH`)
+and implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`,
+and the interface's `toggleInventory` default method is overridden to
+open/dismiss the inventory popup — this replaced the old direct `GamePanel`
+→ `EastPanel` field reference that pressing **I** used to go through, and
+there is no menu widget in between: **I** calls `toggleInventory()`
+directly.
+
+**Screen flow** (`Main.java` and screen panels): `Main.loadGame()` first calls
+`loadAndApplyDefaultTheme()` (loads the mod registry and applies `core:default`'s
+theme — see `docs/ui-widgets.md`'s "Widget theming") before building any screen, then uses
+`CardLayout` to manage four screens: title, game, settings, and keybinds,
+navigated via a shared `cards` map + `navigateTo()` helper (needed because
+settings and keybinds reference each other - a genuine two-way cycle plain
+lambda capture can't express, since Java lambdas can't forward-reference a
+local variable declared later in the same method). `TitleScreenPanel` and
+`SettingsScreenPanel` are each real `Widget`-style Swing focus targets in
+their own right (focusable, with their own `InputMap`/`ActionMap` bound at
+`WHEN_FOCUSED`) rather than relying on an inner child widget to hold real
+focus - `navigateTo()` calls `requestFocusInWindow()` on whichever screen a
+navigation lands on, matching the same bind-and-delegate idiom
+`InventoryPanel` already established for composite screens with mixed
+navigation.
+
+`TitleScreenPanel` shows the "VEIL" title (with Delta Corps Priest 1 font, or
+monospaced fallback if the font resource is absent) and a centered menu
+(Continue, New, Load, Settings, Exit) — New navigates to the game view and
+starts the game loop. `SettingsScreenPanel` is a centered, bordered, navigable,
+back-able list of eleven settings items, every row sharing one width (matching
+the widest row, same convention `RadioGroupWidget`'s vertical mode already
+uses): Brightness and Volume (both sliders, rendered as an actual bar via
+`SliderWidget.getDisplayText()`), Fullscreen (radio toggle: Windowed/
+Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Theme (radio
+cycle: Default/Midnight/Sunrise — a fixed placeholder list built the same way
+as Font's, purely visual and not wired to the real mod-driven theme registry
+described in `docs/ui-widgets.md`'s "Widget theming"; see `specs/intent/widget-theming.md`'s
+Clarifications), Keybinds (opens
+the dedicated keybinds page), placeholder action items (Open Game Folder,
+Open Mod Folder - both call `Desktop.open`, creating `mods/` next to the
+install if missing; About, Reset to Defaults), and an explicit Go Back item
+(added after Step 4.5 playtest found Escape-only back navigation wasn't
+discoverable). Left/Right calls `moveLeft()`/`moveRight()` on sliders or
+radio groups directly (bypassing their own now-unused internal key bindings,
+same as `InventoryPanel`'s sub-widgets), which updates the highlighted
+option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
+returns to the title screen. Its "Reset to Defaults" row opens a
+`ResetConfirmationPopup` (a `CompactPopupWidget` asking "Reset
+all settings to their defaults?" via a horizontal `RadioGroupWidget<String>`
+defaulting to "No", the same safe-default convention `DropConfirmationPopup`
+uses; choosing either option just dismisses the popup, since no setting
+persists real state yet). `SettingsScreenPanel` doesn't host that popup
+inside its own layout, mirroring `InventoryPanel`/`GameWindow`'s approach:
+`ui/SettingsWindow.buildContentArea(SettingsScreenPanel)` builds a
+`JLayeredPane` with the settings screen at `DEFAULT_LAYER` and the reset
+popup at `POPUP_LAYER` above it, stretched to match via `FillLayout`, and
+`Main.java` wires that layered pane into the settings card instead of adding
+`SettingsScreenPanel` directly.
+
+`SettingsKeybindsPanel` lists every rebindable action (Move up/down/left/
+right, Toggle inventory) and its current key in a real `TableWidget<ActionRow>`
+(Action/Key columns, bordered grid, header row - the same widget
+`InventoryPanel` uses for its field/value table), allows navigation between
+actions and a footer (Go back, Reset to Defaults, Cancel, Apply - left to
+right), and opens a "press any key" popup on Enter to capture an arbitrary
+key as a new binding (a `KeyListener`, not `InputMap`/`ActionMap`, since it
+must catch any keystroke while armed rather than a fixed set). Rebinding a
+key calls `TableWidget.updateRow()` to refresh just that row's Key cell
+without disturbing the selected row - `setRows()` would have reset selection
+to the first row on every keypress. The armed action row gets a green accent
+border via `TableWidget.setSelectedRowAccentColor()` (the same
+`WidgetTheme.VALID_HIGHLIGHT` convention `RadioGroupWidget`'s confirmed-option
+border already uses), and every other row dims via
+`TableWidget.setOtherRowsDimmed()`, so the armed row reads as the only
+currently-active thing, like a modal dimming its backdrop. Reset to Defaults
+restores every action's default binding (via `updateRow()` per row, same
+selection-preserving reasoning) and stays on this page (state genuinely local
+to this page); Go back/Cancel/Apply all return to the settings screen
+identically (nothing else persists yet). The popup itself is still internal
+boolean state (`popupOpen`), not yet a real rendered overlay component.
+Actual key rebinding is visual only - no persistent state, `Keybindings.java`'s
+real constants are untouched. F5 still resets the entire game (back to the
+title screen).
+
+`InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
+(`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable
+via a `JScrollPane` styled with `TerminalScrollBarUI`, non-wrapping) and a
+details pane on the right (name/type/slot/damage range/effects table,
+refreshed live off the list's `onSelectionChange` hook), divided by a 2px
+light-gray line matching the rest of the UI's border style. The effects are
+rendered as a `TableWidget<Item.Effect>` with two columns (stat and value),
+row-highlighted when selected. Navigation can be switched between the item
+list and the effects table via Left/Right keys; Up/Down then navigate within
+the current pane. Pressing D (Drop) from any pane opens a nested
+`DropConfirmationPopup` (a `CompactPopupWidget` containing a
+horizontal `RadioGroupWidget<String>` asking "Drop item?", defaulting to "No"
+highlighted), which closes on any selection or Escape without actually
+removing items. It's
+populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
+constructor) rather than loading mod content itself, mirroring
+`PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
+inside `EastPanel`'s own layout, the popup is promoted to window level:
+`ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a `JLayeredPane`
+with a `mainArea` panel (`GamePanel` + `EastPanel`) at `DEFAULT_LAYER`, the
+inventory popup at `POPUP_LAYER` above it, and the drop-confirmation popup at
+`DRAG_LAYER` (even higher) — all positioned by the same `FillLayout`, which
+stretches the full-screen inventory popup to cover the whole game view and
+sidebar, but centers the compact drop-confirmation popup at its preferred
+size on top of that. `Main.java` wires that layered
+pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
+`EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
+counter `MenuPanel` used to drive) is deleted entirely, superseded by
+`ListWidget`.
+
+`CodexPanel` extends `PopupWidget` and mirrors `InventoryPanel`'s list+detail
+split structure: a tab switcher across Items, Tiles, and Classes (three
+`JLabel`s styled as tabs with selection highlighting) above a 50/50 split body
+with a category-specific entry list on the left (scrollable `ListWidget`,
+non-wrapping) and a field/value detail table on the right (`TableWidget`
+showing ID, Name, Glyph/Symbol/Color, etc. per category). Up/Down/Left/Right
+navigate within the current pane and can switch focus between list and detail
+via Left/Right. Tab and Shift+Tab cycle forward/backward through tabs. Data is
+populated externally from mod content (`showItems`/`showTiles`/`showClasses`)
+same as `InventoryPanel`. Opening Codex via the X key while Inventory is open
+closes Inventory first, and vice versa, so only one popup is ever visible at
+a time — mutual exclusion is handled in `EastPanel.toggleCodex()`/
+`toggleInventory()`. The codex is placed at `POPUP_LAYER` in `GameWindow`'s
+layered pane, same as the inventory. Buildings and Quests tabs are deferred
+(see `specs/intent/codex-ui.md`). `InventoryPanel` and `CodexPanel`'s
+duplicated details-pane/focus-navigation code is being extracted per
+`docs/components.md`; see that doc's worked example.
