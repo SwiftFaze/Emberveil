@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0-beta.6](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.5...v0.5.0-beta.6) (2026-09-01)
+
+
+### Features
+
+* add in-game Codex overlay for Items/Tiles/Classes ([7e4acb6](https://github.com/SwiftFaze/Veil/commit/7e4acb66d16508b38df29d0b874bc2a8d72974ef))
+* add in-game Codex overlay for Items/Tiles/Classes ([#113](https://github.com/SwiftFaze/Veil/issues/113)) ([c532cf0](https://github.com/SwiftFaze/Veil/commit/c532cf0b80798e10c142fd436e344d3cf0f19b57))
+* fill Codex layout to available space, show item damage/effects ([9eddf52](https://github.com/SwiftFaze/Veil/commit/9eddf52eac681cec2f6c2e3e838181c3438f1538))
+* fill Codex tab buttons full-width, remove non-functional Close button ([15022b8](https://github.com/SwiftFaze/Veil/commit/15022b87bb02b21e8e2bdaa87e995fe58f266ca0))
+
+
+### Bug Fixes
+
+* stop CodexPanel losing keyboard focus on Tab ([1857cfa](https://github.com/SwiftFaze/Veil/commit/1857cfacc4a21939b033cc685c60041ecfe96c0b))
+
 ## [0.5.0-beta.5](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.4...v0.5.0-beta.5) (2026-08-31)
 
 
