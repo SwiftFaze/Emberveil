@@ -90,7 +90,24 @@ the change rather than silently editing history.
 
 ## Stopping condition
 
-Once there are no remaining open questions, stop. Tell the user the spec
-is ready for review at `/specs/features/<slug>.feature`, and that you
-will not begin implementation until they approve it. Do not start writing
-code, even partially, in this same turn.
+Once there are no remaining open questions, stop. Do not start writing
+implementation code, even partially, in this same turn — that's Step 4,
+a separate handoff, and out of scope for this skill regardless of path.
+
+Whether you then block on human approval depends on which path this
+feature is on (`.claude/workflow.md`'s high-risk vs standard split — if
+you haven't already classified it, do so now per that doc's "Notes for
+the agent": auth, payments, data integrity, or public APIs is high-risk,
+one matching characteristic is enough, default to high-risk if genuinely
+unsure):
+
+- **High-risk path**: tell the user the spec is ready for review at
+  `/specs/features/<slug>.feature`, and that you will not begin
+  implementation until they approve it. This is `.claude/workflow.md`'s
+  Step 3 — a real blocking gate, not a formality.
+- **Standard path** (everything else, the default): tell the user the
+  spec is ready at `/specs/features/<slug>.feature`, and say explicitly
+  that no approval gate blocks moving on — `.claude/workflow.md`'s Step 3
+  is high-risk-path-only, so they're free to review it or not before
+  Step 4 starts. Don't ask them to check it and don't wait for a
+  response before considering this skill done.

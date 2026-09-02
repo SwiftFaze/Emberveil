@@ -3,13 +3,8 @@ package com.swiftfaze.veil.steps;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
-import com.swiftfaze.veil.mods.ModLoader;
-import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.sandbox.ClassSandboxModel;
 import com.swiftfaze.veil.sandbox.ClassSandboxPanel;
-import com.swiftfaze.veil.ui.CodexPanel;
-import com.swiftfaze.veil.ui.EastPanel;
-import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.ResetConfirmationPopup;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
@@ -26,7 +21,6 @@ import io.cucumber.java.en.When;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
-import javax.swing.JLayeredPane;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -52,15 +46,12 @@ public class UiComponentFrameworkSteps {
         titleScreenPanel = null;
         settingsScreenPanel = null;
         keybindsPanel = null;
-        eastPanel = null;
         confirmedTableRows.clear();
         confirmedItem = null;
         actionInvoked = false;
         listItems = null;
         dataSourceItems = null;
-        restoreGameFocusInvoked = false;
         lastKeyCode = 0;
-        layeredContentArea = null;
     }
 
     private ListWidget<String> listWidget;
@@ -79,13 +70,10 @@ public class UiComponentFrameworkSteps {
     private SettingsScreenPanel settingsScreenPanel;
     private SettingsKeybindsPanel keybindsPanel;
 
-    private EastPanel eastPanel;
     private ClassSandboxPanel classPanel;
     private ClassSandboxModel classModel;
     private List<String> classNames;
-    private boolean restoreGameFocusInvoked;
     private int lastKeyCode; // Track which key was pressed for scenarios
-    private JLayeredPane layeredContentArea;
 
     @Given("a list widget with items {string}, {string}, {string} and {string} selected")
     public void aListWidgetWithItems(String first, String second, String third, String selected) {
@@ -119,11 +107,6 @@ public class UiComponentFrameworkSteps {
             case "Right" -> fireRightKey();
             case "Enter" -> fireEnterKey();
             case "Escape" -> fireEscapeKey();
-            case "D" -> fireDropKey();
-            case "X" -> fireCodexToggleKey();
-            case "I" -> fireInventoryToggleKey();
-            case "Tab" -> fireTabKey();
-            case "Shift+Tab" -> fireShiftTabKey();
             default -> throw new IllegalArgumentException("Unhandled key: " + key);
         }
     }
@@ -141,10 +124,6 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveUp();
         } else if (radioGroupWidget != null) {
             radioGroupWidget.moveUp();
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-up");
-        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction("popup-up");
         }
     }
 
@@ -161,10 +140,6 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveDown();
         } else if (radioGroupWidget != null) {
             radioGroupWidget.moveDown();
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-down");
-        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction("popup-down");
         }
     }
 
@@ -179,12 +154,6 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveLeft();
         } else if (radioGroupWidget != null && radioGroupWidget.isHorizontal()) {
             radioGroupWidget.moveLeft();
-        } else if (dropConfirmationPopupIsOpen()) {
-            fireDropChoiceAction("radio-left");
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-left");
-        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction("popup-left");
         }
     }
 
@@ -199,12 +168,6 @@ public class UiComponentFrameworkSteps {
             tableWidget.moveRight();
         } else if (radioGroupWidget != null && radioGroupWidget.isHorizontal()) {
             radioGroupWidget.moveRight();
-        } else if (dropConfirmationPopupIsOpen()) {
-            fireDropChoiceAction("radio-right");
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-right");
-        } else if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction("popup-right");
         }
     }
 
@@ -234,25 +197,6 @@ public class UiComponentFrameworkSteps {
             if (action != null) {
                 action.actionPerformed(new ActionEvent(buttonWidget, ActionEvent.ACTION_PERFORMED, "button-confirm"));
             }
-        } else if (dropConfirmationPopupIsOpen()) {
-            fireDropChoiceAction("radio-confirm");
-        } else if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction("popup-confirm");
-        }
-    }
-
-    // The nested drop-confirmation popup's own radio-group choice, not InventoryPanel's
-    // item-list/effects-table pane switching (which shares the same "popup-left"/"popup-right"
-    // action names on InventoryPanel itself) — must be checked and routed separately.
-    private boolean dropConfirmationPopupIsOpen() {
-        return eastPanel != null && eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible();
-    }
-
-    private void fireDropChoiceAction(String actionName) {
-        RadioGroupWidget<String> choice = eastPanel.getInventoryPanel().getDropConfirmationPopup().getChoiceWidget();
-        Action action = choice.getActionMap().get(actionName);
-        if (action != null) {
-            action.actionPerformed(new ActionEvent(choice, ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -283,34 +227,6 @@ public class UiComponentFrameworkSteps {
             fireResetAction("popup-dismiss");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.back();
-        } else if (eastPanel != null) {
-            if (eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
-                fireInventoryPopupDropAction("popup-dismiss");
-            } else if (eastPanel.getInventoryPanel().isVisible()) {
-                fireInventoryPopupAction("popup-dismiss");
-            } else if (eastPanel.getCodexPanel().isVisible()) {
-                fireCodexPopupAction("popup-dismiss");
-            }
-        }
-    }
-
-    private void fireDropKey() {
-        if (eastPanel != null && eastPanel.getInventoryPanel().isVisible()) {
-            fireInventoryPopupAction(com.swiftfaze.veil.input.Keybindings.ACTION_DROP_ITEM);
-        }
-    }
-
-    private void fireInventoryPopupAction(String actionName) {
-        Action action = eastPanel.getInventoryPanel().getActionMap().get(actionName);
-        if (action != null) {
-            action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel(), ActionEvent.ACTION_PERFORMED, actionName));
-        }
-    }
-
-    private void fireCodexPopupAction(String actionName) {
-        Action action = eastPanel.getCodexPanel().getActionMap().get(actionName);
-        if (action != null) {
-            action.actionPerformed(new ActionEvent(eastPanel.getCodexPanel(), ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -369,73 +285,6 @@ public class UiComponentFrameworkSteps {
     @Then("the button's action was invoked")
     public void theButtonsActionWasInvoked() {
         assertTrue(actionInvoked);
-    }
-
-    @Given("the rebuilt in-game inventory screen")
-    public void theRebuiltInGameInventoryScreen() {
-        eastPanel = new EastPanel();
-        restoreGameFocusInvoked = false;
-        eastPanel.setRestoreGameFocusAction(() -> restoreGameFocusInvoked = true);
-    }
-
-    @When("the inventory is toggled open")
-    public void theInventoryIsToggledOpen() {
-        eastPanel.toggleInventory();
-    }
-
-    @Given("the inventory popup is open")
-    public void theInventoryPopupIsOpen() {
-        if (eastPanel == null) {
-            theRebuiltInGameInventoryScreen();
-        }
-        if (!eastPanel.getInventoryPanel().isVisible()) {
-            eastPanel.toggleInventory();
-        }
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the inventory popup is shown")
-    public void theInventoryPopupIsShown() {
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the inventory popup is closed")
-    public void theInventoryPopupIsClosed() {
-        assertFalse(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the restore-game-focus action was invoked")
-    public void theRestoreGameFocusActionWasInvoked() {
-        assertTrue(restoreGameFocusInvoked);
-    }
-
-    @Given("the game window's layered content area")
-    public void theGameWindowsLayeredContentArea() {
-        eastPanel = new EastPanel();
-        layeredContentArea = GameWindow.buildContentArea(new GamePanel(), eastPanel);
-    }
-
-    @Then("the inventory popup's layer is above the game and sidebar content's layer")
-    public void theInventoryPopupsLayerIsAboveTheGameAndSidebarContentsLayer() {
-        int popupLayer = layeredContentArea.getLayer(eastPanel.getInventoryPanel());
-        int mainAreaLayer = layeredContentArea.getLayer(
-                layeredContentArea.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0]);
-        assertTrue(popupLayer > mainAreaLayer);
-    }
-
-    @Then("the inventory popup lists the item {string}")
-    public void theInventoryPopupListsTheItem(String itemName) {
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the inventory popup's first item is highlighted as selected")
-    public void theInventoryPopupsFirstItemIsHighlightedAsSelected() {
-        assertEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
-    }
-
-    @Then("the inventory popup's selected item is no longer the first item")
-    public void theInventoryPopupsSelectedItemIsNoLongerTheFirstItem() {
-        assertNotEquals(0, eastPanel.getInventoryPanel().getSelectedIndex());
     }
 
     @Given("a class sandbox panel is showing")
@@ -502,13 +351,6 @@ public class UiComponentFrameworkSteps {
     private void fireAction(String actionName) {
         Action action = classPanel.getActionMap().get(actionName);
         action.actionPerformed(new ActionEvent(classPanel, ActionEvent.ACTION_PERFORMED, actionName));
-    }
-
-    private void fireInventoryPopupDropAction(String actionName) {
-        Action action = eastPanel.getInventoryPanel().getDropConfirmationPopup().getActionMap().get(actionName);
-        if (action != null) {
-            action.actionPerformed(new ActionEvent(eastPanel.getInventoryPanel().getDropConfirmationPopup(), ActionEvent.ACTION_PERFORMED, actionName));
-        }
     }
 
     @Given("a table widget with rows {string}, {string}, {string} and row {int} selected")
@@ -617,185 +459,6 @@ public class UiComponentFrameworkSteps {
         while (!radioGroupWidget.getHighlightedOption().equals(highlighted)) {
             radioGroupWidget.moveHorizontal(true);
         }
-    }
-
-    @When("an item with effects {string}, {string} is selected")
-    public void anItemWithEffectsIsSelected(String effect1, String effect2) {
-        // No real mod item has 2 effects (max is 1 - core:iron_sword, core:iron_helmet, etc. each
-        // have exactly one), so this scenario's fixed 2-effect precondition needs a fake item
-        // rather than navigating real ModLoader data.
-        eastPanel.getInventoryPanel().showItems(List.of(fakeItemWithEffects(List.of(effect1, effect2))));
-    }
-
-    @When("an item with no effects is selected")
-    public void anItemWithNoEffectsIsSelected() {
-        eastPanel.getInventoryPanel().showItems(List.of(fakeItemWithEffects(List.of())));
-    }
-
-    // Parses "+strength (base)" into an Item.Effect("stat_bonus", "strength", "base") - the same
-    // shape InventoryPanel.fieldRows()/the old detailLines() format ("+" + stat + " (" + calc +
-    // ")") already used, just inverted back into structured data for test setup.
-    private com.swiftfaze.veil.entities.items.Item fakeItemWithEffects(List<String> effectStrings) {
-        List<com.swiftfaze.veil.entities.items.Item.Effect> effects = new ArrayList<>();
-        for (String s : effectStrings) {
-            String stripped = s.startsWith("+") ? s.substring(1) : s;
-            int parenIndex = stripped.indexOf(" (");
-            String stat = parenIndex >= 0 ? stripped.substring(0, parenIndex) : stripped;
-            String calc = parenIndex >= 0 ? stripped.substring(parenIndex + 2, stripped.length() - 1) : "";
-            effects.add(new com.swiftfaze.veil.entities.items.Item.Effect("stat_bonus", stat, calc));
-        }
-        com.swiftfaze.veil.entities.items.Item.ItemAttributes attributes =
-                new com.swiftfaze.veil.entities.items.Item.ItemAttributes('?', "misc", "none",
-                        new com.swiftfaze.veil.entities.items.Item.BaseDamage(0, 0), effects);
-        return new com.swiftfaze.veil.entities.items.Item("test:fake_item", "Fake Item", attributes);
-    }
-
-    @Then("the details pane shows an effects table with {int} rows")
-    public void theDetailsPaneShowsAnEffectsTableWithRows(int rowCount) {
-        assertEquals(rowCount, eastPanel.getInventoryPanel().getEffectsTable().getRowCount());
-    }
-
-    @Then("the effects table's first row is highlighted as selected")
-    public void theEffectsTableFirstRowIsHighlighted() {
-        assertEquals(0, eastPanel.getInventoryPanel().getEffectsTable().getSelectedRowIndex());
-    }
-
-    @Then("the details pane shows a field-value table listing the item's ID, Name, Glyph, Type, and Slot")
-    public void theDetailsPaneShowsAFieldValueTable() {
-        // The fields table always has these 5 rows plus 2 more (Base Damage Min/Max) when the
-        // item has damage — asserting >= 5 covers both cases without depending on the private
-        // FieldRow type's content.
-        assertTrue(eastPanel.getInventoryPanel().getFieldsTable().getRowCount() >= 5);
-    }
-
-    @Then("the field-value table is not row-highlighted")
-    public void theFieldValueTableIsNotRowHighlighted() {
-        assertFalse(eastPanel.getInventoryPanel().getFieldsTable().isSelectable());
-    }
-
-    // Matches both a "Given/And the effects table has navigation focus" precondition (drives it:
-    // selects an effects-bearing item, then presses Right) and a "Then ... has navigation focus"
-    // assertion (a no-op drive when a prior "When Right pressed" step already put it there) — same
-    // shared-step-text reasoning as theDropConfirmationPopupIsShown() above.
-    @Then("the effects table has navigation focus")
-    public void theEffectsTableHasNavigationFocus() {
-        if (!eastPanel.getInventoryPanel().isEffectsTableFocused()) {
-            theSelectedItemHasEffects();
-            fireInventoryPopupAction("popup-right"); // enters the fields table first
-            // Down falls through the fields table into the effects table once at its last row.
-            int guard = 0;
-            while (!eastPanel.getInventoryPanel().isEffectsTableFocused() && guard < 20) {
-                fireInventoryPopupAction("popup-down");
-                guard++;
-            }
-        }
-        assertTrue(eastPanel.getInventoryPanel().isEffectsTableFocused());
-    }
-
-    @Then("the item list has navigation focus")
-    public void theItemListHasNavigationFocus() {
-        assertTrue(eastPanel.getInventoryPanel().isItemListFocused());
-    }
-
-    @Then("the effects table's selected row is no longer the first row")
-    public void theEffectsTableSelectedRowIsNoLongerFirstRow() {
-        assertTrue(eastPanel.getInventoryPanel().isEffectsTableFocused());
-        assertFalse(eastPanel.getInventoryPanel().getEffectsTable().isAtFirstRow());
-    }
-
-    @Given("the selected item has effects")
-    public void theSelectedItemHasEffects() {
-        // No real mod item has more than 1 effect (see fakeItemWithEffects's own comment), and
-        // some scenarios using this step need to navigate/confirm *between* multiple effect rows
-        // - a real 1-effect item can't exercise that, so this injects a fake 2-effect item
-        // instead of navigating real ModLoader data.
-        eastPanel.getInventoryPanel().showItems(List.of(
-                fakeItemWithEffects(List.of("+strength (base)", "+agility (base)"))));
-    }
-
-    @Given("the selected item has no effects")
-    public void theSelectedItemHasNoEffects() {
-        // Handled by test setup
-    }
-
-    @Given("an item is selected")
-    public void anItemIsSelected() {
-        // The first item is selected by default when inventory is opened
-        assertNotNull(eastPanel.getInventoryPanel().getSelectedItem());
-    }
-
-    // Matches both a "Given/And the fields table has navigation focus" precondition (drives it:
-    // presses Right from the item list) and a "Then ... has navigation focus" assertion (a no-op
-    // drive when a prior "When Right pressed" step already put it there) — same shared-step-text
-    // reasoning as theEffectsTableHasNavigationFocus() above.
-    @Then("the fields table has navigation focus")
-    public void theFieldsTableHasNavigationFocus() {
-        if (!eastPanel.getInventoryPanel().isFieldsTableFocused()) {
-            fireInventoryPopupAction("popup-right");
-        }
-        assertTrue(eastPanel.getInventoryPanel().isFieldsTableFocused());
-    }
-
-    @Given("the fields table's selected row is its last row")
-    public void theFieldsTableSelectedRowIsItsLastRow() {
-        int guard = 0;
-        while (!eastPanel.getInventoryPanel().getFieldsTable().isAtLastRow() && guard < 20) {
-            fireInventoryPopupAction("popup-down");
-            guard++;
-        }
-        assertTrue(eastPanel.getInventoryPanel().getFieldsTable().isAtLastRow());
-    }
-
-    @Then("the drop-confirmation popup asks {string}")
-    public void theDropConfirmationPopupAsks(String question) {
-        assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
-    }
-
-    // Matches both a "Given/And '<choice>' is highlighted..." precondition (drives the highlight
-    // to match, e.g. the Scenario Outline's Yes case) and a "Then ... is highlighted" assertion
-    // (a no-op drive when a prior "When Left/Right pressed" step already put it there) — same
-    // reason as theDropConfirmationPopupIsShown() above: Cucumber matches step text regardless of
-    // keyword, so this one method must serve both.
-    @Then("{string} is highlighted in the drop-confirmation popup")
-    public void isHighlightedInDropPopup(String option) {
-        RadioGroupWidget<String> choice = eastPanel.getInventoryPanel().getDropConfirmationPopup().getChoiceWidget();
-        int guard = 0;
-        while (!option.equals(choice.getHighlightedOption()) && guard < 10) {
-            fireDropChoiceAction("radio-right");
-            guard++;
-        }
-        assertEquals(option, choice.getHighlightedOption());
-    }
-
-    @Then("the drop-confirmation popup is closed")
-    public void theDropConfirmationPopupIsClosed() {
-        assertFalse(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
-    }
-
-    @Then("the item was not removed")
-    public void theItemWasNotRemoved() {
-        // No actual drop logic exists yet, so this is always true
-        assertTrue(true);
-    }
-
-    // Matches BOTH "Given the drop-confirmation popup is shown" (drives the popup open from
-    // scratch when used as a standalone precondition) and "Then the drop-confirmation popup is
-    // shown" (asserts it, when the popup was already opened by a prior "D" key-press step in the
-    // same scenario) — Cucumber matches step text regardless of the Given/When/Then keyword used
-    // in the .feature file, so ONE method must handle both; two separate methods with identical
-    // text is a duplicate-step-definition error that aborts glue loading for the whole suite.
-    @Given("the drop-confirmation popup is shown")
-    public void theDropConfirmationPopupIsShown() {
-        if (eastPanel == null) {
-            theRebuiltInGameInventoryScreen();
-        }
-        if (!eastPanel.getInventoryPanel().isVisible()) {
-            theInventoryIsToggledOpen();
-        }
-        if (!eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible()) {
-            fireDropKey();
-        }
-        assertTrue(eastPanel.getInventoryPanel().getDropConfirmationPopup().isVisible());
     }
 
     @Given("a slider widget ranging {int} to {int} with step {int} and value {int}")
@@ -1059,154 +722,5 @@ public class UiComponentFrameworkSteps {
     @Then("the confirmation popup is closed")
     public void theConfirmationPopupIsClosed() {
         assertFalse(settingsScreenPanel.getResetConfirmationPopup().isVisible());
-    }
-
-    @Given("the game world is running")
-    public void theGameWorldIsRunning() {
-        theRebuiltInGameInventoryScreen();
-    }
-
-    @Given("the codex overlay is open")
-    public void theCodexOverlayIsOpen() {
-        if (eastPanel == null) {
-            theRebuiltInGameInventoryScreen();
-        }
-        if (!eastPanel.getCodexPanel().isVisible()) {
-            eastPanel.toggleCodex();
-        }
-    }
-
-    @Then("the codex overlay is shown")
-    public void theCodexOverlayIsShown() {
-        assertTrue(eastPanel.getCodexPanel().isVisible());
-    }
-
-    @Then("the codex overlay is not shown")
-    public void theCodexOverlayIsNotShown() {
-        assertFalse(eastPanel.getCodexPanel().isVisible());
-    }
-
-    @Then("a tab switcher for {string}, {string}, {string} is shown")
-    public void aTabSwitcherForIsShown(String first, String second, String third) {
-        assertEquals(List.of(first, second, third), eastPanel.getCodexPanel().getTabLabels());
-    }
-
-    @Then("the {string} tab is selected")
-    public void theTabIsSelected(String label) {
-        assertEquals(label, eastPanel.getCodexPanel().getSelectedCategory().getLabel());
-    }
-
-    @Given("the {string} tab is opened")
-    public void theTabIsOpened(String label) {
-        CodexPanel codex = eastPanel.getCodexPanel();
-        int guard = 0;
-        while (!codex.getSelectedCategory().getLabel().equals(label) && guard < 10) {
-            codex.nextTab();
-            guard++;
-        }
-        assertEquals(label, codex.getSelectedCategory().getLabel());
-    }
-
-    @Then("the detail pane shows the first {word} entry's data")
-    public void theDetailPaneShowsTheFirstEntrysData(String category) {
-        CodexPanel codex = eastPanel.getCodexPanel();
-        assertFalse(codex.isShowingPlaceholder());
-        assertEquals(expectedFirstEntryName(category), codex.getSelectedEntryName());
-    }
-
-    @Then("the codex list shows one entry per mod-defined {word}")
-    public void theCodexListShowsOneEntryPerModDefined(String category) {
-        ModRegistry mods = ModLoader.load(java.nio.file.Paths.get("mods"));
-        int expected = switch (category) {
-            case "Items" -> mods.getAllItems().size();
-            case "Tiles" -> mods.getAllTiles().size();
-            case "Classes" -> mods.getAllPlayerClasses().size();
-            default -> throw new IllegalArgumentException("Unhandled category: " + category);
-        };
-        assertEquals(expected, eastPanel.getCodexPanel().getEntryCount());
-    }
-
-    @When("an entry is selected from the list")
-    public void anEntryIsSelectedFromTheList() {
-        fireCodexPopupAction("popup-down");
-    }
-
-    @Then("the detail pane shows that entry's data")
-    public void theDetailPaneShowsThatEntrysData() {
-        CodexPanel codex = eastPanel.getCodexPanel();
-        assertFalse(codex.isShowingPlaceholder());
-        assertNotNull(codex.getSelectedEntryName());
-    }
-
-    @Given("no mods define any {word}")
-    public void noModsDefineAny(String category) {
-        CodexPanel codex = eastPanel.getCodexPanel();
-        switch (category) {
-            case "Items" -> codex.showItems(List.of());
-            case "Tiles" -> codex.showTiles(List.of());
-            case "Classes" -> codex.showClasses(List.of());
-            default -> throw new IllegalArgumentException("Unhandled category: " + category);
-        }
-    }
-
-    @Then("the codex list is empty")
-    public void theCodexListIsEmpty() {
-        assertEquals(0, eastPanel.getCodexPanel().getEntryCount());
-    }
-
-    @Then("the detail pane shows {string}")
-    public void theDetailPaneShows(String text) {
-        assertEquals(text, eastPanel.getCodexPanel().getDetailPlaceholderText());
-    }
-
-    @Given("the codex overlay was previously closed while showing the {string} tab")
-    public void theCodexOverlayWasPreviouslyClosedWhileShowingTheTab(String label) {
-        if (eastPanel == null) {
-            theRebuiltInGameInventoryScreen();
-        }
-        CodexPanel codex = eastPanel.getCodexPanel();
-        if (!codex.isVisible()) {
-            eastPanel.toggleCodex();
-        }
-        int guard = 0;
-        while (!codex.getSelectedCategory().getLabel().equals(label) && guard < 10) {
-            codex.nextTab();
-            guard++;
-        }
-        eastPanel.toggleCodex();
-    }
-
-    private String expectedFirstEntryName(String category) {
-        ModRegistry mods = ModLoader.load(java.nio.file.Paths.get("mods"));
-        return switch (category) {
-            case "Items" -> mods.getAllItems().get(0).getName();
-            case "Tiles" -> mods.getAllTiles().get(0).getId();
-            case "Classes" -> mods.getAllPlayerClasses().get(0).getName();
-            default -> throw new IllegalArgumentException("Unhandled category: " + category);
-        };
-    }
-
-    private void fireCodexToggleKey() {
-        if (eastPanel != null) {
-            eastPanel.toggleCodex();
-        }
-    }
-
-    private void fireInventoryToggleKey() {
-        if (eastPanel != null) {
-            eastPanel.toggleInventory();
-        }
-    }
-
-    private void fireTabKey() {
-        if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction(Keybindings.ACTION_NEXT_TAB);
-        }
-    }
-
-    private void fireShiftTabKey() {
-        if (eastPanel != null && eastPanel.getCodexPanel().isVisible()) {
-            fireCodexPopupAction(Keybindings.ACTION_PREV_TAB);
-        }
     }
 }

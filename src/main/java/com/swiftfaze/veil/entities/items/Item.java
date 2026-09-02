@@ -1,8 +1,11 @@
 package com.swiftfaze.veil.entities.items;
 
+import com.swiftfaze.veil.component.DetailTable;
+import com.swiftfaze.veil.component.Inspectable;
+import java.util.ArrayList;
 import java.util.List;
 
-public class Item {
+public class Item implements Inspectable {
 
     public record BaseDamage(int min, int max) {
     }
@@ -57,5 +60,29 @@ public class Item {
 
     public List<Effect> getEffects() {
         return effects;
+    }
+
+    @Override
+    public List<DetailTable> getDetailTables() {
+        List<List<String>> fieldRows = new ArrayList<>(List.of(
+                List.of("ID", id),
+                List.of("Name", name),
+                List.of("Glyph", String.valueOf(glyph)),
+                List.of("Type", type),
+                List.of("Slot", slot)
+        ));
+        if (baseDamage.max() > 0) {
+            fieldRows.add(List.of("Base Damage (Min)", String.valueOf(baseDamage.min())));
+            fieldRows.add(List.of("Base Damage (Max)", String.valueOf(baseDamage.max())));
+        }
+        List<DetailTable> tables = new ArrayList<>();
+        tables.add(new DetailTable("", List.of("Field", "Value"), fieldRows));
+        if (!effects.isEmpty()) {
+            List<List<String>> effectRows = effects.stream()
+                    .map(e -> List.of(e.type(), e.stat(), e.calc()))
+                    .toList();
+            tables.add(new DetailTable("Effects:", List.of("Type", "Stat", "Calc"), effectRows));
+        }
+        return tables;
     }
 }

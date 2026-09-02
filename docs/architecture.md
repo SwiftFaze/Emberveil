@@ -17,10 +17,14 @@ code depends on the UI layer, or if a widget depends on a screen. See
 `docs/testing.md`'s "Module dependency gate" section for the exact rule
 and why `Main` and `sandbox` are excluded.
 
-**Entry point / window assembly** (`Main.java`): builds a `JFrame` with
-`NorthPanel`/`SouthPanel`/`EastPanel`/`GamePanel` in a `BorderLayout`. There
-is no game loop/ticker — the world only repaints in response to key events
-(see `GamePanel.bindKeys`).
+**Entry point / window assembly** (`Main.java`): builds a `JFrame` wrapping
+`GamePanel` (via `ui/GameWindow.buildContentArea`) plus `InventoryPanel`/
+`CodexPanel` layered above it as popups, in a `BorderLayout` — the former
+`NorthPanel`/`SouthPanel`/`EastPanel` shell around them was removed as
+early scaffolding pending a proper reimplementation, replaced by minimal
+inline wiring in `Main.buildGameCard`/`wirePopups` (see `docs/screens.md`'s
+"UI shell" note). There is no game loop/ticker — the world only repaints
+in response to key events (see `GamePanel.bindKeys`).
 
 **`GamePanel`** is the core of the simulation: it owns the `Player`, the
 active `WorldScene`, and a `Camera`, wires keyboard input directly to player
@@ -84,7 +88,9 @@ eight base-stat *values* and growth curves are data-driven — `Stats`' fields
 and its derived `getAttackPower`/`getDefense` formulas stay plain Java. The
 eight registered stats are `strength`, `dexterity`, `constitution`,
 `intelligence`, `wisdom`, `luck`, `maxHp`, `maxMana`. This data isn't wired
-into gameplay yet beyond display in `PlayerInfoPanel`.
+into gameplay yet — it used to also feed a `PlayerInfoPanel` display,
+removed along with the rest of the early UI shell (see `docs/screens.md`'s
+"UI shell" note).
 
 **Items** (`entities/items/Item.java`): a plain data holder (name, glyph,
 type, slot, base damage min/max, and an `effects` list of `{type, stat,
@@ -95,12 +101,12 @@ validated at load time against the same stat registry
 (`mods/core/stats.json`) classes use, and `effects[].calc` is parsed with
 `CalcExpressionParser` for syntactic validity — but, unlike `PlayerClass`,
 nothing evaluates an item's `calc` to a number yet, since no equip/
-inventory-management system exists to consume it. `EastPanel` loads the
-`ModRegistry` itself (same self-contained pattern as `PlayerInfo`/
-`TileTestScene2`) and pushes `ModRegistry.getAllItems()`'s result into
-`InventoryPanel` via `showItems(List<Item>)`, replacing its previous
-hardcoded stub labels. This is phase 4 of the data-driven-mod-content
-initiative; see `specs/intent/data-driven-item.md`.
+inventory-management system exists to consume it. `InventoryPanel` takes
+`ModRegistry.getAllItems()`'s result via `showItems(List<Item>)` — that
+wiring now happens in `Main.wirePopups` rather than `EastPanel`'s
+constructor, removed along with the rest of the early UI shell (see
+`docs/screens.md`'s "UI shell" note). This is phase 4 of the
+data-driven-mod-content initiative; see `specs/intent/data-driven-item.md`.
 
 **Quests** (`entities/quests/Quest.java`): a plain data holder (name, an
 `objective` — `{type, target, count}`, fixed to `"kill"` this slice — and
@@ -148,7 +154,10 @@ point (`pom.xml`'s `main.class` stays `com.swiftfaze.veil.Main`). Run it
 explicitly: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox`.
 `ClassSandboxModel` wraps `PlayerClassLoader.loadAll()` and exposes class
 names plus computed `Stats` per class (via `PlayerClass.applyBaseStats`, no
-duplicated formulas); `ClassSandboxPanel` (a `TerminalPanel`) reuses
+duplicated formulas); `ClassSandboxPanel` (a plain `JPanel`, inlining the
+black-background/monospaced-label styling `TerminalPanel` used to provide
+before that shared base was removed — see `docs/screens.md`'s "UI shell"
+note) reuses
 `ui/widget/ListWidget` (wrap-around left on, the framework default) via
 its own Key Bindings wiring — Up/Down moves the selection and immediately
 refreshes the displayed attack power/defense/HP/mana, no separate confirm

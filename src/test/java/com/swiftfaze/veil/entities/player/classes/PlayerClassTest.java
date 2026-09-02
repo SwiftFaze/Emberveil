@@ -1,8 +1,10 @@
 package com.swiftfaze.veil.entities.player.classes;
 
+import com.swiftfaze.veil.component.DetailTable;
 import com.swiftfaze.veil.entities.player.Stats;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,5 +81,19 @@ class PlayerClassTest {
         assertEquals(100, stats.getCurrentHp());
         assertEquals(50, stats.getMaxMana());
         assertEquals(50, stats.getCurrentMana());
+    }
+
+    @Test
+    void getDetailTablesReturnsIdAndName() {
+        PlayerClass warrior = new PlayerClass("test:warrior", "Warrior", Map.of());
+
+        List<DetailTable> tables = warrior.getDetailTables();
+
+        assertEquals(1, tables.size());
+        assertEquals("", tables.get(0).label());
+        assertEquals(List.of("Field", "Value"), tables.get(0).columnHeaders());
+        assertEquals(2, tables.get(0).rows().size());
+        assertEquals(List.of("ID", "test:warrior"), tables.get(0).rows().get(0));
+        assertEquals(List.of("Name", "Warrior"), tables.get(0).rows().get(1));
     }
 }

@@ -3,10 +3,11 @@ Feature: Terminal-style UI component framework
   focus/navigation manager, and one consistent "selected" highlight style
   — replaces each panel's hand-rolled InputMap/ActionMap wiring and ad hoc
   highlight color. Three concrete widgets (list, button, popup/modal) are
-  built on it and proven end-to-end by rebuilding the existing in-game
-  inventory screen (opened directly via the keyboard inventory toggle, no
-  navigable menu widget — see Clarifications), and by migrating
-  ClassSandboxPanel off the deleted SelectableMenu, on top of it.
+  built on it, proven in isolation and by migrating ClassSandboxPanel off
+  the deleted SelectableMenu. This file used to also prove the framework
+  end-to-end by rebuilding the in-game inventory screen through EastPanel;
+  that proof case was removed alongside EastPanel — see the trailing
+  Risks note.
 
   Scenario: Navigating a list widget down moves the selection to the next item
     Given a list widget with items "Inventory", "Help", "Journal" and "Inventory" selected
@@ -44,40 +45,6 @@ Feature: Terminal-style UI component framework
     When the "Enter" key is pressed
     Then the button's action was invoked
 
-  Scenario: Toggling the inventory open makes the popup visible
-    Given the rebuilt in-game inventory screen
-    When the inventory is toggled open
-    Then the inventory popup is open
-
-  Scenario: Dismissing the popup with Escape closes it and restores game focus
-    Given the rebuilt in-game inventory screen
-    And the inventory is toggled open
-    When the "Escape" key is pressed
-    Then the inventory popup is closed
-    And the restore-game-focus action was invoked
-
-  Scenario: The rebuilt inventory popup displays real loaded item data with the first item selected
-    Given the rebuilt in-game inventory screen
-    When the inventory is toggled open
-    Then the inventory popup lists the item "Iron Sword"
-    And the inventory popup's first item is highlighted as selected
-
-  Scenario: Up/Down navigates the inventory popup's item list
-    Given the rebuilt in-game inventory screen
-    And the inventory is toggled open
-    When the "Down" key is pressed
-    Then the inventory popup's selected item is no longer the first item
-
-  Scenario: Up at the inventory popup's first item does not wrap to the last item
-    Given the rebuilt in-game inventory screen
-    And the inventory is toggled open
-    When the "Up" key is pressed
-    Then the inventory popup's first item is highlighted as selected
-
-  Scenario: The inventory popup is layered above the game view and sidebar, not inside them
-    Given the game window's layered content area
-    Then the inventory popup's layer is above the game and sidebar content's layer
-
   Scenario: ClassSandboxPanel's initial selection is highlighted and its stats shown
     Given a class sandbox panel is showing
     Then the first class's label is colored "#eeb392"
@@ -111,33 +78,12 @@ Feature: Terminal-style UI component framework
   #   - Disabled-widget styling — the shared style/theme constants support
   #     it as a convention hook, but no widget in the rebuilt real screen is
   #     ever disabled, so there's nothing concrete to prove end-to-end.
-  #   - Confirming/using an inventory item (equip, drop, inspect) — Up/Down
-  #     navigates the popup's item list and highlights a selection (added
-  #     after Step 4.5 playtest: the game is keyboard-only, no mouse, so
-  #     the list had to be keyboard-navigable for scrolling to be usable at
-  #     all — see specs/intent/ui-component-framework.md's Clarifications),
-  #     but Enter/Confirm on a selected item does nothing yet; real
-  #     per-item interaction is milestone "6. Intro Quest & UI" (#7)'s job.
   #   - Table widget, radio group widget, pattern-validated text fields —
   #     tracked separately in #35.
   #   - Any mouse/pointer handling — this game is keyboard-only by design.
-  #   - Wiring new item data or changing how items load — #26 phase 4
-  #     (data-driven-item, #51) already shipped this; the rebuilt list
-  #     widget just needs to keep rendering it.
   #   - A deeper redesign of ClassSandboxPanel beyond the mechanical
   #     SelectableMenu -> list-widget swap — tracked in milestone "3. Dev
   #     sandbox framework".
-  #   - Any new panel features, layout, or visual redesign beyond what's
-  #     needed to prove the framework against this real screen — this
-  #     rebuilt screen is an explicitly disposable skeleton, expected to be
-  #     fully deleted and rebuilt once milestone "6. Intro Quest & UI" (#7)
-  #     lands. The one exception: the inventory popup is layered above the
-  #     whole game window (JLayeredPane, GameWindow.buildContentArea), not
-  #     just centered in the sidebar — added after Step 4.5 manual playtest
-  #     showed the popup sitting inline in EastPanel's own layout didn't
-  #     read as a popup at all. That's a real behavior gap, not visual
-  #     polish, so it's in scope despite the disposable-skeleton framing
-  #     above.
   #
   # Risks:
   #   - This feature supersedes scenarios in four existing files, which
@@ -197,3 +143,17 @@ Feature: Terminal-style UI component framework
   #     generic framework primitive, not exclusively tied to the Close
   #     button's former role, and is proven directly rather than through
   #     any popup now.
+  #
+  # Removal note (later, unrelated cleanup):
+  #   - The six scenarios proving this framework end-to-end through the
+  #     rebuilt in-game inventory screen ("Toggling the inventory open...",
+  #     "Dismissing the popup with Escape...", "...displays real loaded
+  #     item data...", the two Up/Down item-list scenarios, and "...is
+  #     layered above the game view and sidebar...") were removed when
+  #     EastPanel/NorthPanel/SouthPanel/PlayerInfoPanel/TerminalPanel were
+  #     deleted as unrelated early-scaffolding cleanup (see
+  #     specs/intent/shared-list-detail-ui-contract.md's Clarifications).
+  #     The list/button/popup framework itself is untouched and still
+  #     proven by the scenarios above and by ClassSandboxPanel — only its
+  #     inventory-popup proof case is gone, pending a reimplemented
+  #     composition root.

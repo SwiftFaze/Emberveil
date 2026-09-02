@@ -15,12 +15,6 @@ Feature: Keyboard input and menu navigation
     When a key with no bound action is pressed
     Then registered game listeners are not notified
 
-  Scenario: Toggling inventory dispatches through the listener interface
-    Given the inventory panel is hidden
-    When the "toggle inventory" action fires
-    Then the inventory panel becomes visible
-    And the toggle did not use a direct field reference to EastPanel
-
   # Non-goals:
   #   - A generic rebindable keymap UI — Keybindings is a constants class,
   #     not a settings screen.
@@ -29,8 +23,15 @@ Feature: Keyboard input and menu navigation
   # through a MenuPanel, with Help/Journal/Map/Character/Stats staying
   # decorative) was deleted entirely in ui-component-framework.feature —
   # see that file and specs/intent/ui-component-framework.md's
-  # Clarifications. The "toggle inventory" scenario below is unaffected,
-  # since it goes through GamePanel's own "I" binding, not a menu.
+  # Clarifications.
+  #
+  # Note (later removal): a "Toggling inventory dispatches through the
+  # listener interface" scenario used to live here, driven through
+  # EastPanel. It was removed when EastPanel/NorthPanel/SouthPanel/
+  # PlayerInfoPanel/TerminalPanel were deleted as unrelated early-scaffolding
+  # cleanup (see specs/intent/shared-list-detail-ui-contract.md's
+  # Clarifications) — InventoryPanel is no longer wired into the live game,
+  # so there's nothing for GamePanel's "I" binding to toggle right now.
   #
   # Risks:
   #   - GamePanel's existing WASD/arrow keys are already bound to movement;

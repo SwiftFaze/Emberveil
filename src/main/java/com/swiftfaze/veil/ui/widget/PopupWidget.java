@@ -23,6 +23,15 @@ public class PopupWidget extends Widget {
 
         add(contentPanel, BorderLayout.CENTER);
 
+        // Without this, Java's default focus-traversal handling consumes Tab/Shift+Tab on
+        // whichever component currently holds keyboard focus (the popup itself, or a content
+        // widget a subclass has explicitly focused, e.g. DropConfirmationPopup's radio choice)
+        // before this popup's own onUp/onDown/onLeft/onRight routing (or a subclass's own Tab
+        // binding, e.g. CodexPanel's tab switcher) ever sees the key event — silently kicking
+        // keyboard focus onto some other descendant (typically the first focusable list/table)
+        // whose own WHEN_FOCUSED bindings then intercept subsequent arrow-key presses instead.
+        setFocusTraversalKeysEnabled(false);
+
         bindKeys();
     }
 

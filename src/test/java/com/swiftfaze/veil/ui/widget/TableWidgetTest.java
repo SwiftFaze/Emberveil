@@ -123,4 +123,45 @@ public class TableWidgetTest {
         tableWidget.setOtherRowsDimmed(false);
         assertEquals("Sword", tableWidget.getSelectedRow());
     }
+
+    @Test
+    public void ofRowsCreatesTableWithPreRenderedRows() {
+        List<String> headers = List.of("Field", "Value");
+        List<List<String>> rows = List.of(
+                List.of("ID", "test:1"),
+                List.of("Name", "Test Item"),
+                List.of("Type", "weapon")
+        );
+
+        TableWidget<List<String>> table = TableWidget.ofRows(headers, rows);
+
+        assertEquals(3, table.getRowCount());
+        assertEquals(List.of("ID", "test:1"), table.getSelectedRow());
+        table.moveDown();
+        assertEquals(List.of("Name", "Test Item"), table.getSelectedRow());
+    }
+
+    @Test
+    public void ofRowsWithEmptyRows() {
+        List<String> headers = List.of("Field", "Value");
+        List<List<String>> rows = List.of();
+
+        TableWidget<List<String>> table = TableWidget.ofRows(headers, rows);
+
+        assertEquals(0, table.getRowCount());
+        assertNull(table.getSelectedRow());
+    }
+
+    @Test
+    public void ofRowsInfersColumnCountFromFirstRowWhenHeadersEmpty() {
+        List<List<String>> rows = List.of(
+                List.of("a", "b", "c"),
+                List.of("d", "e", "f")
+        );
+
+        TableWidget<List<String>> table = TableWidget.ofRows(List.of(), rows);
+
+        assertEquals(2, table.getRowCount());
+        assertEquals(List.of("a", "b", "c"), table.getSelectedRow());
+    }
 }

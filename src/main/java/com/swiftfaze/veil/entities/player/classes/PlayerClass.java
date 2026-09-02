@@ -1,12 +1,14 @@
 package com.swiftfaze.veil.entities.player.classes;
 
+import com.swiftfaze.veil.component.DetailTable;
+import com.swiftfaze.veil.component.Inspectable;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.mods.CalcExpressionParser;
-
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-public class PlayerClass {
+public class PlayerClass implements Inspectable {
 
     public record StatCurve(int base, String growthCalc) {
     }
@@ -56,5 +58,14 @@ public class PlayerClass {
         StatCurve curve = statsByName.getOrDefault(statName, new StatCurve(0, null));
         double growth = curve.growthCalc() == null ? 0 : CalcExpressionParser.evaluate(curve.growthCalc(), level);
         return Math.toIntExact(Math.round(curve.base() + growth));
+    }
+
+    @Override
+    public List<DetailTable> getDetailTables() {
+        List<List<String>> rows = List.of(
+                List.of("ID", id),
+                List.of("Name", name)
+        );
+        return List.of(new DetailTable("", List.of("Field", "Value"), rows));
     }
 }

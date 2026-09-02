@@ -4,14 +4,15 @@ import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.mods.WidgetColorTheme;
-import com.swiftfaze.veil.ui.EastPanel;
+import com.swiftfaze.veil.ui.CodexPanel;
 import com.swiftfaze.veil.ui.GameWindow;
-import com.swiftfaze.veil.ui.NorthPanel;
+import com.swiftfaze.veil.ui.InventoryPanel;
+import com.swiftfaze.veil.ui.PopupToggleListener;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SettingsWindow;
-import com.swiftfaze.veil.ui.SouthPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
+import com.swiftfaze.veil.ui.widget.FocusManager;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,19 +48,41 @@ public class Main {
     }
 
     private static GamePanel buildGameCard(JPanel cardPanel, Map<String, JComponent> cards) {
-        NorthPanel northPanel = new NorthPanel();
-        SouthPanel southPanel = new SouthPanel();
-        EastPanel eastPanel = new EastPanel();
         GamePanel gamePanel = new GamePanel();
-        gamePanel.addGameListener(eastPanel);
-        eastPanel.setRestoreGameFocusAction(gamePanel::requestFocusInWindow);
-        JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel, eastPanel);
+        InventoryPanel inventoryPanel = new InventoryPanel();
+        CodexPanel codexPanel = new CodexPanel();
+        wirePopups(gamePanel, inventoryPanel, codexPanel);
+
+        JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel);
+        gameContentArea.add(inventoryPanel, JLayeredPane.POPUP_LAYER);
+        gameContentArea.add(codexPanel, JLayeredPane.POPUP_LAYER);
+        gameContentArea.add(inventoryPanel.getDropConfirmationPopup(), JLayeredPane.DRAG_LAYER);
+
         JPanel gameCard = new JPanel(new BorderLayout());
-        gameCard.add(northPanel, BorderLayout.NORTH);
-        gameCard.add(southPanel, BorderLayout.SOUTH);
         gameCard.add(gameContentArea, BorderLayout.CENTER);
         cardPanel.add(gameCard, "game");
         return gamePanel;
+    }
+
+    // Minimal stopgap wiring so the I/X toggles keep working with EastPanel gone (see
+    // specs/intent/shared-list-detail-ui-contract.md's Clarifications) — no sidebar, no
+    // player-info display, just enough plumbing for the two popups to open/close/exclude
+    // each other and hand focus back to the game on dismiss, same as EastPanel used to.
+    private static void wirePopups(GamePanel gamePanel, InventoryPanel inventoryPanel, CodexPanel codexPanel) {
+        ModRegistry mods = ModLoader.load(Paths.get("mods"));
+        FocusManager focusManager = new FocusManager();
+
+        inventoryPanel.setFocusManager(focusManager);
+        inventoryPanel.showItems(mods.getAllItems());
+        inventoryPanel.setOnDismiss(gamePanel::requestFocusInWindow);
+
+        codexPanel.setFocusManager(focusManager);
+        codexPanel.showItems(mods.getAllItems());
+        codexPanel.showTiles(mods.getAllTiles());
+        codexPanel.showClasses(mods.getAllPlayerClasses());
+        codexPanel.setOnDismiss(gamePanel::requestFocusInWindow);
+
+        gamePanel.addGameListener(new PopupToggleListener(inventoryPanel, codexPanel));
     }
 
     private static void buildUIScreens(CardLayout cardLayout, JPanel cardPanel,
