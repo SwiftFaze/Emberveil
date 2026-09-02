@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.9](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.8...v0.5.0-beta.9) (2026-09-02)
+
+
+### Features
+
+* add Identifiable/DetailTable contract and shared details-pane widget ([f7036fb](https://github.com/SwiftFaze/Veil/commit/f7036fb824df570f565133d774e1f49070106d42))
+* shared list/detail UI contract + early UI-shell cleanup ([f077a16](https://github.com/SwiftFaze/Veil/commit/f077a1684b9c081068ae4bf8c6c4a0a270c11c30))
+
 ## [0.5.0-beta.8](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.7...v0.5.0-beta.8) (2026-09-01)
 
 
