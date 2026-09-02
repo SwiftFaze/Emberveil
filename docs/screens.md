@@ -6,18 +6,21 @@ how the individual screen panels compose the reusable widgets from
 data contract Inventory and Codex use to display domain content, see
 `docs/components.md`.
 
-**UI shell** (`ui/`): `NorthPanel`, `SouthPanel`, and `PlayerInfoPanel`
-extend `TerminalPanel`, a shared `JPanel` base centralizing the black
-background, monospaced label styling, and a `makeLabel` helper — each
-panel still sets its own border/layout specifics that genuinely differ
-(e.g. `PlayerInfoPanel`'s bottom-line border, `NorthPanel`'s centered
-title). `EastPanel` composes just `PlayerInfoPanel` (in `BorderLayout.NORTH`)
-and implements `GameListener`: `updatePlayer` refreshes `PlayerInfoPanel`,
-and the interface's `toggleInventory` default method is overridden to
-open/dismiss the inventory popup — this replaced the old direct `GamePanel`
-→ `EastPanel` field reference that pressing **I** used to go through, and
-there is no menu widget in between: **I** calls `toggleInventory()`
-directly.
+**UI shell** (`ui/`): removed (`EastPanel`, `NorthPanel`, `SouthPanel`,
+`PlayerInfoPanel`, `TerminalPanel`) as early scaffolding pending a proper
+reimplementation — `GamePanel` currently has no sidebar and no title bar
+(see Clarifications in `specs/intent/shared-list-detail-ui-contract.md`).
+`Main.buildGameCard`/`wirePopups` now do just enough plumbing to keep
+`InventoryPanel`/`CodexPanel` reachable via the I/X toggles: constructing
+them, loading mod content into them, and registering `ui/
+PopupToggleListener` (implements `GameListener`) to handle open/dismiss/
+mutual-exclusion/focus-restore — the same behavior `EastPanel` used to
+provide, just as a small standalone class instead of a full sidebar panel
+(it has to live in `ui/`, not nested in `Main`, for
+`ModuleDependencyTest`'s engine/UI ArchUnit gate — `Main`'s own
+UI-dependency exemption doesn't extend to classes nested inside it). There
+is no player-info display feeding `updatePlayer` right now. The descriptions below of `InventoryPanel`/`CodexPanel`
+themselves are unaffected either way.
 
 **Screen flow** (`Main.java` and screen panels): `Main.loadGame()` first calls
 `loadAndApplyDefaultTheme()` (loads the mod registry and applies `core:default`'s
@@ -108,19 +111,15 @@ the current pane. Pressing D (Drop) from any pane opens a nested
 horizontal `RadioGroupWidget<String>` asking "Drop item?", defaulting to "No"
 highlighted), which closes on any selection or Escape without actually
 removing items. It's
-populated externally (`showItems(List<Item>)`, called from `EastPanel`'s
-constructor) rather than loading mod content itself, mirroring
-`PlayerInfoPanel`'s `updatePlayer`-style external push. Rather than living
-inside `EastPanel`'s own layout, the popup is promoted to window level:
-`ui/GameWindow.buildContentArea(GamePanel, EastPanel)` builds a `JLayeredPane`
-with a `mainArea` panel (`GamePanel` + `EastPanel`) at `DEFAULT_LAYER`, the
-inventory popup at `POPUP_LAYER` above it, and the drop-confirmation popup at
-`DRAG_LAYER` (even higher) — all positioned by the same `FillLayout`, which
-stretches the full-screen inventory popup to cover the whole game view and
-sidebar, but centers the compact drop-confirmation popup at its preferred
-size on top of that. `Main.java` wires that layered
-pane into the frame's `BorderLayout.CENTER` instead of adding `GamePanel`/
-`EastPanel` directly. `SelectableMenu` (the old hand-rolled index-wrap
+populated externally (`showItems(List<Item>)`, called from
+`Main.wirePopups`) rather than loading mod content itself.
+`ui/GameWindow.buildContentArea(GamePanel)` builds a `JLayeredPane`
+wrapping just `GamePanel` at `DEFAULT_LAYER`; `Main.buildGameCard` then
+adds the inventory popup and its nested drop-confirmation popup directly
+(`POPUP_LAYER`/`DRAG_LAYER`) rather than `GameWindow` doing it — that
+layering logic used to live inside `GameWindow` itself, driven by an
+`EastPanel` parameter, before that composition root was removed (see the
+UI shell note above). `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by
 `ListWidget`.
 
@@ -133,11 +132,12 @@ showing ID, Name, Glyph/Symbol/Color, etc. per category). Up/Down/Left/Right
 navigate within the current pane and can switch focus between list and detail
 via Left/Right. Tab and Shift+Tab cycle forward/backward through tabs. Data is
 populated externally from mod content (`showItems`/`showTiles`/`showClasses`)
-same as `InventoryPanel`. Opening Codex via the X key while Inventory is open
-closes Inventory first, and vice versa, so only one popup is ever visible at
-a time — mutual exclusion is handled in `EastPanel.toggleCodex()`/
-`toggleInventory()`. The codex is placed at `POPUP_LAYER` in `GameWindow`'s
-layered pane, same as the inventory. Buildings and Quests tabs are deferred
+same as `InventoryPanel`. Opening Codex via the X key while Inventory is
+open still closes Inventory first, and vice versa, so only one popup is
+ever visible at a time — that mutual exclusion moved from
+`EastPanel.toggleCodex()`/`toggleInventory()` into `Main`'s
+`PopupToggleListener` (see the UI shell note above) when `EastPanel` was
+removed, same behavior either way. Buildings and Quests tabs are deferred
 (see `specs/intent/codex-ui.md`). `InventoryPanel` and `CodexPanel`'s
 duplicated details-pane/focus-navigation code is being extracted per
 `docs/components.md`; see that doc's worked example.

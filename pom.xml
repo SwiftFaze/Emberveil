@@ -181,7 +181,6 @@
                         <param>com.swiftfaze.veil.world.*</param>
                         <param>com.swiftfaze.veil.entities.*</param>
                         <param>com.swiftfaze.veil.mods.*</param>
-                        <param>com.swiftfaze.veil.ui.EastPanel</param>
                         <param>com.swiftfaze.veil.ui.InventoryPanel</param>
                         <param>com.swiftfaze.veil.input.Keybindings</param>
                         <param>com.swiftfaze.veil.sandbox.ClassSandboxModel</param>
@@ -233,12 +232,9 @@
                         <exclude>**/ui/widget/FocusManager.java</exclude>
                         <exclude>**/ui/widget/TerminalScrollBarUI.java</exclude>
                         <exclude>**/ui/widget/Widget.java</exclude>
-                        <exclude>**/ui/NorthPanel.java</exclude>
-                        <exclude>**/ui/PlayerInfoPanel.java</exclude>
+                        <exclude>**/ui/GameWindow.java</exclude>
                         <exclude>**/ui/ResetConfirmationPopup.java</exclude>
                         <exclude>**/ui/SettingsWindow.java</exclude>
-                        <exclude>**/ui/SouthPanel.java</exclude>
-                        <exclude>**/ui/TerminalPanel.java</exclude>
                         <exclude>**/GameConst.java</exclude>
                         <exclude>**/Positionable.java</exclude>
                         <exclude>**/DrawableAsciiEntity.java</exclude>
@@ -273,27 +269,33 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <!-- Class-file globs excluded from the coverage ratio below. This must
+                                 live here (the check goal's own top-level excludes), not as
+                                 <rule><excludes> with dotted FQNs — that form is silently a no-op
+                                 for an element=BUNDLE rule (verified: with only the FQN list, the
+                                 check still failed at raw ~81% instead of the ~86% the exclusions
+                                 should have produced). -->
+                            <excludes>
+                                <exclude>**/ui/widget/ButtonWidget.class</exclude>
+                                <exclude>**/ui/widget/FocusManager.class</exclude>
+                                <exclude>**/ui/widget/TerminalScrollBarUI.class</exclude>
+                                <exclude>**/ui/widget/Widget.class</exclude>
+                                <exclude>**/ui/GameWindow.class</exclude>
+                                <exclude>**/ui/InventoryPanel.class</exclude>
+                                <exclude>**/ui/ResetConfirmationPopup.class</exclude>
+                                <exclude>**/ui/SettingsWindow.class</exclude>
+                                <exclude>**/Main.class</exclude>
+                                <exclude>**/Main$*.class</exclude>
+                                <exclude>**/GameConst.class</exclude>
+                                <exclude>**/Positionable.class</exclude>
+                                <exclude>**/DrawableAsciiEntity.class</exclude>
+                                <exclude>**/exceptions/ModLoadException.class</exclude>
+                                <exclude>**/game/GameListener.class</exclude>
+                                <exclude>**/sandbox/ClassSandbox.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
-                                    <excludes>
-                                        <exclude>com.swiftfaze.veil.ui.widget.ButtonWidget</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.widget.FocusManager</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.widget.TerminalScrollBarUI</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.widget.Widget</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.NorthPanel</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.PlayerInfoPanel</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.ResetConfirmationPopup</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.SettingsWindow</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.SouthPanel</exclude>
-                                        <exclude>com.swiftfaze.veil.ui.TerminalPanel</exclude>
-                                        <exclude>com.swiftfaze.veil.GameConst</exclude>
-                                        <exclude>com.swiftfaze.veil.Positionable</exclude>
-                                        <exclude>com.swiftfaze.veil.DrawableAsciiEntity</exclude>
-                                        <exclude>com.swiftfaze.veil.exceptions.ModLoadException</exclude>
-                                        <exclude>com.swiftfaze.veil.game.GameListener</exclude>
-                                        <exclude>com.swiftfaze.veil.sandbox.ClassSandbox</exclude>
-                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>

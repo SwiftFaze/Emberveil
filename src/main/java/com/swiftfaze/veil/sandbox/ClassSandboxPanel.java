@@ -2,15 +2,16 @@ package com.swiftfaze.veil.sandbox;
 
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.input.Keybindings;
-import com.swiftfaze.veil.ui.TerminalPanel;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
 import javax.swing.*;
+import java.awt.Component;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
-public class ClassSandboxPanel extends TerminalPanel {
+public class ClassSandboxPanel extends JPanel {
 
     private final ClassSandboxModel model;
     private final List<String> names;
@@ -24,6 +25,8 @@ public class ClassSandboxPanel extends TerminalPanel {
         this.listWidget = new ListWidget<>(s -> s);
         this.labels = new JLabel[names.size()];
 
+        setBackground(WidgetTheme.BACKGROUND);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setFocusable(true);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -74,6 +77,14 @@ public class ClassSandboxPanel extends TerminalPanel {
                 refresh();
             }
         });
+    }
+
+    private JLabel makeLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(WidgetTheme.NORMAL_TEXT);
+        label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
 
     private void refresh() {

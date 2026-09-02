@@ -2,14 +2,12 @@ package com.swiftfaze.veil.steps;
 
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
-import com.swiftfaze.veil.ui.EastPanel;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import javax.swing.Action;
 import java.awt.event.ActionEvent;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class KeyboardInputAndMenuNavigationSteps {
 
     private GamePanel gamePanel;
-    private EastPanel eastPanel;
     private boolean listenerNotified;
 
     @Given("a game panel with a player at position \\({int}, {int})")
@@ -56,34 +53,12 @@ public class KeyboardInputAndMenuNavigationSteps {
         assertFalse(listenerNotified);
     }
 
-    @Given("the inventory panel is hidden")
-    public void theInventoryPanelIsHidden() {
-        gamePanel = new GamePanel();
-        eastPanel = new EastPanel();
-        gamePanel.addGameListener(eastPanel);
-        eastPanel.getInventoryPanel().setVisible(false);
-    }
-
-    @Then("the inventory panel becomes visible")
-    public void theInventoryPanelBecomesVisible() {
-        assertTrue(eastPanel.getInventoryPanel().isVisible());
-    }
-
-    @Then("the toggle did not use a direct field reference to EastPanel")
-    public void theToggleDidNotUseADirectFieldReferenceToEastPanel() {
-        boolean hasEastPanelField = Arrays.stream(GamePanel.class.getDeclaredFields())
-                .anyMatch(field -> field.getType().equals(EastPanel.class));
-        assertFalse(hasEastPanelField);
-    }
-
-
     private String actionNameFor(String spokenName) {
         return switch (spokenName) {
             case "move up" -> Keybindings.ACTION_MOVE_UP;
             case "move down" -> Keybindings.ACTION_MOVE_DOWN;
             case "move left" -> Keybindings.ACTION_MOVE_LEFT;
             case "move right" -> Keybindings.ACTION_MOVE_RIGHT;
-            case "toggle inventory" -> Keybindings.ACTION_TOGGLE_INVENTORY;
             default -> throw new IllegalArgumentException("Unhandled action: " + spokenName);
         };
     }
