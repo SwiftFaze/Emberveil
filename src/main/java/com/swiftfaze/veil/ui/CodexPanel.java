@@ -1,5 +1,6 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.component.Inspectable;
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.input.Keybindings;
@@ -22,12 +23,6 @@ import java.util.List;
  */
 public class CodexPanel extends PopupWidget {
 
-    private record FieldRow(String field, String value) {
-    }
-
-    private record CodexEntry(String name, List<FieldRow> fields, List<Item.Effect> effects) {
-    }
-
     public enum Category {
         ITEMS("Items"), TILES("Tiles"), CLASSES("Classes");
 
@@ -42,25 +37,17 @@ public class CodexPanel extends PopupWidget {
         }
     }
 
-    private enum Focus { ENTRY_LIST, FIELDS }
-
     private static final String NO_ENTRY_TEXT = "(no item selected)";
 
-    private final ListWidget<CodexEntry> entryList;
-    private final JPanel detailsPanel;
-    private final JScrollPane detailsScrollPane;
-    private final TableWidget<FieldRow> fieldsTable;
-    private final JLabel effectsLabel;
-    private final TableWidget<Item.Effect> effectsTable;
+    private final ListWidget<Inspectable> entryList;
+    private final DetailsPaneWidget detailsPane;
     private final List<JLabel> tabLabels = new ArrayList<>();
 
-    private List<Item> items = List.of();
-    private List<Tile> tiles = List.of();
-    private List<PlayerClass> classes = List.of();
-    private List<CodexEntry> currentEntries = List.of();
+    private List<Inspectable> items = List.of();
+    private List<Inspectable> tiles = List.of();
+    private List<Inspectable> classes = List.of();
+    private List<Inspectable> currentEntries = List.of();
     private Category selectedCategory = Category.ITEMS;
-    private Focus focus = Focus.ENTRY_LIST;
-    private boolean showingPlaceholder;
 
     public CodexPanel() {
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER);
@@ -70,53 +57,43 @@ public class CodexPanel extends PopupWidget {
         addContent(makeTitleLabel());
         addContent(buildTabRow());
 
-        entryList = new ListWidget<>(CodexEntry::name);
+        entryList = new ListWidget<>(Inspectable::getName);
         entryList.setWrapAround(false);
-        entryList.setOnSelectionChange(this::updateDetails);
+        detailsPane = new DetailsPaneWidget();
+        entryList.setOnSelectionChange(detailsPane::showEntry);
 
-        detailsPanel = ListDetailLayoutUtility.buildDetailsPanel();
-
-        fieldsTable = new TableWidget<>(List.of("Field", "Value"), List.of(FieldRow::field, FieldRow::value));
-        ListDetailLayoutUtility.configureDetailsTable(fieldsTable);
-
-        effectsLabel = ListDetailLayoutUtility.makeEffectsLabel();
-        effectsTable = ListDetailLayoutUtility.buildEffectsTable();
-
-        detailsScrollPane = ListDetailLayoutUtility.buildScrollPane(detailsPanel);
-        addContent(ListDetailLayoutUtility.buildBody(ListDetailLayoutUtility.buildScrollPane(entryList), detailsScrollPane));
+        addContent(ListDetailLayoutUtility.buildBody(ListDetailLayoutUtility.buildScrollPane(entryList), detailsPane));
         bindTabKeys();
         disableFocusTraversalKeys();
     }
 
     /**
-     * Without this, Java's default focus-traversal handling consumes Tab/Shift+Tab on
-     * whichever component currently holds keyboard focus (the Close button, in practice)
-     * before bindTabKeys()'s own InputMap bindings ever see the key event - silently
-     * kicking keyboard focus out of the popup entirely instead of switching tabs.
+     * PopupWidget's own constructor already disables focus-traversal-keys on itself (see its
+     * javadoc); entryList is the first focusable descendant Tab could otherwise land real
+     * keyboard focus on, so it needs the same treatment for bindTabKeys()'s InputMap bindings
+     * (and this popup's own onUp/onDown/onLeft/onRight routing) to keep seeing Tab and the
+     * arrow keys instead of losing them to entryList's own WHEN_FOCUSED bindings.
      */
     private void disableFocusTraversalKeys() {
-        setFocusTraversalKeysEnabled(false);
         entryList.setFocusTraversalKeysEnabled(false);
-        fieldsTable.setFocusTraversalKeysEnabled(false);
-        effectsTable.setFocusTraversalKeysEnabled(false);
     }
 
     public void showItems(List<Item> items) {
-        this.items = items;
+        this.items = new ArrayList<>(items);
         if (selectedCategory == Category.ITEMS) {
             refreshEntries();
         }
     }
 
     public void showTiles(List<Tile> tiles) {
-        this.tiles = tiles;
+        this.tiles = new ArrayList<>(tiles);
         if (selectedCategory == Category.TILES) {
             refreshEntries();
         }
     }
 
     public void showClasses(List<PlayerClass> classes) {
-        this.classes = classes;
+        this.classes = new ArrayList<>(classes);
         if (selectedCategory == Category.CLASSES) {
             refreshEntries();
         }
@@ -143,20 +120,41 @@ public class CodexPanel extends PopupWidget {
     }
 
     public String getSelectedEntryName() {
-        CodexEntry selected = entryList.getSelectedItem();
-        return selected == null ? null : selected.name();
+        Inspectable selected = entryList.getSelectedItem();
+        return selected == null ? null : selected.getName();
     }
 
     public boolean isShowingPlaceholder() {
-        return showingPlaceholder;
+        return detailsPane.isShowingPlaceholder();
     }
 
     public String getDetailPlaceholderText() {
-        return showingPlaceholder ? NO_ENTRY_TEXT : null;
+        return detailsPane.isShowingPlaceholder() ? NO_ENTRY_TEXT : null;
     }
 
-    public TableWidget<FieldRow> getFieldsTable() {
-        return fieldsTable;
+    public TableWidget<List<String>> getFieldsTable() {
+        return getTableOrEmpty(0);
+    }
+
+    public TableWidget<List<String>> getEffectsTable() {
+        return getTableOrEmpty(1);
+    }
+
+    private TableWidget<List<String>> getTableOrEmpty(int index) {
+        TableWidget<List<String>> table = detailsPane.getTable(index);
+        return table != null ? table : TableWidget.ofRows(List.of("Field", "Value"), List.of());
+    }
+
+    public boolean isFieldsTableFocused() {
+        return detailsPane.isTableFocused(0);
+    }
+
+    public boolean isEffectsTableFocused() {
+        return detailsPane.isTableFocused(1);
+    }
+
+    public boolean isEntryListFocused() {
+        return !detailsPane.hasFocus();
     }
 
     public void nextTab() {
@@ -171,111 +169,52 @@ public class CodexPanel extends PopupWidget {
 
     @Override
     protected void onUp() {
-        switch (focus) {
-            case ENTRY_LIST -> entryList.moveUp();
-            case FIELDS -> fieldsTable.moveUp();
+        if (detailsPane.hasFocus()) {
+            detailsPane.moveUp();
+        } else {
+            entryList.moveUp();
         }
     }
 
     @Override
     protected void onDown() {
-        switch (focus) {
-            case ENTRY_LIST -> entryList.moveDown();
-            case FIELDS -> fieldsTable.moveDown();
+        if (detailsPane.hasFocus()) {
+            detailsPane.moveDown();
+        } else {
+            entryList.moveDown();
         }
     }
 
     @Override
     protected void onLeft() {
-        if (focus != Focus.ENTRY_LIST) {
-            focus = Focus.ENTRY_LIST;
-            fieldsTable.setSelectable(false);
+        if (detailsPane.hasFocus()) {
+            detailsPane.clearFocus();
         }
     }
 
     @Override
     protected void onRight() {
-        if (focus == Focus.ENTRY_LIST) {
-            focus = Focus.FIELDS;
-            fieldsTable.setSelectable(true);
-            fieldsTable.moveToStart();
+        if (!detailsPane.hasFocus()) {
+            detailsPane.focusFirstTable();
         }
     }
 
     private void selectCategory(Category category) {
         selectedCategory = category;
-        focus = Focus.ENTRY_LIST;
-        fieldsTable.setSelectable(false);
+        detailsPane.clearFocus();
         refreshTabHighlight();
         refreshEntries();
     }
 
     private void refreshEntries() {
         currentEntries = switch (selectedCategory) {
-            case ITEMS -> items.stream().map(this::toEntry).toList();
-            case TILES -> tiles.stream().map(this::toEntry).toList();
-            case CLASSES -> classes.stream().map(this::toEntry).toList();
+            case ITEMS -> items;
+            case TILES -> tiles;
+            case CLASSES -> classes;
         };
         entryList.setItems(currentEntries);
     }
 
-    private CodexEntry toEntry(Item item) {
-        List<FieldRow> fields = new ArrayList<>(List.of(
-                new FieldRow("ID", item.getId()),
-                new FieldRow("Name", item.getName()),
-                new FieldRow("Glyph", String.valueOf(item.getGlyph())),
-                new FieldRow("Type", item.getType()),
-                new FieldRow("Slot", item.getSlot())
-        ));
-        Item.BaseDamage damage = item.getBaseDamage();
-        if (damage.max() > 0) {
-            fields.add(new FieldRow("Base Damage (Min)", String.valueOf(damage.min())));
-            fields.add(new FieldRow("Base Damage (Max)", String.valueOf(damage.max())));
-        }
-        return new CodexEntry(item.getName(), fields, item.getEffects());
-    }
-
-    private CodexEntry toEntry(Tile tile) {
-        Color c = tile.getColor();
-        List<FieldRow> fields = List.of(
-                new FieldRow("ID", tile.getId()),
-                new FieldRow("Symbol", String.valueOf(tile.getSymbol())),
-                new FieldRow("Color", "rgb(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ")"),
-                new FieldRow("Walkable", String.valueOf(tile.isWalkable()))
-        );
-        return new CodexEntry(tile.getId(), fields, List.of());
-    }
-
-    private CodexEntry toEntry(PlayerClass playerClass) {
-        List<FieldRow> fields = List.of(
-                new FieldRow("ID", playerClass.getId()),
-                new FieldRow("Name", playerClass.getName())
-        );
-        return new CodexEntry(playerClass.getName(), fields, List.of());
-    }
-
-    private void updateDetails(CodexEntry entry) {
-        detailsPanel.removeAll();
-        focus = Focus.ENTRY_LIST;
-        if (entry == null) {
-            showingPlaceholder = true;
-            detailsPanel.add(detailLabel(NO_ENTRY_TEXT));
-        } else {
-            showingPlaceholder = false;
-            fieldsTable.setRows(entry.fields());
-            fieldsTable.setSelectable(false);
-            detailsPanel.add(fieldsTable);
-            if (!entry.effects().isEmpty()) {
-                effectsTable.setRows(entry.effects());
-                effectsTable.setSelectable(false);
-                detailsPanel.add(effectsLabel);
-                detailsPanel.add(effectsTable);
-            }
-        }
-        detailsPanel.revalidate();
-        detailsPanel.repaint();
-        detailsScrollPane.getViewport().setViewPosition(new Point(0, 0));
-    }
 
     private void bindTabKeys() {
         InputMap inputMap = getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -327,14 +266,6 @@ public class CodexPanel extends PopupWidget {
         for (Category category : Category.values()) {
             WidgetTheme.applySelection(tabLabels.get(category.ordinal()), category == selectedCategory);
         }
-    }
-
-    private JLabel detailLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(WidgetTheme.NORMAL_TEXT);
-        label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
     }
 
 }

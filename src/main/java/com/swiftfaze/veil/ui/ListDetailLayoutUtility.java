@@ -1,6 +1,5 @@
 package com.swiftfaze.veil.ui;
 
-import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.TerminalScrollBarUI;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
@@ -47,10 +46,10 @@ public final class ListDetailLayoutUtility {
     }
 
     /**
-     * Builds a styled "Effects:" section label.
+     * Builds a styled section label with the given text.
      */
-    public static JLabel makeEffectsLabel() {
-        JLabel label = new JLabel("Effects:");
+    public static JLabel makeSectionLabel(String text) {
+        JLabel label = new JLabel(text);
         label.setForeground(WidgetTheme.NORMAL_TEXT);
         label.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -79,17 +78,5 @@ public final class ListDetailLayoutUtility {
         table.setSelectable(false);
         table.setAlignmentX(Component.LEFT_ALIGNMENT);
         table.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-    }
-
-    /**
-     * Builds the standard effects table (same in both Codex and Inventory).
-     */
-    public static TableWidget<Item.Effect> buildEffectsTable() {
-        TableWidget<Item.Effect> table = new TableWidget<>(
-                List.of("Type", "Stat", "Calc"),
-                List.of(Item.Effect::type, Item.Effect::stat, Item.Effect::calc)
-        );
-        configureDetailsTable(table);
-        return table;
     }
 }

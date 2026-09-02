@@ -23,7 +23,7 @@ public interface Identifiable {
 
 public record DetailField(String label, String value) {}
 
-public record DetailTable(List<String> columnHeaders, List<List<String>> rows) {}
+public record DetailTable(String label, List<String> columnHeaders, List<List<String>> rows) {}
 
 public interface DetailDescribable {
     List<DetailTable> getDetailTables();
@@ -43,6 +43,10 @@ public interface Inspectable extends Identifiable, DetailDescribable {}
 - **`DetailTable`** — a details pane can show more than one table (e.g.
   base fields plus a second table of effects/bonuses); this shape
   doesn't hardcode how many or what a given type's second table means.
+  Its `label` renders as a heading above the table when non-blank (e.g.
+  "Effects"); leave it `""` for a table that needs no heading (see
+  "Resolved" below for why this lives on the record instead of a
+  widget-side convention).
 - **`Inspectable`** — convenience union for a type that's both listable
   and detail-renderable. Not required — a type can implement just one of
   the two — but useful as a single generic bound for a widget that wants
@@ -147,11 +151,19 @@ already applies Rule 1 to world rendering, where `GamePanel` iterates
   (keyed off however many `DetailTable`s the current `DetailDescribable`
   returned), instead of each popup re-deriving its own `Focus` enum.
 
-**Open questions** (not yet decided):
+**Resolved:**
 
-- Should `TableWidget` gain `onSelectionChange` for parity with
-  `ListWidget`?
-- Does the shared details widget render one `TableWidget` per
-  `DetailTable`, or does `DetailTable` need a section label (e.g.
-  "Effects:") as part of its own data rather than one the widget
-  hardcodes?
+- `TableWidget` does not gain `onSelectionChange`. Nothing in this case
+  needs live-preview *within* a table (unlike `ListWidget`, where the
+  details pane needs to update as the list scrolls) — adding it would be
+  wiring an output "just in case a future consumer might want it," which
+  Rule 4 already warns against. The asymmetry with `ListWidget` is
+  intentional, not a gap.
+- `DetailTable` carries its own `label` as data, not one the widget
+  hardcodes by position (e.g. "table 0 is unlabeled, table 1+ is
+  labeled"). A widget-side positional convention is Rule 1's violation
+  moved up one level, and breaks the moment a type doesn't fit the
+  two-table shape — `PlayerClass` has only one table, and a future type
+  could need three, or a labeled first table. Each type states its own
+  label per table instead; `""` renders no heading, matching
+  `InventoryPanel`'s current unlabeled Fields table.

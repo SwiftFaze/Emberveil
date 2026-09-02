@@ -49,6 +49,20 @@ public class TableWidget<T> extends Widget {
         bindKeys();
     }
 
+    public static TableWidget<List<String>> ofRows(List<String> columnHeaders, List<List<String>> rows) {
+        int columnCount = columnHeaders.isEmpty()
+                ? (rows.isEmpty() ? 0 : rows.get(0).size())
+                : columnHeaders.size();
+        List<Function<List<String>, String>> renderers = new ArrayList<>();
+        for (int i = 0; i < columnCount; i++) {
+            int column = i;
+            renderers.add(row -> row.get(column));
+        }
+        TableWidget<List<String>> table = new TableWidget<>(columnHeaders, renderers);
+        table.setRows(rows);
+        return table;
+    }
+
     public void setRows(List<T> rows) {
         this.rows.clear();
         this.rows.addAll(rows);

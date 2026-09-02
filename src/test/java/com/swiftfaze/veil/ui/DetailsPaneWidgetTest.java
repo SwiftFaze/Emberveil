@@ -1,0 +1,247 @@
+package com.swiftfaze.veil.ui;
+
+import com.swiftfaze.veil.component.DetailTable;
+import com.swiftfaze.veil.component.Inspectable;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class DetailsPaneWidgetTest {
+
+    private DetailsPaneWidget detailsPane;
+
+    @BeforeEach
+    void setUp() {
+        detailsPane = new DetailsPaneWidget();
+    }
+
+    @Test
+    void showEntryNullShowsPlaceholder() {
+        detailsPane.showEntry(null);
+
+        assertTrue(detailsPane.isShowingPlaceholder());
+        assertEquals(0, detailsPane.getTableCount());
+    }
+
+    @Test
+    void showEntrySingleTableEntry() {
+        Inspectable entry = createSingleTableEntry();
+        detailsPane.showEntry(entry);
+
+        assertFalse(detailsPane.isShowingPlaceholder());
+        assertEquals(1, detailsPane.getTableCount());
+        assertNotNull(detailsPane.getTable(0));
+        assertNull(detailsPane.getTable(1));
+    }
+
+    @Test
+    void showEntryTwoTableEntry() {
+        Inspectable entry = createTwoTableEntry();
+        detailsPane.showEntry(entry);
+
+        assertFalse(detailsPane.isShowingPlaceholder());
+        assertEquals(2, detailsPane.getTableCount());
+        assertNotNull(detailsPane.getTable(0));
+        assertNotNull(detailsPane.getTable(1));
+    }
+
+    @Test
+    void focusFirstTableWhenEmpty() {
+        detailsPane.showEntry(null);
+        detailsPane.focusFirstTable();
+
+        assertFalse(detailsPane.hasFocus());
+    }
+
+    @Test
+    void focusFirstTableWithOneTable() {
+        detailsPane.showEntry(createSingleTableEntry());
+        detailsPane.focusFirstTable();
+
+        assertTrue(detailsPane.hasFocus());
+        assertTrue(detailsPane.isTableFocused(0));
+    }
+
+    @Test
+    void focusFirstTableWithTwoTables() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+
+        assertTrue(detailsPane.hasFocus());
+        assertTrue(detailsPane.isTableFocused(0));
+        assertFalse(detailsPane.isTableFocused(1));
+    }
+
+    @Test
+    void clearFocusAfterFocus() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+        assertTrue(detailsPane.hasFocus());
+
+        detailsPane.clearFocus();
+
+        assertFalse(detailsPane.hasFocus());
+    }
+
+    @Test
+    void moveDownFromFirstTableToSecond() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+
+        detailsPane.moveDown();
+
+        assertTrue(detailsPane.isTableFocused(1));
+    }
+
+    @Test
+    void moveUpFromSecondTableToFirst() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+        detailsPane.moveDown();
+        assertTrue(detailsPane.isTableFocused(1));
+
+        detailsPane.moveUp();
+
+        assertTrue(detailsPane.isTableFocused(0));
+    }
+
+    @Test
+    void moveDownOnLastRowOfLastTableStays() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+        detailsPane.moveDown();
+
+        detailsPane.moveDown();
+
+        assertTrue(detailsPane.isTableFocused(1));
+    }
+
+    @Test
+    void moveUpOnFirstRowOfFirstTableStays() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+
+        detailsPane.moveUp();
+
+        assertTrue(detailsPane.isTableFocused(0));
+    }
+
+    @Test
+    void moveWhenNotFocusedIsNoOp() {
+        detailsPane.showEntry(createTwoTableEntry());
+        assertFalse(detailsPane.hasFocus());
+
+        detailsPane.moveUp();
+        detailsPane.moveDown();
+
+        assertFalse(detailsPane.hasFocus());
+    }
+
+    @Test
+    void getTableReturnsCorrectTable() {
+        detailsPane.showEntry(createTwoTableEntry());
+
+        assertEquals(1, detailsPane.getTable(0).getRowCount());
+        assertEquals(2, detailsPane.getTable(1).getRowCount());
+    }
+
+    @Test
+    void getTableOutOfBoundsReturnsNull() {
+        detailsPane.showEntry(createTwoTableEntry());
+
+        assertNull(detailsPane.getTable(-1));
+        assertNull(detailsPane.getTable(2));
+    }
+
+    @Test
+    void isTableFocusedReturnsFalseWhenNotFocused() {
+        detailsPane.showEntry(createTwoTableEntry());
+
+        assertFalse(detailsPane.isTableFocused(0));
+        assertFalse(detailsPane.isTableFocused(1));
+    }
+
+    @Test
+    void isTableFocusedReturnsTrueOnlyForFocusedTable() {
+        detailsPane.showEntry(createTwoTableEntry());
+        detailsPane.focusFirstTable();
+
+        assertTrue(detailsPane.isTableFocused(0));
+        assertFalse(detailsPane.isTableFocused(1));
+
+        detailsPane.moveDown();
+
+        assertFalse(detailsPane.isTableFocused(0));
+        assertTrue(detailsPane.isTableFocused(1));
+    }
+
+    @Test
+    void showEntryNullAfterDataClearsPlaceholder() {
+        detailsPane.showEntry(createSingleTableEntry());
+        assertFalse(detailsPane.isShowingPlaceholder());
+
+        detailsPane.showEntry(null);
+
+        assertTrue(detailsPane.isShowingPlaceholder());
+        assertEquals(0, detailsPane.getTableCount());
+    }
+
+    private Inspectable createSingleTableEntry() {
+        return new Inspectable() {
+            @Override
+            public String getId() {
+                return "test:single";
+            }
+
+            @Override
+            public String getName() {
+                return "Single Table";
+            }
+
+            @Override
+            public List<DetailTable> getDetailTables() {
+                return List.of(
+                        new DetailTable("", List.of("Field", "Value"),
+                                List.of(List.of("Test", "Value")))
+                );
+            }
+        };
+    }
+
+    private Inspectable createTwoTableEntry() {
+        return new Inspectable() {
+            @Override
+            public String getId() {
+                return "test:double";
+            }
+
+            @Override
+            public String getName() {
+                return "Two Tables";
+            }
+
+            @Override
+            public List<DetailTable> getDetailTables() {
+                return List.of(
+                        new DetailTable("", List.of("Field", "Value"),
+                                List.of(List.of("Test", "Value"))),
+                        new DetailTable("Effects:", List.of("Type", "Stat"),
+                                List.of(
+                                        List.of("bonus", "strength"),
+                                        List.of("penalty", "speed")
+                                ))
+                );
+            }
+        };
+    }
+
+    private void assertNotNull(Object value) {
+        assertTrue(value != null, "Expected non-null value");
+    }
+}
