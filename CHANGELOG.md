@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0-beta.11](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.10...v0.5.0-beta.11) (2026-09-03)
+
+
+### Features
+
+* persist settings and keybinds choices across app restarts ([7c078cc](https://github.com/SwiftFaze/Veil/commit/7c078cc33bc35c5c6d46b4d2f8073f958efe2ac8))
+* persist settings and keybinds choices across app restarts ([b510e55](https://github.com/SwiftFaze/Veil/commit/b510e554c2686b072ca848009f318eb88272a8c6)), closes [#135](https://github.com/SwiftFaze/Veil/issues/135)
+
+
+### Bug Fixes
+
+* correct ui-verification.md's Robot-vs-paint() guidance ([206611d](https://github.com/SwiftFaze/Veil/commit/206611d0c4f912dddd29cede7da60e8a4164b4c1))
+
 ## [0.5.0-beta.10](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.9...v0.5.0-beta.10) (2026-09-03)
 
 
