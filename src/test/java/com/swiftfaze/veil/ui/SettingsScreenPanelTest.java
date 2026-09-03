@@ -1,39 +1,48 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SettingsScreenPanelTest {
 
     @Test
-    void constructorInitializes() {
+    void constructorInitializes(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
         SettingsScreenPanel panel = new SettingsScreenPanel(
             screen -> {},
             path -> {},
-            new ControlsHintBarWidget()
+            new ControlsHintBarWidget(),
+            store
         );
         assertNotNull(panel);
     }
 
     @Test
-    void moveLeftWorks() {
-        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget());
+    void moveLeftWorks(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
+        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget(), store);
         panel.moveLeft();
         assertNotNull(panel);
     }
 
     @Test
-    void moveRightWorks() {
-        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget());
+    void moveRightWorks(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
+        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget(), store);
         panel.moveRight();
         assertNotNull(panel);
     }
 
     @Test
-    void confirmWorks() {
-        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget());
+    void confirmWorks(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
+        SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget(), store);
         panel.confirm();
         assertNotNull(panel);
     }

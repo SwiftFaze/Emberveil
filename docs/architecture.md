@@ -125,8 +125,11 @@ quest state (`entities/player/QuestLog.java`, an unvalidated
 `Map<String, QuestLog.State>` of not-started/offered/active/complete,
 defaulting unseen quest IDs to not-started) is composed onto `PlayerInfo`
 alongside `stats`/`playerClass`, with no order validation on transitions
-and no persistence across restarts — no save/load system exists in the
-project yet. This is phase 5 of the data-driven-mod-content initiative;
+and no persistence across restarts — no game-save/progress system exists in
+the project yet (distinct from the settings-only persistence in
+`com.swiftfaze.veil.config`, see `docs/screens.md`'s "Settings persistence" —
+per-installation config, not per-playthrough save data, different lifecycle).
+This is phase 5 of the data-driven-mod-content initiative;
 see `specs/intent/data-driven-quest.md`.
 
 **Rendering contracts**: `Positionable` (x/y) → `DrawableAsciiEntity` (adds

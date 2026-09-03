@@ -58,3 +58,4 @@ part of any change.
 | `deterministic-gauntlet-workflow.md` | [#128](https://github.com/SwiftFaze/Veil/issues/128) (builds on [#123](https://github.com/SwiftFaze/Veil/issues/123)) |
 | `shared-list-detail-ui-contract.md` | [#125](https://github.com/SwiftFaze/Veil/issues/125) (implements the contract already designed in `docs/components.md`) |
 | `controls-hint-bar.md` | [#134](https://github.com/SwiftFaze/Veil/issues/134) (contextual world-action hints out of scope, tracked in [#133](https://github.com/SwiftFaze/Veil/issues/133)) |
+| `settings-persistence.md` | [#135](https://github.com/SwiftFaze/Veil/issues/135) (split out of the Fullscreen/Windowed live-toggle work; game-save/progress persistence tracked separately) |

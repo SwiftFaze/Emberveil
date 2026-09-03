@@ -1,5 +1,7 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.config.SettingsConfig;
+import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
@@ -9,7 +11,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -33,20 +35,27 @@ public class SettingsKeybindsPanel extends JPanel implements HintAware {
 
     private final List<String> actions;
     private final Map<String, String> keyBindings;
+    private final Map<String, String> committedBindings;
     private final Consumer<String> onBack;
     private final ControlsHintBarWidget hintBar;
+    private final SettingsStore settingsStore;
     private final TableWidget<ActionRow> actionsTable;
     private final JPanel footerPanel;
+    private final ResetConfirmationPopup discardConfirmationPopup;
+    private final ResetConfirmationPopup resetConfirmationPopup;
 
     private boolean footerFocused = false;
     private int footerIndex = 0;
     private boolean popupOpen = false;
+    private Runnable pendingDiscardAction = () -> {};
 
-    public SettingsKeybindsPanel(Consumer<String> onBack, ControlsHintBarWidget hintBar) {
+    public SettingsKeybindsPanel(Consumer<String> onBack, ControlsHintBarWidget hintBar, SettingsStore settingsStore) {
         this.onBack = onBack;
         this.hintBar = hintBar;
+        this.settingsStore = settingsStore;
         this.actions = List.of("Move up", "Move down", "Move left", "Move right", "Toggle inventory");
-        this.keyBindings = new HashMap<>();
+        this.keyBindings = new LinkedHashMap<>(settingsStore.config().getKeybinds());
+        this.committedBindings = new LinkedHashMap<>(settingsStore.config().getKeybinds());
 
         setBackground(WidgetTheme.BACKGROUND);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -77,19 +86,21 @@ public class SettingsKeybindsPanel extends JPanel implements HintAware {
         add(footerPanel);
         add(Box.createVerticalGlue());
 
-        setDefaultBindings();
         actionsTable.setRows(buildRows());
         refreshFooter();
         addKeyListener(new KeybindsKeyListener());
-        refreshHints();
-    }
 
-    private void setDefaultBindings() {
-        keyBindings.put("Move up", "Up");
-        keyBindings.put("Move down", "Down");
-        keyBindings.put("Move left", "Left");
-        keyBindings.put("Move right", "Right");
-        keyBindings.put("Toggle inventory", "I");
+        discardConfirmationPopup = new ResetConfirmationPopup("Discard Changes", "Discard unsaved keybind changes?");
+        resetConfirmationPopup = new ResetConfirmationPopup("Confirm Reset", "Reset all keybinds to their defaults?");
+
+        discardConfirmationPopup.setOnYes(() -> {
+            revertBindings();
+            pendingDiscardAction.run();
+        });
+
+        resetConfirmationPopup.setOnYes(this::resetBindingsToDefaults);
+
+        refreshHints();
     }
 
     private List<ActionRow> buildRows() {
@@ -100,17 +111,21 @@ public class SettingsKeybindsPanel extends JPanel implements HintAware {
         return rows;
     }
 
-    /**
-     * Restores every action's default binding without disturbing the table's current
-     * selection - unlike setRows(), which always resets selection to the first row, and
-     * would be visible the next time Up leaves the footer back into the action list.
-     */
+    private boolean isDirty() {
+        return !keyBindings.equals(committedBindings);
+    }
+
+    private void revertBindings() {
+        keyBindings.clear();
+        keyBindings.putAll(committedBindings);
+        actionsTable.setRows(buildRows());
+    }
+
     private void resetBindingsToDefaults() {
-        setDefaultBindings();
-        for (int i = 0; i < actions.size(); i++) {
-            String action = actions.get(i);
-            actionsTable.updateRow(i, new ActionRow(action, keyBindings.get(action)));
-        }
+        SettingsConfig defaults = new SettingsConfig();
+        keyBindings.clear();
+        keyBindings.putAll(defaults.getKeybinds());
+        actionsTable.setRows(buildRows());
     }
 
     public String getHighlightedActionName() {
@@ -164,16 +179,55 @@ public class SettingsKeybindsPanel extends JPanel implements HintAware {
         if (!footerFocused) {
             popupOpen = true;
             applyArmedStyle();
-        } else if ("Reset to Defaults".equals(getHighlightedFooterAction())) {
-            resetBindingsToDefaults();
         } else {
-            onBack.accept("settings");
+            String action = getHighlightedFooterAction();
+            switch (action) {
+                case "Apply" -> handleApply();
+                case "Cancel" -> handleCancel();
+                case "Go back" -> handleGoBack();
+                case "Reset to Defaults" -> handleResetToDefaults();
+            }
         }
         refreshHints();
     }
 
-    public void back() {
+    private void handleApply() {
+        committedBindings.clear();
+        committedBindings.putAll(keyBindings);
+        settingsStore.config().setKeybinds(new LinkedHashMap<>(keyBindings));
+        settingsStore.persist();
         onBack.accept("settings");
+    }
+
+    private void handleCancel() {
+        if (isDirty()) {
+            openDiscardConfirmation(() -> {});
+        }
+    }
+
+    private void handleGoBack() {
+        if (isDirty()) {
+            openDiscardConfirmation(() -> onBack.accept("settings"));
+        } else {
+            onBack.accept("settings");
+        }
+    }
+
+    private void handleResetToDefaults() {
+        resetConfirmationPopup.open();
+    }
+
+    private void openDiscardConfirmation(Runnable afterDiscard) {
+        pendingDiscardAction = afterDiscard;
+        discardConfirmationPopup.open();
+    }
+
+    public void back() {
+        if (isDirty()) {
+            openDiscardConfirmation(() -> onBack.accept("settings"));
+        } else {
+            onBack.accept("settings");
+        }
     }
 
     public String getKeyForAction(String action) {
@@ -210,11 +264,14 @@ public class SettingsKeybindsPanel extends JPanel implements HintAware {
         }
     }
 
-    /**
-     * Flags the selected action row as "armed" (green accent border, every other row
-     * dimmed) while its press-any-key popup is open, mirroring RadioGroupWidget's
-     * confirmed-option border convention.
-     */
+    public ResetConfirmationPopup getDiscardConfirmationPopup() {
+        return discardConfirmationPopup;
+    }
+
+    public ResetConfirmationPopup getResetConfirmationPopup() {
+        return resetConfirmationPopup;
+    }
+
     private void applyArmedStyle() {
         actionsTable.setSelectedRowAccentColor(popupOpen ? WidgetTheme.VALID_HIGHLIGHT : null);
         actionsTable.setOtherRowsDimmed(popupOpen);

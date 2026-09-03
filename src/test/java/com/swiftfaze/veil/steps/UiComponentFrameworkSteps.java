@@ -1,5 +1,6 @@
 package com.swiftfaze.veil.steps;
 
+import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.game.GamePanel;
@@ -28,6 +29,8 @@ import javax.swing.Action;
 import javax.swing.ActionMap;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +48,7 @@ public class UiComponentFrameworkSteps {
         // But leave classPanel, classModel, classNames alone since they're used by class sandbox tests
         listWidget = null;
         buttonWidget = null;
+        selectedItem = null;
         tableWidget = null;
         radioGroupWidget = null;
         sliderWidget = null;
@@ -60,7 +64,10 @@ public class UiComponentFrameworkSteps {
         hintBar = new ControlsHintBarWidget();
         inventoryPanel = null;
         codexPanel = null;
+        tempDir = null;
+        settingsStore = null;
     }
+
 
     private ListWidget<String> listWidget;
     private ButtonWidget buttonWidget;
@@ -95,6 +102,10 @@ public class UiComponentFrameworkSteps {
     private ClassSandboxModel classModel;
     private List<String> classNames;
     private int lastKeyCode; // Track which key was pressed for scenarios
+
+    // Settings persistence test support
+    private Path tempDir;
+    private SettingsStore settingsStore;
 
     @Given("a list widget with items {string}, {string}, {string} and {string} selected")
     public void aListWidgetWithItems(String first, String second, String third, String selected) {
@@ -211,7 +222,11 @@ public class UiComponentFrameworkSteps {
     }
 
     private void fireEnterKey() {
-        if (keybindsPanel != null) {
+        if (keybindsPanel != null && keybindsPanel.getDiscardConfirmationPopup().isVisible()) {
+            fireRadioGroupAction(keybindsPanel.getDiscardConfirmationPopup().getChoiceWidget(), "radio-confirm");
+        } else if (keybindsPanel != null && keybindsPanel.getResetConfirmationPopup().isVisible()) {
+            fireRadioGroupAction(keybindsPanel.getResetConfirmationPopup().getChoiceWidget(), "radio-confirm");
+        } else if (keybindsPanel != null) {
             keybindsPanel.confirm();
         } else if (confirmationPopupIsOpen()) {
             fireResetChoiceAction("radio-confirm");
@@ -245,9 +260,13 @@ public class UiComponentFrameworkSteps {
 
     private void fireResetChoiceAction(String actionName) {
         RadioGroupWidget<String> choice = settingsScreenPanel.getResetConfirmationPopup().getChoiceWidget();
-        Action action = choice.getActionMap().get(actionName);
+        fireRadioGroupAction(choice, actionName);
+    }
+
+    private void fireRadioGroupAction(RadioGroupWidget<String> widget, String actionName) {
+        Action action = widget.getActionMap().get(actionName);
         if (action != null) {
-            action.actionPerformed(new ActionEvent(choice, ActionEvent.ACTION_PERFORMED, actionName));
+            action.actionPerformed(new ActionEvent(widget, ActionEvent.ACTION_PERFORMED, actionName));
         }
     }
 
@@ -604,8 +623,24 @@ public class UiComponentFrameworkSteps {
         assertTrue(titleScreenPanel != null);
     }
 
+    // Matches both a "Given the settings screen is shown" precondition (builds it fresh) and a
+    // "Then the settings screen is shown" assertion later in the same scenario (e.g. after an
+    // action navigates back to it) — Cucumber matches step text regardless of keyword, so this
+    // one method must serve both. Rebuilding unconditionally on the Then-position usage would
+    // silently discard the panel's own in-memory state (any pending, not-yet-persisted edit)
+    // right before an assertion that depends on it — same reason theConfirmationPopupIsShown()
+    // guards below.
     @Given("the settings screen is shown")
-    public void theSettingsScreenIsShown() {
+    public void theSettingsScreenIsShown() throws Exception {
+        if (settingsScreenPanel != null) {
+            return;
+        }
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        if (settingsStore == null) {
+            settingsStore = new SettingsStore(tempDir);
+        }
         settingsScreenPanel = new SettingsScreenPanel(
             screen -> {
                 // Menu action callback
@@ -613,9 +648,9 @@ public class UiComponentFrameworkSteps {
             folder -> {
                 // Open folder callback
             },
-            hintBar
+            hintBar,
+            settingsStore
         );
-        assertTrue(settingsScreenPanel != null);
     }
 
     @Then("the settings items are {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}")
@@ -699,12 +734,25 @@ public class UiComponentFrameworkSteps {
         assertTrue(true);
     }
 
+    // Matches both a "Given the keybinds page is shown" precondition (builds it fresh) and a
+    // "Then the keybinds page is shown" assertion later in the same scenario (e.g. after Cancel
+    // stays on the page) — same reason theSettingsScreenIsShown() guards above: rebuilding
+    // unconditionally on the Then-position usage would silently discard any pending, not-yet-
+    // applied edit right before an assertion that depends on it.
     @Given("the keybinds page is shown")
-    public void theKeybindsPageIsShown() {
+    public void theKeybindsPageIsShown() throws Exception {
+        if (keybindsPanel != null) {
+            return;
+        }
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        if (settingsStore == null) {
+            settingsStore = new SettingsStore(tempDir);
+        }
         keybindsPanel = new SettingsKeybindsPanel(screen -> {
             // Menu action callback
-        }, hintBar);
-        assertTrue(keybindsPanel != null);
+        }, hintBar, settingsStore);
     }
 
     @Then("the keybinds page lists {string} bound to {string}")
@@ -739,7 +787,7 @@ public class UiComponentFrameworkSteps {
     // scratch when used as a standalone precondition) and "Then the confirmation popup is shown"
     // (asserts it) — Cucumber matches step text regardless of keyword, so one method must handle both.
     @Then("the confirmation popup is shown")
-    public void theConfirmationPopupIsShown() {
+    public void theConfirmationPopupIsShown() throws Exception {
         if (settingsScreenPanel == null) {
             theSettingsScreenIsShown();
         }
@@ -893,4 +941,156 @@ public class UiComponentFrameworkSteps {
                 List.of(parseHint(hint1), parseHint(hint2), parseHint(hint3), parseHint(hint4), parseHint(hint5), parseHint(hint6)),
                 hintBar.getHints());
     }
+
+    // Settings Persistence Steps
+
+    @Given("no settings file exists next to the install")
+    public void noSettingsFileExists() throws Exception {
+        // Create temp directory only if one doesn't already exist
+        // (shouldn't happen in normal scenario flow, but defensive against misuse)
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        // Always create fresh SettingsStore with the temp directory
+        settingsStore = new SettingsStore(tempDir);
+    }
+
+    @Given("the settings file has {string} set to {int}")
+    public void settingsFileHasSetToInt(String key, int value) throws Exception {
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        if (settingsStore == null) {
+            settingsStore = new SettingsStore(tempDir);
+        }
+        // Write to settings.json
+        com.swiftfaze.veil.config.SettingsConfig config = settingsStore.config();
+        switch (key) {
+            case "Brightness" -> config.setBrightness(value);
+            case "Volume" -> config.setVolume(value);
+        }
+        settingsStore.persist();
+    }
+
+    @Given("the settings file has {string} set to {string}")
+    public void settingsFileHasSetToString(String key, String value) throws Exception {
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        if (settingsStore == null) {
+            settingsStore = new SettingsStore(tempDir);
+        }
+        // Write to settings.json
+        com.swiftfaze.veil.config.SettingsConfig config = settingsStore.config();
+        switch (key) {
+            case "Fullscreen" -> config.setFullscreen(value);
+            case "Font" -> config.setFont(value);
+            case "Theme" -> config.setTheme(value);
+        }
+        settingsStore.persist();
+    }
+
+    @Then("the settings file now has {string} set to {int}")
+    public void assertSettingsFileHasSetToInt(String key, int value) throws Exception {
+        // Re-load from disk to verify persistence
+        com.swiftfaze.veil.config.SettingsRepository repo = new com.swiftfaze.veil.config.SettingsRepository(tempDir);
+        com.swiftfaze.veil.config.SettingsConfig config = repo.load();
+        switch (key) {
+            case "Brightness" -> assertEquals(value, config.getBrightness());
+            case "Volume" -> assertEquals(value, config.getVolume());
+        }
+    }
+
+    @Then("the settings file now has {string} set to {string}")
+    public void assertSettingsFileHasSetToString(String key, String value) throws Exception {
+        // Re-load from disk to verify persistence
+        com.swiftfaze.veil.config.SettingsRepository repo = new com.swiftfaze.veil.config.SettingsRepository(tempDir);
+        com.swiftfaze.veil.config.SettingsConfig config = repo.load();
+        switch (key) {
+            case "Fullscreen" -> assertEquals(value, config.getFullscreen());
+            case "Font" -> assertEquals(value, config.getFont());
+            case "Theme" -> assertEquals(value, config.getTheme());
+        }
+    }
+
+    @Given("the settings file next to the install is corrupt")
+    public void settingsFileIsCorrupt() throws Exception {
+        tempDir = Files.createTempDirectory("veil-test-");
+        Path settingsFile = tempDir.resolve("settings.json");
+        Files.writeString(settingsFile, "{not valid json");
+        settingsStore = new SettingsStore(tempDir);
+    }
+
+    @Given("the settings file has {string} bound to {string}")
+    public void settingsFileHasKeybindSetToString(String action, String key) throws Exception {
+        if (tempDir == null) {
+            tempDir = Files.createTempDirectory("veil-test-");
+        }
+        if (settingsStore == null) {
+            settingsStore = new SettingsStore(tempDir);
+        }
+        com.swiftfaze.veil.config.SettingsConfig config = settingsStore.config();
+        config.getKeybinds().put(action, key);
+        settingsStore.persist();
+    }
+
+    @Then("the settings file now has {string} bound to {string}")
+    public void assertSettingsFileHasKeybindSetToString(String action, String key) throws Exception {
+        // Re-load from disk to verify persistence
+        com.swiftfaze.veil.config.SettingsRepository repo = new com.swiftfaze.veil.config.SettingsRepository(tempDir);
+        com.swiftfaze.veil.config.SettingsConfig config = repo.load();
+        assertEquals(key, config.getKeybinds().get(action));
+    }
+
+    @Then("the discard confirmation popup is shown")
+    public void theDiscardConfirmationPopupIsShown() {
+        if (!keybindsPanel.getDiscardConfirmationPopup().isVisible()) {
+            // Popup should already be open from a prior step
+            // If not, assert it's visible
+        }
+        assertTrue(keybindsPanel.getDiscardConfirmationPopup().isVisible());
+    }
+
+    @Then("the discard confirmation popup is closed")
+    public void theDiscardConfirmationPopupIsClosed() {
+        assertFalse(keybindsPanel.getDiscardConfirmationPopup().isVisible());
+    }
+
+    @Then("the discard confirmation popup is not shown")
+    public void theDiscardConfirmationPopupIsNotShown() {
+        assertFalse(keybindsPanel.getDiscardConfirmationPopup().isVisible());
+    }
+
+    @Given("{string} is highlighted in the discard confirmation popup")
+    public void isHighlightedInDiscardConfirmationPopup(String option) {
+        RadioGroupWidget<String> choice = keybindsPanel.getDiscardConfirmationPopup().getChoiceWidget();
+        int guard = 0;
+        while (!option.equals(choice.getHighlightedOption()) && guard < 10) {
+            fireRadioGroupAction(choice, "radio-left");
+            guard++;
+        }
+        assertEquals(option, choice.getHighlightedOption());
+    }
+
+    @Then("the reset confirmation popup is shown")
+    public void theResetConfirmationPopupIsShown() {
+        assertTrue(keybindsPanel.getResetConfirmationPopup().isVisible());
+    }
+
+    @Then("the reset confirmation popup is closed")
+    public void theResetConfirmationPopupIsClosed() {
+        assertFalse(keybindsPanel.getResetConfirmationPopup().isVisible());
+    }
+
+    @Given("{string} is highlighted in the reset confirmation popup")
+    public void isHighlightedInResetConfirmationPopup(String option) {
+        RadioGroupWidget<String> choice = keybindsPanel.getResetConfirmationPopup().getChoiceWidget();
+        int guard = 0;
+        while (!option.equals(choice.getHighlightedOption()) && guard < 10) {
+            fireRadioGroupAction(choice, "radio-right");
+            guard++;
+        }
+        assertEquals(option, choice.getHighlightedOption());
+    }
+
 }
