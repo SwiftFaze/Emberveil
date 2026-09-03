@@ -4,6 +4,7 @@ import com.swiftfaze.veil.component.Inspectable;
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.classes.PlayerClass;
 import com.swiftfaze.veil.input.Keybindings;
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
@@ -38,10 +39,15 @@ public class CodexPanel extends PopupWidget {
     }
 
     private static final String NO_ENTRY_TEXT = "(no item selected)";
+    private static final List<ControlsHintBarWidget.Hint> TAB_HINTS_TAIL = List.of(
+            new ControlsHintBarWidget.Hint("tab", "Next category"),
+            new ControlsHintBarWidget.Hint("shift+tab", "Prev category"),
+            new ControlsHintBarWidget.Hint("escape", "Close"));
 
     private final ListWidget<Inspectable> entryList;
     private final DetailsPaneWidget detailsPane;
     private final List<JLabel> tabLabels = new ArrayList<>();
+    private final ControlsHintBarWidget hintBar;
 
     private List<Inspectable> items = List.of();
     private List<Inspectable> tiles = List.of();
@@ -49,7 +55,8 @@ public class CodexPanel extends PopupWidget {
     private List<Inspectable> currentEntries = List.of();
     private Category selectedCategory = Category.ITEMS;
 
-    public CodexPanel() {
+    public CodexPanel(ControlsHintBarWidget hintBar) {
+        this.hintBar = hintBar;
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         setBorder(BorderFactory.createCompoundBorder(bottomLine, padding));
@@ -65,6 +72,7 @@ public class CodexPanel extends PopupWidget {
         addContent(ListDetailLayoutUtility.buildBody(ListDetailLayoutUtility.buildScrollPane(entryList), detailsPane));
         bindTabKeys();
         disableFocusTraversalKeys();
+        refreshHints();
     }
 
     /**
@@ -105,6 +113,7 @@ public class CodexPanel extends PopupWidget {
         refreshEntries();
         refreshTabHighlight();
         super.open();
+        refreshHints();
     }
 
     public Category getSelectedCategory() {
@@ -189,6 +198,7 @@ public class CodexPanel extends PopupWidget {
     protected void onLeft() {
         if (detailsPane.hasFocus()) {
             detailsPane.clearFocus();
+            refreshHints();
         }
     }
 
@@ -196,6 +206,7 @@ public class CodexPanel extends PopupWidget {
     protected void onRight() {
         if (!detailsPane.hasFocus()) {
             detailsPane.focusFirstTable();
+            refreshHints();
         }
     }
 
@@ -231,6 +242,15 @@ public class CodexPanel extends PopupWidget {
                 prevTab();
             }
         });
+    }
+
+    private void refreshHints() {
+        List<ControlsHintBarWidget.Hint> hints = new ArrayList<>();
+        hints.add(detailsPane.hasFocus()
+                ? new ControlsHintBarWidget.Hint("left", "Back to list")
+                : new ControlsHintBarWidget.Hint("right", "View details"));
+        hints.addAll(TAB_HINTS_TAIL);
+        hintBar.setHints(hints);
     }
 
     private JLabel makeTitleLabel() {

@@ -1,16 +1,21 @@
 package com.swiftfaze.veil.steps;
 
+import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.entities.player.Stats;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.sandbox.ClassSandboxModel;
 import com.swiftfaze.veil.sandbox.ClassSandboxPanel;
+import com.swiftfaze.veil.ui.CodexPanel;
+import com.swiftfaze.veil.ui.InventoryPanel;
 import com.swiftfaze.veil.ui.ResetConfirmationPopup;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
 import com.swiftfaze.veil.ui.widget.ButtonWidget;
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.ListWidget;
+import com.swiftfaze.veil.ui.widget.PopupWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
 import com.swiftfaze.veil.ui.widget.SliderWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
@@ -52,6 +57,9 @@ public class UiComponentFrameworkSteps {
         listItems = null;
         dataSourceItems = null;
         lastKeyCode = 0;
+        hintBar = new ControlsHintBarWidget();
+        inventoryPanel = null;
+        codexPanel = null;
     }
 
     private ListWidget<String> listWidget;
@@ -69,6 +77,19 @@ public class UiComponentFrameworkSteps {
     private TitleScreenPanel titleScreenPanel;
     private SettingsScreenPanel settingsScreenPanel;
     private SettingsKeybindsPanel keybindsPanel;
+    private ControlsHintBarWidget hintBar;
+    private InventoryPanel inventoryPanel;
+    private CodexPanel codexPanel;
+
+    private static final List<ControlsHintBarWidget.Hint> GAME_HINTS = List.of(
+            new ControlsHintBarWidget.Hint("i", "Inventory"),
+            new ControlsHintBarWidget.Hint("x", "Codex"));
+
+    private static final Item SAMPLE_ITEM = new Item(
+            "test:sword",
+            "Iron Sword",
+            new Item.ItemAttributes('/', "weapon", "hand", new Item.BaseDamage(5, 10), List.of())
+    );
 
     private ClassSandboxPanel classPanel;
     private ClassSandboxModel classModel;
@@ -107,6 +128,8 @@ public class UiComponentFrameworkSteps {
             case "Right" -> fireRightKey();
             case "Enter" -> fireEnterKey();
             case "Escape" -> fireEscapeKey();
+            case "I" -> fireToggleInventoryKey();
+            case "X" -> fireToggleCodexKey();
             default -> throw new IllegalArgumentException("Unhandled key: " + key);
         }
     }
@@ -114,6 +137,10 @@ public class UiComponentFrameworkSteps {
     private void fireUpKey() {
         if (keybindsPanel != null) {
             keybindsPanel.moveUp();
+        } else if (inventoryPanel != null && inventoryPanel.isVisible()) {
+            firePopupAction(inventoryPanel, "popup-up");
+        } else if (codexPanel != null && codexPanel.isVisible()) {
+            firePopupAction(codexPanel, "popup-up");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveUp();
         } else if (titleScreenPanel != null) {
@@ -130,6 +157,10 @@ public class UiComponentFrameworkSteps {
     private void fireDownKey() {
         if (keybindsPanel != null) {
             keybindsPanel.moveDown();
+        } else if (inventoryPanel != null && inventoryPanel.isVisible()) {
+            firePopupAction(inventoryPanel, "popup-down");
+        } else if (codexPanel != null && codexPanel.isVisible()) {
+            firePopupAction(codexPanel, "popup-down");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveDown();
         } else if (titleScreenPanel != null) {
@@ -146,6 +177,10 @@ public class UiComponentFrameworkSteps {
     private void fireLeftKey() {
         if (confirmationPopupIsOpen()) {
             fireResetChoiceAction("radio-left");
+        } else if (inventoryPanel != null && inventoryPanel.isVisible()) {
+            firePopupAction(inventoryPanel, "popup-left");
+        } else if (codexPanel != null && codexPanel.isVisible()) {
+            firePopupAction(codexPanel, "popup-left");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveLeft();
         } else if (sliderWidget != null) {
@@ -160,6 +195,10 @@ public class UiComponentFrameworkSteps {
     private void fireRightKey() {
         if (confirmationPopupIsOpen()) {
             fireResetChoiceAction("radio-right");
+        } else if (inventoryPanel != null && inventoryPanel.isVisible()) {
+            firePopupAction(inventoryPanel, "popup-right");
+        } else if (codexPanel != null && codexPanel.isVisible()) {
+            firePopupAction(codexPanel, "popup-right");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.moveRight();
         } else if (sliderWidget != null) {
@@ -220,11 +259,34 @@ public class UiComponentFrameworkSteps {
         }
     }
 
+    private void firePopupAction(PopupWidget popup, String actionName) {
+        Action action = popup.getActionMap().get(actionName);
+        if (action != null) {
+            action.actionPerformed(new ActionEvent(popup, ActionEvent.ACTION_PERFORMED, actionName));
+        }
+    }
+
+    private void fireToggleInventoryKey() {
+        if (inventoryPanel != null) {
+            inventoryPanel.open();
+        }
+    }
+
+    private void fireToggleCodexKey() {
+        if (codexPanel != null) {
+            codexPanel.open();
+        }
+    }
+
     private void fireEscapeKey() {
         if (keybindsPanel != null) {
             keybindsPanel.back();
         } else if (confirmationPopupIsOpen()) {
             fireResetAction("popup-dismiss");
+        } else if (inventoryPanel != null && inventoryPanel.isVisible()) {
+            firePopupAction(inventoryPanel, "popup-dismiss");
+        } else if (codexPanel != null && codexPanel.isVisible()) {
+            firePopupAction(codexPanel, "popup-dismiss");
         } else if (settingsScreenPanel != null) {
             settingsScreenPanel.back();
         }
@@ -481,7 +543,7 @@ public class UiComponentFrameworkSteps {
     public void theGameIsLaunched() {
         titleScreenPanel = new TitleScreenPanel(item -> {
             // Menu action callback - stored for verification in tests
-        });
+        }, hintBar);
     }
 
     @Given("the title screen is shown")
@@ -489,7 +551,7 @@ public class UiComponentFrameworkSteps {
         if (titleScreenPanel == null) {
             titleScreenPanel = new TitleScreenPanel(item -> {
                 // Menu action callback
-            });
+            }, hintBar);
         }
         assertTrue(titleScreenPanel != null);
     }
@@ -533,7 +595,7 @@ public class UiComponentFrameworkSteps {
         if (titleScreenPanel == null) {
             titleScreenPanel = new TitleScreenPanel(item -> {
                 // Menu action callback
-            });
+            }, hintBar);
         }
     }
 
@@ -550,7 +612,8 @@ public class UiComponentFrameworkSteps {
             },
             folder -> {
                 // Open folder callback
-            }
+            },
+            hintBar
         );
         assertTrue(settingsScreenPanel != null);
     }
@@ -640,7 +703,7 @@ public class UiComponentFrameworkSteps {
     public void theKeybindsPageIsShown() {
         keybindsPanel = new SettingsKeybindsPanel(screen -> {
             // Menu action callback
-        });
+        }, hintBar);
         assertTrue(keybindsPanel != null);
     }
 
@@ -722,5 +785,112 @@ public class UiComponentFrameworkSteps {
     @Then("the confirmation popup is closed")
     public void theConfirmationPopupIsClosed() {
         assertFalse(settingsScreenPanel.getResetConfirmationPopup().isVisible());
+    }
+
+    @Given("the game window is shown")
+    public void theGameWindowIsShown() {
+        // Modeled at the panel level; a live JFrame isn't constructed in headless tests -
+        // same convention as "the settings screen is shown" etc.
+    }
+
+    @Given("the in-game view is shown")
+    public void theInGameViewIsShown() {
+        inventoryPanel = new InventoryPanel(hintBar);
+        inventoryPanel.showItems(List.of(SAMPLE_ITEM));
+        inventoryPanel.setOnDismiss(() -> hintBar.setHints(GAME_HINTS));
+        codexPanel = new CodexPanel(hintBar);
+        codexPanel.showItems(List.of(SAMPLE_ITEM));
+        codexPanel.setOnDismiss(() -> hintBar.setHints(GAME_HINTS));
+        hintBar.setHints(GAME_HINTS);
+    }
+
+    @Given("the inventory popup is shown with an item selected")
+    public void theInventoryPopupIsShownWithAnItemSelected() {
+        inventoryPanel = new InventoryPanel(hintBar);
+        inventoryPanel.showItems(List.of(SAMPLE_ITEM));
+        inventoryPanel.open();
+    }
+
+    @Given("the inventory popup is shown")
+    public void theInventoryPopupIsShown() {
+        if (inventoryPanel == null) {
+            inventoryPanel = new InventoryPanel(hintBar);
+            inventoryPanel.showItems(List.of(SAMPLE_ITEM));
+            inventoryPanel.setOnDismiss(() -> hintBar.setHints(GAME_HINTS));
+            inventoryPanel.open();
+        }
+    }
+
+    @Given("the codex popup is shown with an entry selected")
+    public void theCodexPopupIsShownWithAnEntrySelected() {
+        codexPanel = new CodexPanel(hintBar);
+        codexPanel.showItems(List.of(SAMPLE_ITEM));
+        codexPanel.open();
+    }
+
+    @Given("the last action row is highlighted")
+    public void theLastActionRowIsHighlighted() {
+        List<String> actions = keybindsPanel.getAllActions();
+        String lastAction = actions.get(actions.size() - 1);
+        while (!keybindsPanel.getHighlightedActionName().equals(lastAction)) {
+            keybindsPanel.moveDown();
+        }
+    }
+
+    @When("the {string} key is pressed until {string} is highlighted")
+    public void theKeyIsPressedUntilHighlighted(String key, String item) {
+        int guard = 0;
+        while (!settingsScreenPanel.getHighlightedItemName().equals(item) && guard < 20) {
+            theKeyIsPressed(key);
+            guard++;
+        }
+    }
+
+    @Then("the hint bar is showing at least one hint")
+    public void theHintBarIsShowingAtLeastOneHint() {
+        assertFalse(hintBar.getHints().isEmpty());
+    }
+
+    // Parses a Gherkin-literal "[key]-Action" string (e.g. "[shift+tab]-Prev category")
+    // back into the structured Hint the widget actually stores, so scenario text can stay
+    // in the readable bracket format without ControlsHintBarWidget itself storing strings.
+    private static ControlsHintBarWidget.Hint parseHint(String formatted) {
+        int closeBracket = formatted.indexOf(']');
+        String key = formatted.substring(1, closeBracket);
+        String action = formatted.substring(closeBracket + 2);
+        return new ControlsHintBarWidget.Hint(key, action);
+    }
+
+    @Then("the hint bar shows exactly {string}")
+    public void theHintBarShowsExactlyOne(String hint1) {
+        assertEquals(List.of(parseHint(hint1)), hintBar.getHints());
+    }
+
+    @Then("the hint bar shows exactly {string}, {string}")
+    public void theHintBarShowsExactlyTwo(String hint1, String hint2) {
+        assertEquals(List.of(parseHint(hint1), parseHint(hint2)), hintBar.getHints());
+    }
+
+    @Then("the hint bar shows exactly {string}, {string}, {string}")
+    public void theHintBarShowsExactlyThree(String hint1, String hint2, String hint3) {
+        assertEquals(List.of(parseHint(hint1), parseHint(hint2), parseHint(hint3)), hintBar.getHints());
+    }
+
+    @Then("the hint bar shows exactly {string}, {string}, {string}, {string}")
+    public void theHintBarShowsExactlyFour(String hint1, String hint2, String hint3, String hint4) {
+        assertEquals(List.of(parseHint(hint1), parseHint(hint2), parseHint(hint3), parseHint(hint4)), hintBar.getHints());
+    }
+
+    @Then("the hint bar shows exactly {string}, {string}, {string}, {string}, {string}")
+    public void theHintBarShowsExactlyFive(String hint1, String hint2, String hint3, String hint4, String hint5) {
+        assertEquals(List.of(parseHint(hint1), parseHint(hint2), parseHint(hint3), parseHint(hint4), parseHint(hint5)),
+                hintBar.getHints());
+    }
+
+    @Then("the hint bar shows exactly {string}, {string}, {string}, {string}, {string}, {string}")
+    public void theHintBarShowsExactlySix(String hint1, String hint2, String hint3, String hint4, String hint5, String hint6) {
+        assertEquals(
+                List.of(parseHint(hint1), parseHint(hint2), parseHint(hint3), parseHint(hint4), parseHint(hint5), parseHint(hint6)),
+                hintBar.getHints());
     }
 }

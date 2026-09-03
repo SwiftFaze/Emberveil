@@ -6,12 +6,14 @@ import com.swiftfaze.veil.mods.ModRegistry;
 import com.swiftfaze.veil.mods.WidgetColorTheme;
 import com.swiftfaze.veil.ui.CodexPanel;
 import com.swiftfaze.veil.ui.GameWindow;
+import com.swiftfaze.veil.ui.HintAware;
 import com.swiftfaze.veil.ui.InventoryPanel;
 import com.swiftfaze.veil.ui.PopupToggleListener;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SettingsWindow;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.FocusManager;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 import org.slf4j.Logger;
@@ -26,10 +28,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final List<ControlsHintBarWidget.Hint> GAME_HINTS = List.of(
+            new ControlsHintBarWidget.Hint("i", "Inventory"),
+            new ControlsHintBarWidget.Hint("x", "Codex"));
 
     public static void main(String[] args) {
         loadGame();
@@ -41,17 +47,18 @@ public class Main {
         JPanel cardPanel = new JPanel(cardLayout);
         loadAndApplyDefaultTheme();
         Map<String, JComponent> cards = new HashMap<>();
+        ControlsHintBarWidget hintBar = new ControlsHintBarWidget();
 
-        GamePanel gamePanel = buildGameCard(cardPanel, cards);
-        buildUIScreens(cardLayout, cardPanel, cards, gamePanel);
-        configureAndShowFrame(frame, cardPanel, cardLayout);
+        GamePanel gamePanel = buildGameCard(cardPanel, cards, hintBar);
+        buildUIScreens(cardLayout, cardPanel, cards, gamePanel, hintBar);
+        configureAndShowFrame(frame, cardPanel, cardLayout, hintBar);
     }
 
-    private static GamePanel buildGameCard(JPanel cardPanel, Map<String, JComponent> cards) {
+    private static GamePanel buildGameCard(JPanel cardPanel, Map<String, JComponent> cards, ControlsHintBarWidget hintBar) {
         GamePanel gamePanel = new GamePanel();
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
-        wirePopups(gamePanel, inventoryPanel, codexPanel);
+        InventoryPanel inventoryPanel = new InventoryPanel(hintBar);
+        CodexPanel codexPanel = new CodexPanel(hintBar);
+        wirePopups(gamePanel, inventoryPanel, codexPanel, hintBar);
 
         JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel);
         gameContentArea.add(inventoryPanel, JLayeredPane.POPUP_LAYER);
@@ -68,28 +75,41 @@ public class Main {
     // specs/intent/shared-list-detail-ui-contract.md's Clarifications) — no sidebar, no
     // player-info display, just enough plumbing for the two popups to open/close/exclude
     // each other and hand focus back to the game on dismiss, same as EastPanel used to.
-    private static void wirePopups(GamePanel gamePanel, InventoryPanel inventoryPanel, CodexPanel codexPanel) {
+    private static void wirePopups(GamePanel gamePanel, InventoryPanel inventoryPanel, CodexPanel codexPanel,
+                                    ControlsHintBarWidget hintBar) {
         ModRegistry mods = ModLoader.load(Paths.get("mods"));
         FocusManager focusManager = new FocusManager();
 
         inventoryPanel.setFocusManager(focusManager);
         inventoryPanel.showItems(mods.getAllItems());
-        inventoryPanel.setOnDismiss(gamePanel::requestFocusInWindow);
+        inventoryPanel.setOnDismiss(() -> restoreGameFocus(gamePanel, hintBar));
 
         codexPanel.setFocusManager(focusManager);
         codexPanel.showItems(mods.getAllItems());
         codexPanel.showTiles(mods.getAllTiles());
         codexPanel.showClasses(mods.getAllPlayerClasses());
-        codexPanel.setOnDismiss(gamePanel::requestFocusInWindow);
+        codexPanel.setOnDismiss(() -> restoreGameFocus(gamePanel, hintBar));
 
         gamePanel.addGameListener(new PopupToggleListener(inventoryPanel, codexPanel));
     }
 
-    private static void buildUIScreens(CardLayout cardLayout, JPanel cardPanel,
-                                       Map<String, JComponent> cards, GamePanel gamePanel) {
-        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> handleMenuSelection(menuItem, cardLayout, cardPanel, cards, gamePanel));
-        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder);
-        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(screen -> navigateTo(cardLayout, cardPanel, cards, screen));
+    private static void restoreGameFocus(GamePanel gamePanel, ControlsHintBarWidget hintBar) {
+        gamePanel.requestFocusInWindow();
+        hintBar.setHints(GAME_HINTS);
+    }
+
+    private static void buildUIScreens(CardLayout cardLayout, JPanel cardPanel, Map<String, JComponent> cards,
+                                        GamePanel gamePanel, ControlsHintBarWidget hintBar) {
+        TitleScreenPanel titleScreen = new TitleScreenPanel(menuItem -> {
+            handleMenuSelection(menuItem, cardLayout, cardPanel, cards, gamePanel);
+            if ("New".equals(menuItem)) {
+                hintBar.setHints(GAME_HINTS);
+            }
+        }, hintBar);
+        SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
+                screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder, hintBar);
+        SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
+                screen -> navigateTo(cardLayout, cardPanel, cards, screen), hintBar);
         cards.put("title", titleScreen);
         cards.put("settings", settingsScreen);
         cards.put("keybinds", keybindsScreen);
@@ -109,9 +129,11 @@ public class Main {
         }
     }
 
-    private static void configureAndShowFrame(JFrame frame, JPanel cardPanel, CardLayout cardLayout) {
+    private static void configureAndShowFrame(JFrame frame, JPanel cardPanel, CardLayout cardLayout,
+                                               ControlsHintBarWidget hintBar) {
         frame.setLayout(new BorderLayout());
         frame.add(cardPanel, BorderLayout.CENTER);
+        frame.add(hintBar, BorderLayout.SOUTH);
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -139,6 +161,9 @@ public class Main {
         JComponent target = cards.get(cardName);
         if (target != null) {
             target.requestFocusInWindow();
+            if (target instanceof HintAware hintAware) {
+                hintAware.refreshHints();
+            }
         }
     }
 
