@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.10](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.9...v0.5.0-beta.10) (2026-09-03)
+
+
+### Features
+
+* add persistent controls hint bar ([bfe388f](https://github.com/SwiftFaze/Veil/commit/bfe388fefa7dfeec9b0864adb90f3f98c036e63b))
+* add persistent controls hint bar ([#134](https://github.com/SwiftFaze/Veil/issues/134)) ([9e0cddd](https://github.com/SwiftFaze/Veil/commit/9e0cddd071f0c217d2b042e51f90e439883bb6f5))
+
 ## [0.5.0-beta.9](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.8...v0.5.0-beta.9) (2026-09-02)
 
 
