@@ -168,6 +168,33 @@ expensive.
       Either way, this step needs to know exactly what was implemented —
       don't hand it off as a bare ticket reference to a blank-context
       subagent, or it will re-explore the diff to figure out what changed.
+    - **Before reporting this step done, check for duplicate step
+      definitions.** Cucumber matches step text regardless of the
+      Given/When/Then keyword, so two methods annotated with the same
+      literal step text — even under different keywords — is always a
+      duplicate. A duplicate step definition poisons Cucumber's whole
+      glue registry, not just the two colliding methods: every scenario
+      in the suite can fail, cascading into completely unrelated feature
+      files in a way that makes the real cause hard to spot (see
+      `docs/testing.md`'s troubleshooting note). Run:
+      `grep -ohE '@(Given|When|Then)\("[^"]*"\)' src/test/java/com/swiftfaze/veil/steps/*.java | sed -E 's/@(Given|When|Then)\("(.*)"\)/\2/' | sort | uniq -d`
+      and confirm it prints nothing. If the same literal step text
+      genuinely needs different behavior depending on whether it's a
+      setup precondition or a later assertion, that's a sign the text
+      needs to be reworded into two distinct steps, not that two
+      annotations on the same text are safe — see
+      `UiComponentFrameworkSteps.theConfirmationPopupIsShown()` for the
+      correct single-method pattern (guard with `if (x == null) { build
+      it } else { just assert }`) when the same text is reused as both a
+      fresh-build precondition and a later assertion.
+    - **If this step touches a step-definitions file other `.feature`
+      files also depend on** (this repo's `UiComponentFrameworkSteps.java`
+      backs several features at once), run `mvn clean test` (or
+      `mvn clean verify`) **twice in a row** after your changes and
+      require identical results before reporting done. "Tests pass" once
+      isn't sufficient evidence when shared test infrastructure changed —
+      a real problem there can manifest as flaky, run-order-dependent
+      failures instead of a clean, deterministic one.
     - See "Context & session management" below — checkpoint per scenario,
       not just at the end of the ticket.
     - See "Model selection" below — this step uses Claude Haiku 4.5.
@@ -290,6 +317,40 @@ before any of the three is whether this specific piece of work needs true
 isolation — parallel work in a separate worktree — since that's the one
 case where a fresh, separately-briefed agent (or `/fork`) is actually the
 right call instead of continuing the existing one.
+
+## Verifying subagent completions
+
+Never relay a subagent's "done" report as fact without checking it
+yourself first — this applies to every subagent completion, not only
+visual-verification claims (`docs/ui-verification.md` already states this
+for that one case; it generalizes). A subagent's summary describes what
+it intended to do, not necessarily what it did, no matter how confident
+or detailed the report reads. Before treating any step as finished, the
+orchestrator re-runs the actual check itself: open the file the subagent
+claims to have produced, run the command it claims passed (`mvn verify`,
+the specific test, the specific grep), read the diff of what it actually
+changed. Confidence and detail in a report are not evidence.
+
+**If your independent check finds the subagent's work is wrong, follow
+this escalation path** rather than either blindly re-dispatching the same
+prompt again or jumping straight to a fork:
+
+1. **First failure** — send the same agent a corrective follow-up (via
+   `SendMessage`, resuming it) that names the specific problem you found
+   and how to fix it, including the evidence (the actual error, the
+   actual diff, the actual file content) — not just "this didn't work,
+   try again." Most corrections land here.
+2. **Second failure of the *same class* of mistake** — this means the
+   correction from step 1 didn't land, or the agent repeated a mistake it
+   was already told about. Switch to `/fork` for the next attempt instead
+   of dispatching a third fresh/resumed round on the original agent — a
+   fork inherits your full context, including the diagnosis from steps
+   1-2, so it starts already knowing what went wrong instead of
+   rediscovering it. Only escalate to fork after this second same-class
+   failure, not on the first one.
+3. If the fork also fails the same check, that's a signal the problem is
+   in the diagnosis or the approach itself, not the executing agent —
+   stop and reconsider rather than escalating further.
 
 ## Model selection
 
