@@ -1,6 +1,7 @@
 package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.input.Keybindings;
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
 import com.swiftfaze.veil.ui.widget.SliderWidget;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
@@ -12,14 +13,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class SettingsScreenPanel extends JPanel {
+public class SettingsScreenPanel extends JPanel implements HintAware {
     private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
+    private static final List<ControlsHintBarWidget.Hint> TAIL_HINTS =
+            List.of(new ControlsHintBarWidget.Hint("enter", "Select"), new ControlsHintBarWidget.Hint("escape", "Back"));
 
     private final List<SettingsRow> rows;
     private final JPanel rowsPanel;
     private int selectedIndex = 0;
     private final Consumer<String> onBack;
     private final Consumer<String> onOpenFolder;
+    private final ControlsHintBarWidget hintBar;
     private final ResetConfirmationPopup resetConfirmationPopup;
 
     private static class SettingsRow {
@@ -41,9 +45,10 @@ public class SettingsScreenPanel extends JPanel {
         }
     }
 
-    public SettingsScreenPanel(Consumer<String> onBack, Consumer<String> onOpenFolder) {
+    public SettingsScreenPanel(Consumer<String> onBack, Consumer<String> onOpenFolder, ControlsHintBarWidget hintBar) {
         this.onBack = onBack;
         this.onOpenFolder = onOpenFolder;
+        this.hintBar = hintBar;
         this.rows = new ArrayList<>();
 
         setBackground(WidgetTheme.BACKGROUND);
@@ -273,6 +278,26 @@ public class SettingsScreenPanel extends JPanel {
 
         revalidate();
         repaint();
+        refreshHints();
+    }
+
+    private List<ControlsHintBarWidget.Hint> computeHints() {
+        List<ControlsHintBarWidget.Hint> hints = new ArrayList<>();
+        Object widget = rows.get(selectedIndex).widget;
+        if (widget instanceof SliderWidget) {
+            hints.add(new ControlsHintBarWidget.Hint("left", "Decrease"));
+            hints.add(new ControlsHintBarWidget.Hint("right", "Increase"));
+        } else if (widget instanceof RadioGroupWidget<?>) {
+            hints.add(new ControlsHintBarWidget.Hint("left", "Previous"));
+            hints.add(new ControlsHintBarWidget.Hint("right", "Next"));
+        }
+        hints.addAll(TAIL_HINTS);
+        return hints;
+    }
+
+    @Override
+    public void refreshHints() {
+        hintBar.setHints(computeHints());
     }
 
     public List<String> getAllItemNames() {

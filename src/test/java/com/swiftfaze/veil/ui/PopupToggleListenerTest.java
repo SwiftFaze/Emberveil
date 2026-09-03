@@ -1,5 +1,6 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -9,8 +10,8 @@ class PopupToggleListenerTest {
 
     @Test
     void toggleInventoryOpensTheInventoryPopup() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.toggleInventory();
@@ -20,8 +21,8 @@ class PopupToggleListenerTest {
 
     @Test
     void togglingInventoryTwiceClosesItAgain() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.toggleInventory();
@@ -32,8 +33,8 @@ class PopupToggleListenerTest {
 
     @Test
     void toggleCodexOpensTheCodexPopup() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.toggleCodex();
@@ -43,8 +44,8 @@ class PopupToggleListenerTest {
 
     @Test
     void openingCodexWhileInventoryIsOpenClosesInventoryFirst() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.toggleInventory();
@@ -56,8 +57,8 @@ class PopupToggleListenerTest {
 
     @Test
     void openingInventoryWhileCodexIsOpenClosesCodexFirst() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.toggleCodex();
@@ -69,8 +70,8 @@ class PopupToggleListenerTest {
 
     @Test
     void updatePlayerDoesNotThrow() {
-        InventoryPanel inventoryPanel = new InventoryPanel();
-        CodexPanel codexPanel = new CodexPanel();
+        InventoryPanel inventoryPanel = new InventoryPanel(new ControlsHintBarWidget());
+        CodexPanel codexPanel = new CodexPanel(new ControlsHintBarWidget());
         PopupToggleListener listener = new PopupToggleListener(inventoryPanel, codexPanel);
 
         listener.updatePlayer(null);

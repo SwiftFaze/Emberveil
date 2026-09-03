@@ -1,5 +1,6 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
 import com.swiftfaze.veil.ui.widget.WidgetTheme;
 
@@ -13,9 +14,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class SettingsKeybindsPanel extends JPanel {
+public class SettingsKeybindsPanel extends JPanel implements HintAware {
     private static final Font ROW_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 16);
     private static final List<String> FOOTER_ACTIONS = List.of("Go back", "Reset to Defaults", "Cancel", "Apply");
+    private static final List<ControlsHintBarWidget.Hint> TABLE_HINTS =
+            List.of(new ControlsHintBarWidget.Hint("enter", "Rebind"), new ControlsHintBarWidget.Hint("escape", "Back"));
+    private static final List<ControlsHintBarWidget.Hint> FOOTER_HINTS = List.of(
+            new ControlsHintBarWidget.Hint("up", "Back to table"),
+            new ControlsHintBarWidget.Hint("left", "Previous"),
+            new ControlsHintBarWidget.Hint("right", "Next"),
+            new ControlsHintBarWidget.Hint("enter", "Select"),
+            new ControlsHintBarWidget.Hint("escape", "Back"));
+    private static final List<ControlsHintBarWidget.Hint> CAPTURE_HINTS =
+            List.of(new ControlsHintBarWidget.Hint("any key", "Set binding"));
 
     private record ActionRow(String action, String key) {
     }
@@ -23,6 +34,7 @@ public class SettingsKeybindsPanel extends JPanel {
     private final List<String> actions;
     private final Map<String, String> keyBindings;
     private final Consumer<String> onBack;
+    private final ControlsHintBarWidget hintBar;
     private final TableWidget<ActionRow> actionsTable;
     private final JPanel footerPanel;
 
@@ -30,8 +42,9 @@ public class SettingsKeybindsPanel extends JPanel {
     private int footerIndex = 0;
     private boolean popupOpen = false;
 
-    public SettingsKeybindsPanel(Consumer<String> onBack) {
+    public SettingsKeybindsPanel(Consumer<String> onBack, ControlsHintBarWidget hintBar) {
         this.onBack = onBack;
+        this.hintBar = hintBar;
         this.actions = List.of("Move up", "Move down", "Move left", "Move right", "Toggle inventory");
         this.keyBindings = new HashMap<>();
 
@@ -68,6 +81,7 @@ public class SettingsKeybindsPanel extends JPanel {
         actionsTable.setRows(buildRows());
         refreshFooter();
         addKeyListener(new KeybindsKeyListener());
+        refreshHints();
     }
 
     private void setDefaultBindings() {
@@ -112,6 +126,7 @@ public class SettingsKeybindsPanel extends JPanel {
             actionsTable.moveUp();
         }
         refreshFooter();
+        refreshHints();
     }
 
     public void moveDown() {
@@ -126,12 +141,14 @@ public class SettingsKeybindsPanel extends JPanel {
             actionsTable.moveDown();
         }
         refreshFooter();
+        refreshHints();
     }
 
     public void moveFooterLeft() {
         if (footerFocused && footerIndex > 0) {
             footerIndex--;
             refreshFooter();
+            refreshHints();
         }
     }
 
@@ -139,6 +156,7 @@ public class SettingsKeybindsPanel extends JPanel {
         if (footerFocused && footerIndex < FOOTER_ACTIONS.size() - 1) {
             footerIndex++;
             refreshFooter();
+            refreshHints();
         }
     }
 
@@ -151,6 +169,7 @@ public class SettingsKeybindsPanel extends JPanel {
         } else {
             onBack.accept("settings");
         }
+        refreshHints();
     }
 
     public void back() {
@@ -166,6 +185,7 @@ public class SettingsKeybindsPanel extends JPanel {
         actionsTable.updateRow(actions.indexOf(action), new ActionRow(action, key));
         popupOpen = false;
         applyArmedStyle();
+        refreshHints();
     }
 
     public boolean isPopupOpen() {
@@ -181,6 +201,7 @@ public class SettingsKeybindsPanel extends JPanel {
         footerIndex = FOOTER_ACTIONS.indexOf(action);
         actionsTable.setSelectable(false);
         refreshFooter();
+        refreshHints();
     }
 
     public void pressKey(String key) {
@@ -216,6 +237,18 @@ public class SettingsKeybindsPanel extends JPanel {
         }
         revalidate();
         repaint();
+    }
+
+    private List<ControlsHintBarWidget.Hint> computeHints() {
+        if (popupOpen) {
+            return CAPTURE_HINTS;
+        }
+        return footerFocused ? FOOTER_HINTS : TABLE_HINTS;
+    }
+
+    @Override
+    public void refreshHints() {
+        hintBar.setHints(computeHints());
     }
 
     public List<String> getAllActions() {

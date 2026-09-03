@@ -82,6 +82,31 @@ return false to be centered at their preferred size instead of stretched);
 [min, max] range by fixed steps, with hard bounds—no wrap-around), `FillLayout`
 (a `LayoutManager` stretching every child to the parent's full bounds by
 default, for `JLayeredPane` overlays; now respects `PopupWidget.isFullScreen()`
-to center non-full-screen popups at their preferred size instead), and
+to center non-full-screen popups at their preferred size instead),
 `TerminalScrollBarUI` (a flat black-track/solid-thumb `BasicScrollBarUI`
-replacing the platform look-and-feel's default scrollbar chrome).
+replacing the platform look-and-feel's default scrollbar chrome), and
+`ControlsHintBarWidget` (a single persistent bar, one shared instance built
+once in `Main.loadGame()` and docked at `BorderLayout.SOUTH` of the game
+frame, rendering whichever screen currently has focus's key bindings — see
+`docs/screens.md`'s "Controls hint bar" for how screens push into it).
+`setHints(List<Hint>)` takes structured `record Hint(String key, String
+action)` pairs, not pre-formatted strings — the widget itself turns a raw key
+identifier ("up", "escape", "shift+tab") into its displayed keycap label
+(`keycapText()`: capitalizes the first letter, special-casing "escape"→"Esc"
+and "enter"→"Enter" since those aren't just a capitalized first letter). Each
+hint renders as a literal keycap in true reverse video (`NORMAL_TEXT` as the
+label's background, `BACKGROUND` as its foreground — an actual color swap of
+the theme's two base colors, not `SELECTED_HIGHLIGHT`, since this needs to
+read as a terminal-style status line like `nano`'s, not a selected UI
+element) beside its plain-text action, wrapping into a compact grid (up to 3
+columns, filled column-major — top-to-bottom per column, then the next
+column, the same fill order `nano`'s own help bar uses) once a hint list
+exceeds one row, rather than one ever-widening `FlowLayout` line. Every
+keycap within one `setHints` call shares a single uniform width (the widest
+key in that call), so a short key like "Up" and a longer one like "Enter"
+render as same-size blocks. `HintAware` (`ui/HintAware.java`, a single
+`refreshHints()` method) is implemented by every `CardLayout`-hosted screen
+so `Main.navigateTo()` can re-push the newly-focused screen's current hints
+on every screen switch — a screen's own key-bound methods already push hints
+for in-screen focus changes, but only `Main` knows when a screen switch just
+happened.

@@ -2,6 +2,7 @@ package com.swiftfaze.veil.ui;
 
 import com.swiftfaze.veil.entities.items.Item;
 import com.swiftfaze.veil.input.Keybindings;
+import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.ListWidget;
 import com.swiftfaze.veil.ui.widget.PopupWidget;
 import com.swiftfaze.veil.ui.widget.TableWidget;
@@ -11,15 +12,21 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryPanel extends PopupWidget {
 
+    private static final List<ControlsHintBarWidget.Hint> LIST_HINTS_TAIL =
+            List.of(new ControlsHintBarWidget.Hint("d", "Drop"), new ControlsHintBarWidget.Hint("escape", "Close"));
+
     private final ListWidget<Item> itemList;
     private final DetailsPaneWidget detailsPane;
     private final DropConfirmationPopup dropConfirmationPopup;
+    private final ControlsHintBarWidget hintBar;
 
-    public InventoryPanel() {
+    public InventoryPanel(ControlsHintBarWidget hintBar) {
+        this.hintBar = hintBar;
         Border bottomLine = BorderFactory.createMatteBorder(0, 0, 2, 0, WidgetTheme.BORDER);
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         setBorder(BorderFactory.createCompoundBorder(bottomLine, padding));
@@ -37,6 +44,7 @@ public class InventoryPanel extends PopupWidget {
 
         addContent(ListDetailLayoutUtility.buildBody(ListDetailLayoutUtility.buildScrollPane(itemList), detailsPane));
         bindDropKey();
+        refreshHints();
     }
 
     public void showItems(List<Item> items) {
@@ -81,6 +89,12 @@ public class InventoryPanel extends PopupWidget {
     }
 
     @Override
+    public void open() {
+        super.open();
+        refreshHints();
+    }
+
+    @Override
     protected void onUp() {
         if (detailsPane.hasFocus()) {
             detailsPane.moveUp();
@@ -102,6 +116,7 @@ public class InventoryPanel extends PopupWidget {
     protected void onLeft() {
         if (detailsPane.hasFocus()) {
             detailsPane.clearFocus();
+            refreshHints();
         }
     }
 
@@ -109,7 +124,17 @@ public class InventoryPanel extends PopupWidget {
     protected void onRight() {
         if (!detailsPane.hasFocus()) {
             detailsPane.focusFirstTable();
+            refreshHints();
         }
+    }
+
+    private void refreshHints() {
+        List<ControlsHintBarWidget.Hint> hints = new ArrayList<>();
+        hints.add(detailsPane.hasFocus()
+                ? new ControlsHintBarWidget.Hint("left", "Back to list")
+                : new ControlsHintBarWidget.Hint("right", "View details"));
+        hints.addAll(LIST_HINTS_TAIL);
+        hintBar.setHints(hints);
     }
 
     private JLabel makeTitleLabel() {

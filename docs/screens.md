@@ -123,6 +123,31 @@ UI shell note above). `SelectableMenu` (the old hand-rolled index-wrap
 counter `MenuPanel` used to drive) is deleted entirely, superseded by
 `ListWidget`.
 
+**Controls hint bar** (`ui/widget/ControlsHintBarWidget`, see
+`docs/ui-widgets.md`): `Main.loadGame()` builds one shared instance and
+threads it through every screen's constructor, docked at the game frame's
+`BorderLayout.SOUTH`. Each screen computes its own current hint list and
+calls `hintBar.setHints(...)` whenever a row/sub-focus change would change
+what's valid to press — `TitleScreenPanel`'s hints are static (set once);
+`SettingsScreenPanel.computeHints()` adds Decrease/Increase for a slider row
+or Previous/Next for a radio row, on top of a fixed Select/Back tail;
+`SettingsKeybindsPanel.computeHints()` switches between its table, footer,
+and press-any-key-capture hint sets based on `footerFocused`/`popupOpen`;
+`InventoryPanel`/`CodexPanel` swap a Back-to-list/View-details hint based on
+`detailsPane.hasFocus()`. Plain vertical list movement's Up/Down is
+deliberately omitted from every one of these — assumed player knowledge,
+unlike a row-specific effect (Decrease/Increase, Previous/Next, "Back to
+list") or the in-game view's non-arrow Z/S/Q/D movement scheme, which still
+gets shown since it isn't self-explanatory the same way. `Main.navigateTo()`
+re-pushes the newly-focused screen's hints on every `CardLayout` switch via
+the `HintAware` interface, since a screen's own key-bound methods only cover
+in-screen focus changes, not screen switches. Only Title/Settings/Keybinds
+are wired into the live `Main` composition root today — Inventory/Codex/the
+in-game view's hint pushes are exercised directly against the panel classes
+in `controls-hint-bar.feature`, pending the composition-root rebuild
+mentioned in the UI shell note above (see that feature file's Non-goals for
+why).
+
 `CodexPanel` extends `PopupWidget` and mirrors `InventoryPanel`'s list+detail
 split structure: a tab switcher across Items, Tiles, and Classes (three
 `JLabel`s styled as tabs with selection highlighting) above a 50/50 split body
