@@ -67,7 +67,12 @@ accented and un-accented (an earlier version reserved extra space instead,
 which stopped the whole table resizing on selection but shifted the grid
 lines inward and opened a visible gap between rows); used by
 `SettingsKeybindsPanel`, see `docs/screens.md`), `RadioGroupWidget<T>`
-(a single-select radio group, vertical by default or horizontal on demand),
+(a single-select radio group, vertical by default or horizontal on demand;
+`selectOption(index)` marks an option confirmed without moving the
+highlight/display cursor to it — for restoring a value loaded from disk as
+the initial display too, `selectAndHighlightOption(index)` moves both
+together, added for `SettingsScreenPanel`'s persisted Fullscreen/Font/Theme
+rows, see "Settings persistence" in `docs/screens.md`),
 `PatternFieldWidget` (a text-input field validating its content against a
 caller-supplied regex pattern), `PopupWidget` (a dismissible overlay,
 keyboard-only like the rest of this game — no Close button, since it never

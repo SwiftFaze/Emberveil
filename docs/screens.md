@@ -58,13 +58,16 @@ install if missing; About, Reset to Defaults), and an explicit Go Back item
 discoverable). Left/Right calls `moveLeft()`/`moveRight()` on sliders or
 radio groups directly (bypassing their own now-unused internal key bindings,
 same as `InventoryPanel`'s sub-widgets), which updates the highlighted
-option; Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
+option **and immediately persists it** (see "Settings persistence" below);
+Up/Down navigates the menu; Enter triggers actions; Escape or Go Back
 returns to the title screen. Its "Reset to Defaults" row opens a
 `ResetConfirmationPopup` (a `CompactPopupWidget` asking "Reset
 all settings to their defaults?" via a horizontal `RadioGroupWidget<String>`
 defaulting to "No", the same safe-default convention `DropConfirmationPopup`
-uses; choosing either option just dismisses the popup, since no setting
-persists real state yet). `SettingsScreenPanel` doesn't host that popup
+uses); choosing "Yes" resets Brightness/Fullscreen/Font/Theme/Volume (not
+Keybinds — that has its own separate reset, see below) to their hardcoded
+defaults and persists the result, choosing "No" dismisses without changing
+anything. `SettingsScreenPanel` doesn't host that popup
 inside its own layout, mirroring `InventoryPanel`/`GameWindow`'s approach:
 `ui/SettingsWindow.buildContentArea(SettingsScreenPanel)` builds a
 `JLayeredPane` with the settings screen at `DEFAULT_LAYER` and the reset
@@ -87,15 +90,48 @@ border via `TableWidget.setSelectedRowAccentColor()` (the same
 `WidgetTheme.VALID_HIGHLIGHT` convention `RadioGroupWidget`'s confirmed-option
 border already uses), and every other row dims via
 `TableWidget.setOtherRowsDimmed()`, so the armed row reads as the only
-currently-active thing, like a modal dimming its backdrop. Reset to Defaults
-restores every action's default binding (via `updateRow()` per row, same
-selection-preserving reasoning) and stays on this page (state genuinely local
-to this page); Go back/Cancel/Apply all return to the settings screen
-identically (nothing else persists yet). The popup itself is still internal
-boolean state (`popupOpen`), not yet a real rendered overlay component.
-Actual key rebinding is visual only - no persistent state, `Keybindings.java`'s
-real constants are untouched. F5 still resets the entire game (back to the
-title screen).
+currently-active thing, like a modal dimming its backdrop. Rebind edits
+accumulate in a pending table; a separate `committedBindings` snapshot (synced
+from `settings.json` at construction and re-synced whenever Apply runs) is
+what pending reverts back to. The footer actions now have real, distinct
+meaning: **Apply** persists the pending table and returns to the Settings
+screen; **Cancel** and **Go back** both discard pending edits back to the
+committed snapshot — asking a "Discard unsaved keybind changes?" confirmation
+first only if something's actually pending — but differ in navigation
+(Cancel stays on this page, Go back/Escape leave to Settings); **Reset to
+Defaults** now asks its own "Reset all keybinds to their defaults?"
+confirmation first, then only stages the hardcoded defaults as a pending
+edit (matching every other rebind — still requires Apply to persist, so a
+Reset the player never Applies is just another unsaved change subject to
+the same discard confirmation). Both new confirmations reuse
+`ResetConfirmationPopup`'s widget shape via its two-arg constructor
+(custom title/question text, same `setOnYes(Runnable)` hook mechanism as
+the main screen's), hosted via a new `ui/SettingsKeybindsWindow` (mirrors
+`SettingsWindow`'s `JLayeredPane` pattern, since this page previously had no
+popup host at all). Actual key rebinding still doesn't retarget real input
+dispatch — `Keybindings.java`'s `KeyStroke` constants are unrelated and
+untouched; this page's `Map<String,String>` is a persisted display-only
+label, not real key binding. F5 still resets the entire game (back to the
+title screen) — settings on disk are unaffected either way.
+
+**Settings persistence** (`com.swiftfaze.veil.config`; see
+`specs/intent/settings-persistence.md`): `SettingsConfig` is a plain,
+Gson-serializable data holder (Brightness/Fullscreen/Font/Theme/Volume plus
+a Keybinds map) whose no-arg constructor's field initializers are the single
+source of truth for "defaults" — reused both as the fallback when
+`settings.json` is missing/corrupt/partial and as what Keybinds' own Reset
+to Defaults stages. `SettingsRepository` reads/writes `settings.json` next
+to the install (`Path.of("").toAbsolutePath()`, the same base
+`Main.openFolder`/`ModLoader.load` already treat as "the install"); a
+missing file, unparsable JSON, or a `keybinds` object missing some actions
+all fall back to defaults for just the affected value(s), never a crash.
+`SettingsStore` wraps one `SettingsRepository` plus the single loaded
+`SettingsConfig` instance and is constructed once in `Main.loadGame` (not
+per-screen) specifically so `SettingsScreenPanel` and `SettingsKeybindsPanel`
+share the same in-memory config object — each screen only ever mutates the
+fields it owns, but since both hold a reference to the same instance,
+neither screen's `persist()` call can clobber a change the other screen
+already made in the same session.
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable

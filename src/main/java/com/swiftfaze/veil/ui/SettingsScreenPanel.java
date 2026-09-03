@@ -1,5 +1,6 @@
 package com.swiftfaze.veil.ui;
 
+import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.input.Keybindings;
 import com.swiftfaze.veil.ui.widget.ControlsHintBarWidget;
 import com.swiftfaze.veil.ui.widget.RadioGroupWidget;
@@ -25,6 +26,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
     private final Consumer<String> onOpenFolder;
     private final ControlsHintBarWidget hintBar;
     private final ResetConfirmationPopup resetConfirmationPopup;
+    private final SettingsStore settingsStore;
 
     private static class SettingsRow {
         String name;
@@ -45,10 +47,11 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
         }
     }
 
-    public SettingsScreenPanel(Consumer<String> onBack, Consumer<String> onOpenFolder, ControlsHintBarWidget hintBar) {
+    public SettingsScreenPanel(Consumer<String> onBack, Consumer<String> onOpenFolder, ControlsHintBarWidget hintBar, SettingsStore settingsStore) {
         this.onBack = onBack;
         this.onOpenFolder = onOpenFolder;
         this.hintBar = hintBar;
+        this.settingsStore = settingsStore;
         this.rows = new ArrayList<>();
 
         setBackground(WidgetTheme.BACKGROUND);
@@ -79,6 +82,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
         bindKeys();
 
         resetConfirmationPopup = new ResetConfirmationPopup();
+        resetConfirmationPopup.setOnYes(this::resetAllToDefaults);
     }
 
     private void bindKeys() {
@@ -133,24 +137,26 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
     private void initializeRows() {
         rows.clear();
 
-        rows.add(new SettingsRow("Brightness", new SliderWidget(0, 10, 1, 5)));
+        var config = settingsStore.config();
+
+        rows.add(new SettingsRow("Brightness", new SliderWidget(0, 10, 1, config.getBrightness())));
 
         RadioGroupWidget<String> fullscreenRadio = new RadioGroupWidget<>(s -> s, true);
         fullscreenRadio.setOptions(List.of("Windowed", "Fullscreen"));
-        fullscreenRadio.selectOption(0);
+        fullscreenRadio.selectAndHighlightOption(List.of("Windowed", "Fullscreen").indexOf(config.getFullscreen()));
         rows.add(new SettingsRow("Fullscreen", fullscreenRadio));
 
         RadioGroupWidget<String> fontRadio = new RadioGroupWidget<>(s -> s, true);
         fontRadio.setOptions(List.of("Monospaced", "Serif", "SansSerif"));
-        fontRadio.selectOption(0);
+        fontRadio.selectAndHighlightOption(List.of("Monospaced", "Serif", "SansSerif").indexOf(config.getFont()));
         rows.add(new SettingsRow("Font", fontRadio));
 
         RadioGroupWidget<String> themeRadio = new RadioGroupWidget<>(s -> s, true);
         themeRadio.setOptions(List.of("Default", "Midnight", "Sunrise"));
-        themeRadio.selectOption(0);
+        themeRadio.selectAndHighlightOption(List.of("Default", "Midnight", "Sunrise").indexOf(config.getTheme()));
         rows.add(new SettingsRow("Theme", themeRadio));
 
-        rows.add(new SettingsRow("Volume", new SliderWidget(0, 10, 1, 5)));
+        rows.add(new SettingsRow("Volume", new SliderWidget(0, 10, 1, config.getVolume())));
         rows.add(new SettingsRow("Keybinds", null));
         rows.add(new SettingsRow("Open Game Folder", null));
         rows.add(new SettingsRow("Open Mod Folder", null));
@@ -189,6 +195,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
             radio.moveLeft();
         }
         refresh();
+        syncAndPersist(row);
     }
 
     public void moveRight() {
@@ -199,6 +206,19 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
             radio.moveRight();
         }
         refresh();
+        syncAndPersist(row);
+    }
+
+    private void syncAndPersist(SettingsRow row) {
+        switch (row.name) {
+            case "Brightness" -> settingsStore.config().setBrightness(((SliderWidget) row.widget).getValue());
+            case "Fullscreen" -> settingsStore.config().setFullscreen(String.valueOf(((RadioGroupWidget<?>) row.widget).getHighlightedOption()));
+            case "Font" -> settingsStore.config().setFont(String.valueOf(((RadioGroupWidget<?>) row.widget).getHighlightedOption()));
+            case "Theme" -> settingsStore.config().setTheme(String.valueOf(((RadioGroupWidget<?>) row.widget).getHighlightedOption()));
+            case "Volume" -> settingsStore.config().setVolume(((SliderWidget) row.widget).getValue());
+            default -> { return; }
+        }
+        settingsStore.persist();
     }
 
     public void confirm() {
@@ -217,6 +237,13 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
 
     public void back() {
         onBack.accept("title");
+    }
+
+    private void resetAllToDefaults() {
+        settingsStore.config().resetToDefaults();
+        initializeRows();
+        refresh();
+        settingsStore.persist();
     }
 
     public String getItemValue(String itemName) {

@@ -47,16 +47,33 @@ way you'd inspect a user-supplied screenshot.
      production code does (e.g. `popup.open("Iron Sword")`, not a
      hand-built stand-in).
    - Adds it to an actual `JFrame` and calls `frame.setVisible(true)` —
-     **the frame must really be shown.** Painting an unrealized/never-shown
-     frame via `component.paint()` or `component.printAll()` onto a bare
-     `BufferedImage` produces misleading results (confirmed this session:
-     it silently drops per-line styling on wrapped text) because Swing's
-     text/layout pipeline behaves differently without a real native peer.
-   - Waits briefly after showing it (`Thread.sleep(500)`–`800`ms) for the
-     OS to actually paint before capturing.
-   - Captures the frame's real screen bounds with `java.awt.Robot`
-     (`robot.createScreenCapture(frame.getBounds())`) and writes that to a
-     PNG in the scratchpad with `ImageIO.write`.
+     the frame must really be shown, not left unrealized.
+   - Waits briefly after showing it (`Thread.sleep(500)`–`800`ms) for
+     layout/painting to settle, then calls `frame.doLayout()` on the
+     frame and its layered pane before capturing.
+   - **Captures by painting the component tree directly onto an offscreen
+     `BufferedImage`** (`Graphics2D` from
+     `image.createGraphics()`, then `component.paint(g2d)`), not with
+     `java.awt.Robot`. This is the *opposite* of this doc's own earlier
+     guidance — confirmed in this session (2026-09-03) that
+     `Robot.createScreenCapture` is unreliable in this dev environment:
+     it repeatedly returned a blank/white capture (just the OS window
+     chrome, no component content) for a popup that direct `.paint()`
+     rendered correctly on the very same run, immediately before and
+     after, with nothing else changed. This isn't a one-off — it
+     reproduced across multiple popup classes and multiple consecutive
+     attempts, including for a component that had captured correctly via
+     Robot earlier in that same session. Robot depends on real OS-level
+     screen compositing, which this environment doesn't reliably
+     provide; direct `.paint()` doesn't. Direct `.paint()` has one known
+     narrow caveat from an earlier incident (predating the Robot
+     unreliability finding above): it can silently drop per-line styling
+     on wrapped rich-text — if a render looks suspicious specifically
+     around styled/wrapped text and you have reason to believe you're in
+     an environment where Robot actually works, cross-check with Robot
+     as a secondary opinion, but don't default to it and don't take a
+     blank Robot capture as proof of a rendering bug without first
+     confirming the same blank shows up via direct `.paint()`.
    - Disposes the frame immediately after capturing.
 3. Compile and run it against the project's classes:
    ```
@@ -69,14 +86,29 @@ way you'd inspect a user-supplied screenshot.
    component-tree dump (walk `Container.getComponents()`, print each
    child's class, `getBounds()`, `getPreferredSize()`, `getMaximumSize()`,
    and — for a text component — its actual text) before guessing further.
-   This is what actually found the stale-`getPreferredSize()` bug above;
+   This is what actually found the stale-`getPreferredSize()` bug below;
    reasoning about the layout math alone had already been wrong twice.
 6. Delete or leave the throwaway diagnostic in the scratchpad (it's
    session-local and never committed) once the fix is confirmed.
 
 Re-run this after every attempted fix, not just once per bug — a plausible
 explanation for what's wrong is not the same as having verified the new
-code actually renders correctly.
+code actually renders correctly. If a render looks unexpectedly blank,
+that's a signal to double-check the diagnostic's own capture method
+(see the Robot-vs-`.paint()` note above) before concluding it's a real
+application bug.
+
+### Historical note: why this doc used to say the opposite about Robot
+
+The stale-`getPreferredSize()` incident described above (two silently-
+broken text-wrapping "fixes," both tests-green) is what originally made
+this doc mandate `Robot.createScreenCapture` and warn against direct
+`.paint()`/`.printAll()` on an unrealized frame. That underlying lesson —
+render the real, actually-shown component and look at it, don't just
+reason about layout math — still holds. The specific method recommended
+for capturing it doesn't: see the `.paint()`-vs-`Robot` note in "How to
+do it" above for why this environment specifically needs the opposite of
+what used to be recommended here.
 
 ## Relaying "done" up the chain
 

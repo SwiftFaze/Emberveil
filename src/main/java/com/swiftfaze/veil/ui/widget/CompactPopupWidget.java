@@ -36,6 +36,8 @@ public class CompactPopupWidget extends PopupWidget {
         // its own full box (the outer frame above already closes that box).
         titleLabel = new JLabel(title);
         titleLabel.setForeground(WidgetTheme.NORMAL_TEXT);
+        titleLabel.setBackground(WidgetTheme.BACKGROUND);
+        titleLabel.setOpaque(true);
         titleLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createCompoundBorder(
@@ -67,6 +69,7 @@ public class CompactPopupWidget extends PopupWidget {
         pane.setEditable(false);
         pane.setFocusable(false);
         pane.setOpaque(false);
+        pane.setBackground(null);
         pane.setForeground(WidgetTheme.NORMAL_TEXT);
         pane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         pane.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));

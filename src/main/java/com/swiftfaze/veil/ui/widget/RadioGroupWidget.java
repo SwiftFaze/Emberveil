@@ -99,6 +99,21 @@ public class RadioGroupWidget<T> extends Widget {
         }
     }
 
+    /**
+     * Sets both the highlighted and selected option to the same index — for restoring a
+     * previously-confirmed choice (e.g. loaded from a settings file) as the initial display.
+     * selectOption() alone only marks an option confirmed without moving the highlight/display
+     * cursor to it, so a non-default restored value would be selected internally but still show
+     * the first option on screen.
+     */
+    public void selectAndHighlightOption(int index) {
+        if (index >= 0 && index < options.size()) {
+            highlightedIndex = index;
+            selectedIndex = index;
+            refreshHighlight();
+        }
+    }
+
     public boolean isHorizontal() {
         return horizontal;
     }

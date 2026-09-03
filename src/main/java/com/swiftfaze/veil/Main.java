@@ -1,5 +1,6 @@
 package com.swiftfaze.veil;
 
+import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.mods.ModLoader;
 import com.swiftfaze.veil.mods.ModRegistry;
@@ -10,6 +11,7 @@ import com.swiftfaze.veil.ui.HintAware;
 import com.swiftfaze.veil.ui.InventoryPanel;
 import com.swiftfaze.veil.ui.PopupToggleListener;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
+import com.swiftfaze.veil.ui.SettingsKeybindsWindow;
 import com.swiftfaze.veil.ui.SettingsScreenPanel;
 import com.swiftfaze.veil.ui.SettingsWindow;
 import com.swiftfaze.veil.ui.TitleScreenPanel;
@@ -106,16 +108,17 @@ public class Main {
                 hintBar.setHints(GAME_HINTS);
             }
         }, hintBar);
+        SettingsStore settingsStore = new SettingsStore(Path.of("").toAbsolutePath());
         SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
-                screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder, hintBar);
+                screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder, hintBar, settingsStore);
         SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
-                screen -> navigateTo(cardLayout, cardPanel, cards, screen), hintBar);
+                screen -> navigateTo(cardLayout, cardPanel, cards, screen), hintBar, settingsStore);
         cards.put("title", titleScreen);
         cards.put("settings", settingsScreen);
         cards.put("keybinds", keybindsScreen);
         cardPanel.add(titleScreen, "title");
         cardPanel.add(SettingsWindow.buildContentArea(settingsScreen), "settings");
-        cardPanel.add(keybindsScreen, "keybinds");
+        cardPanel.add(SettingsKeybindsWindow.buildContentArea(keybindsScreen), "keybinds");
     }
 
     private static void handleMenuSelection(String menuItem, CardLayout cardLayout, JPanel cardPanel,

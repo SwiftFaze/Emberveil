@@ -41,6 +41,28 @@ conventions so Maven can tell them apart automatically:
   actually exercising the described behavior manually (e.g. building and
   running an installer), not via `mvn test`/`mvn verify`.
 
+### Troubleshooting: cascading/flaky Cucumber failures
+
+If `UndefinedStepException` starts appearing across scenarios in
+feature files unrelated to whatever you just changed — not real
+assertion failures, but steps Cucumber claims don't exist — **check for
+duplicate or ambiguous step definitions first**, before environment
+theories (JDK/tooling version mismatches, JaCoCo instrumentation,
+parallel execution). Cucumber matches step text regardless of the
+Given/When/Then keyword, so two methods annotated with the same literal
+step text under different keywords is always a duplicate. A duplicate
+poisons the *entire* glue registry for that test run, not just the two
+colliding methods — which is exactly what produces this
+misleading-looks-unrelated, run-to-run-varying failure pattern (which
+scenario happens to trigger the collision first, and how far the
+resulting registry corruption cascades, depends on execution order).
+Find it with:
+```
+grep -ohE '@(Given|When|Then)\("[^"]*"\)' src/test/java/com/swiftfaze/veil/steps/*.java | sed -E 's/@(Given|When|Then)\("(.*)"\)/\2/' | sort | uniq -d
+```
+See `.claude/workflow.md`'s Step 5 guidance for the full rule (this check
+is mandatory before reporting Step 5 done, not just a debugging tip).
+
 ## Integration tests
 
 - Location: `src/test/java/**/*IT.java`
