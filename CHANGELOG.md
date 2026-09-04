@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0-beta.12](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.11...v0.5.0-beta.12) (2026-09-04)
+
+
+### Features
+
+* apply Fullscreen/Windowed setting live to the game window ([f82921b](https://github.com/SwiftFaze/Veil/commit/f82921b08f2e2fe7c53203ad160bb633f1863cdf))
+
 ## [0.5.0-beta.11](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.10...v0.5.0-beta.11) (2026-09-03)
 
 
