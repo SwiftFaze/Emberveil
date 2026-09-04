@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,8 +54,8 @@ public class Main {
 
         GamePanel gamePanel = buildGameCard(cardPanel, cards, hintBar);
         buildUIScreens(cardLayout, cardPanel, cards, gamePanel, hintBar);
-        wirePauseMenuNavigation(cards, cardLayout, cardPanel, frame);
-        configureAndShowFrame(frame, cardPanel, cardLayout, hintBar);
+        wirePauseMenuNavigation(cards, cardLayout, cardPanel, gamePanel);
+        configureAndShowFrame(frame, cardPanel, cardLayout, hintBar, cards);
     }
 
     private static GamePanel buildGameCard(JPanel cardPanel, Map<String, JComponent> cards, ControlsHintBarWidget hintBar) {
@@ -157,7 +156,7 @@ public class Main {
     }
 
     private static void wirePauseMenuNavigation(Map<String, JComponent> cards, CardLayout cardLayout,
-                                                 JPanel cardPanel, JFrame frame) {
+                                                 JPanel cardPanel, GamePanel gamePanel) {
         PauseMenuPopup pauseMenuPopup = (PauseMenuPopup) cards.get("pause");
         SettingsScreenPanel settingsScreen = (SettingsScreenPanel) cards.get("settings");
         pauseMenuPopup.setOnMenuSelect(item -> {
@@ -165,24 +164,24 @@ public class Main {
                 settingsScreen.setBackTarget("pause");
                 navigateTo(cardLayout, cardPanel, cards, "settings");
             } else if (PauseMenuPopup.EXIT_TO_MAIN_MENU.equals(item)) {
-                resetGame(frame);
+                gamePanel.resetState();
+                navigateTo(cardLayout, cardPanel, cards, "title");
             }
         });
     }
 
     private static void configureAndShowFrame(JFrame frame, JPanel cardPanel, CardLayout cardLayout,
-                                               ControlsHintBarWidget hintBar) {
+                                               ControlsHintBarWidget hintBar, Map<String, JComponent> cards) {
         frame.setLayout(new BorderLayout());
         frame.add(cardPanel, BorderLayout.CENTER);
         frame.add(hintBar, BorderLayout.SOUTH);
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
+        wireWindowMode(frame, cards);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         cardLayout.show(cardPanel, "title");
         ((JComponent) cardPanel.getComponent(0)).requestFocusInWindow();
-        keyListen(frame);
     }
 
     // Must run before any screen/widget is constructed below - they read WidgetTheme's
@@ -223,27 +222,42 @@ public class Main {
         }
     }
 
-    private static void keyListen(JFrame frame) {
-        JRootPane rootPane = frame.getRootPane();
-        rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "resetGame");
-        rootPane.getActionMap().put("resetGame", new AbstractAction() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                resetGame(frame);
-            }
+    private static void wireWindowMode(JFrame frame, Map<String, JComponent> cards) {
+        SettingsScreenPanel settingsScreen = (SettingsScreenPanel) cards.get("settings");
+        settingsScreen.setOnWindowModeChanged(mode -> {
+            applyWindowMode(frame, mode);
+            settingsScreen.requestFocusInWindow();
         });
     }
 
-    private static void resetGame(JFrame oldFrame) {
-        try {
-            oldFrame.dispose(); // closes old window, releases its listeners
-            loadGame();
-            logger.info("Scene Reset");
-        } catch (Exception e) {
-            logger.error("Reset failed", e); // pass the Throwable, not e.getMessage()
+    private static final int MIN_WINDOW_WIDTH = 400;
+    private static final int MIN_WINDOW_HEIGHT = 300;
+
+    private static void applyWindowMode(JFrame frame, String mode) {
+        boolean fullscreen = "Fullscreen".equals(mode);
+        boolean wasDisplayable = frame.isDisplayable();
+        if (wasDisplayable) {
+            frame.dispose(); // Swing requires this before setUndecorated on an already-shown frame
+        }
+        frame.setUndecorated(fullscreen);
+        frame.setResizable(!fullscreen);
+        if (fullscreen) {
+            frame.setBounds(currentScreenBounds(frame));
+        } else {
+            frame.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+            frame.pack();
+        }
+        if (wasDisplayable) {
+            frame.setVisible(true);
         }
     }
 
+    private static Rectangle currentScreenBounds(JFrame frame) {
+        GraphicsConfiguration config = frame.getGraphicsConfiguration();
+        GraphicsDevice device = config != null
+                ? config.getDevice()
+                : GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        return device.getDefaultConfiguration().getBounds();
+    }
 
 }

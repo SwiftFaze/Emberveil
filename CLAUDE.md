@@ -20,7 +20,6 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
 - Run the game from source: `mvn compile exec:java` (no packaging or version number needed).
 - Run the dev-only class/stats sandbox instead of the game: `mvn compile exec:java -Dexec.mainClass=com.swiftfaze.veil.sandbox.ClassSandbox` (not part of the packaged build — see `docs/architecture.md`).
 - `mvn package` also produces `target/Veil-<version>-app.jar`, a runnable fat jar (`java -jar` it directly) — see `docs/release.md` for how CI turns that into Windows/Linux/macOS installers on release.
-- Press **F5** while the game window is focused to hot-reset the scene (`Main.resetGame` disposes the `JFrame` and rebuilds it from scratch — see `Main.java`).
 - Mutation testing (workflow Step 6): `mvn org.pitest:pitest-maven:mutationCoverage` — report lands in `target/pit-reports/`. See `docs/testing.md`.
 
 ## CI / releases

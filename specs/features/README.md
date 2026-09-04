@@ -37,7 +37,7 @@ that change's definition of done, not separate cleanup.
 | `building-loader-failure-path.feature` | Mod loader failure/error path |
 | `world-single-floor-rendering.feature` | Single-floor world rendering |
 | `world-scene-population-and-building-placement.feature` | World scene population and building placement |
-| `camera-behavior.feature` | Camera follow/scroll behavior |
+| `camera-behavior.feature` | Camera follow/scroll behavior; viewport resizing (tracking a resizable Windowed frame's live panel size) and its 5x5-tile minimum-size floor, added for `fullscreen-windowed-toggle.feature` |
 | `keyboard-input-and-menu-navigation.feature` | Key Bindings input and menu navigation |
 | `installer-mods-bundling.feature` | jpackage installer build bundles `mods/core` alongside the executable |
 | `ui-component-framework.feature` | Shared terminal-style widget framework (list/button/popup, focus manager, selected-state styling), proven by `ClassSandboxPanel` and in isolation; supersedes SelectableMenu-based scenarios previously in `keyboard-input-and-menu-navigation.feature`, `ui-panel-rendering-and-composition.feature`, `class-sandbox-panel-selection.feature`, and `data-driven-item.feature`. Its former in-game inventory-popup proof case was removed alongside `EastPanel` (see Clarifications in `specs/intent/shared-list-detail-ui-contract.md`) |
@@ -55,3 +55,4 @@ that change's definition of done, not separate cleanup.
 | `controls-hint-bar.feature` | Persistent bottom-of-window hint bar reflecting current key bindings, updating at row/sub-focus granularity across Title, Settings, Keybinds, Inventory, and Codex; contextual world-action hints out of scope (tracked in #133) |
 | `pause-screen-esc.feature` | ESC opens a pause menu overlay (Resume / Settings / Exit to Main Menu) mirroring Inventory/Codex's popup pattern; freezes movement while paused |
 | `settings-persistence.feature` | `settings.json` loaded at startup / written on change for the Settings and Keybinds screens; newly-wired Settings-screen Reset to Defaults; Keybinds page's Apply/Cancel/Go back/Escape/Reset to Defaults given real, distinct (and confirmation-gated) meaning for the first time |
+| `fullscreen-windowed-toggle.feature` | Settings screen's Fullscreen/Windowed radio applies live to the real game window (toggle, Reset to Defaults, and launching with an already-persisted value); the F5 hot-reset dev feature is removed entirely; camera-viewport-follows-panel-size behavior is covered in `camera-behavior.feature` instead |

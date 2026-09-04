@@ -19,7 +19,7 @@ import static com.swiftfaze.veil.GameConst.*;
 
 public class GamePanel extends JPanel {
 
-    private final Player player = new Player(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y);
+    private Player player = new Player(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y);
     private TileTestScene2 scene = new TileTestScene2(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT);
     private final Camera camera = new Camera(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
@@ -56,10 +56,10 @@ public class GamePanel extends JPanel {
         inputMap.put(Keybindings.TOGGLE_CODEX, Keybindings.ACTION_TOGGLE_CODEX);
         inputMap.put(Keybindings.MENU_CANCEL, Keybindings.ACTION_TOGGLE_PAUSE);
 
-        actionMap.put(Keybindings.ACTION_MOVE_UP, new MoveAction(player::moveUp));
-        actionMap.put(Keybindings.ACTION_MOVE_DOWN, new MoveAction(player::moveDown));
-        actionMap.put(Keybindings.ACTION_MOVE_LEFT, new MoveAction(player::moveLeft));
-        actionMap.put(Keybindings.ACTION_MOVE_RIGHT, new MoveAction(player::moveRight));
+        actionMap.put(Keybindings.ACTION_MOVE_UP, new MoveAction(worldScene -> player.moveUp(worldScene)));
+        actionMap.put(Keybindings.ACTION_MOVE_DOWN, new MoveAction(worldScene -> player.moveDown(worldScene)));
+        actionMap.put(Keybindings.ACTION_MOVE_LEFT, new MoveAction(worldScene -> player.moveLeft(worldScene)));
+        actionMap.put(Keybindings.ACTION_MOVE_RIGHT, new MoveAction(worldScene -> player.moveRight(worldScene)));
         actionMap.put(Keybindings.ACTION_TOGGLE_INVENTORY, new ToggleInventoryAction());
         actionMap.put(Keybindings.ACTION_TOGGLE_CODEX, new ToggleCodexAction());
         actionMap.put(Keybindings.ACTION_TOGGLE_PAUSE, new TogglePauseAction());
@@ -96,10 +96,27 @@ public class GamePanel extends JPanel {
         return paused;
     }
 
+    /**
+     * Resets Player/WorldScene state back to a fresh session, so a subsequent
+     * New/Continue doesn't inherit stale state from an exited game (e.g. via
+     * the pause menu's Exit to Main Menu). Replaces the old dispose-and-
+     * reload-everything approach (removed with the F5 hot-reset feature) with
+     * an in-place reset of just this panel's own state.
+     */
+    public void resetState() {
+        player = new Player(DEFAULT_PLAYER_START_X, DEFAULT_PLAYER_START_Y);
+        scene = new TileTestScene2(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT);
+        entitiesToDraw.clear();
+        addEntity(scene);
+        addEntity(player);
+        paused = false;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        camera.resizeViewport(getWidth() / TILE_WIDTH, getHeight() / TILE_HEIGHT);
         camera.centerOn(player.getX(), player.getY());
 
         scene.renderWorld(

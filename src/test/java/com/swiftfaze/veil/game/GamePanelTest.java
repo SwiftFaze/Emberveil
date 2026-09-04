@@ -74,6 +74,30 @@ class GamePanelTest {
         assertTrue(listenerCalled[0]);
     }
 
+    @Test
+    void resetStateRestoresDefaultPlayerPositionAndUnpauses() {
+        GamePanel panel = new GamePanel();
+        panel.getPlayer().setPosition(1, 1);
+        panel.setPaused(true);
+
+        panel.resetState();
+
+        assertEquals(com.swiftfaze.veil.GameConst.DEFAULT_PLAYER_START_X, panel.getPlayer().getX());
+        assertEquals(com.swiftfaze.veil.GameConst.DEFAULT_PLAYER_START_Y, panel.getPlayer().getY());
+        assertFalse(panel.isPaused());
+    }
+
+    @Test
+    void movementStillWorksAfterResetState() {
+        GamePanel panel = new GamePanel();
+        panel.resetState();
+        int startY = panel.getPlayer().getY();
+
+        fireAction(panel, Keybindings.ACTION_MOVE_UP);
+
+        assertEquals(startY - 1, panel.getPlayer().getY());
+    }
+
     private void fireAction(GamePanel panel, String actionName) {
         Action action = panel.getActionMap().get(actionName);
         action.actionPerformed(new ActionEvent(panel, ActionEvent.ACTION_PERFORMED, actionName));

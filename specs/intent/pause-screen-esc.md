@@ -94,4 +94,20 @@ budgets).
   dismiss binding wins), and pressing ESC again (now that GamePanel has focus)
   opens the pause menu. No extra code needed to prevent conflict.
 
+- Exit to Main Menu's reset mechanism: originally implemented by reusing
+  `Main.resetGame()` (the same dispose-and-reload-everything approach the F5
+  hot-reset dev feature used). While this PR was open, `feat/fullscreen-
+  windowed-toggle` merged into `develop` and deliberately removed F5 hot-reset
+  and `resetGame()` entirely (window-mode switching now happens in-place via
+  `Main.applyWindowMode`, not by tearing down and reloading). Resolved during
+  the resulting merge conflict by adding `GamePanel.resetState()` instead: an
+  in-place reset (fresh `Player`/`WorldScene`, cleared/rebuilt
+  `entitiesToDraw`, `paused` cleared) that doesn't depend on disposing the
+  frame. This also required changing `GamePanel.player` from `final` to a
+  reassignable field, and changing its movement `Action`s from bound method
+  references (`player::moveUp`) to lambdas that read the `player` field
+  dynamically — a bound reference would have kept moving the discarded
+  pre-reset `Player` instance forever. See `docs/screens.md`'s `PauseMenuPopup`
+  section for the current mechanism.
+
 Scope otherwise settled via a grilling session on 2026-09-02.

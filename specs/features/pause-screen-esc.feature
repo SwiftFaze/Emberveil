@@ -41,8 +41,11 @@ Feature: ESC opens a pause menu overlay
     Then the host was notified of "Exit to Main Menu" selection
 
   # Non-goals:
-  # - The actual CardLayout screen swap from Settings back to pause menu (Main.java composition-root wiring)
-  # - Verifying that "Exit to Main Menu" actually calls resetGame() and rebuilds the window (same category as F5 hot-reset, verified via manual playtest)
+  # - The actual CardLayout screen swap from Settings back to pause menu, and Main.java actually
+  #   wiring "Exit to Main Menu" to GamePanel.resetState() (Main.java composition-root wiring,
+  #   verified via manual playtest, not Cucumber) — GamePanel.resetState() itself (fresh
+  #   Player/WorldScene, paused cleared) is covered directly by GamePanelTest instead, since
+  #   unlike the old resetGame()/F5 hot-reset it replaced, it's now plain GamePanel logic.
 
   # Open questions:
   # - Interaction with Inventory/Codex popups already being open when ESC is pressed is resolved per Swing's focus-dispatch priority: pressing ESC while Inventory/Codex holds focus closes that popup (their own dismiss binding at WHEN_ANCESTOR_OF_FOCUSED_COMPONENT wins); pressing ESC again opens pause menu. No extra code needed. See specs/intent/pause-screen-esc.md.

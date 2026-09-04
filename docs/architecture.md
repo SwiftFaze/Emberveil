@@ -35,7 +35,11 @@ brightness falloff, or fog overlay. `Camera` (`Camera.java`) is a plain
 offset holder — `centerOn(x, y)` sets its top-left offset to the target
 position minus half the viewport, with no smoothing between calls and no
 clamping to the map's bounds, so the viewport can extend past the map edge
-when the player is near one.
+when the player is near one. The viewport is resizable after construction
+via `resizeViewport(width, height)`, tracking `GamePanel`'s live pixel size
+each paint so a resizable Windowed frame reveals more or less of the map
+around the player as it's resized; resizing below a 5-tile-per-dimension
+minimum clamps to that floor rather than shrinking to zero or negative tiles.
 
 **World representation** (`world/WorldScene.java`): an abstract base holding
 a `Tile[width][height]` grid. The concrete scene (`TileTestScene2`)
@@ -143,13 +147,12 @@ Inventory, and future panels like a player stats screen) — see
 
 **Keyboard input** (`input/Keybindings.java`, `GamePanel.bindKeys`): all
 keyboard input goes through Swing Key Bindings (`InputMap`/`ActionMap`,
-`WHEN_IN_FOCUSED_WINDOW`) — the same mechanism `Main.java` already used for
-F5/reset. `Keybindings` centralizes the `KeyStroke` and action-name
-constants; `GamePanel` registers one `Action` per named binding (movement,
-inventory toggle) instead of a raw `KeyListener` switch. Each `Action`
-notifies `GameListener`s and repaints itself, so there's no catch-all
-"notify after every keypress" path — an unbound key simply never invokes
-an `Action`.
+`WHEN_IN_FOCUSED_WINDOW`). `Keybindings` centralizes the `KeyStroke` and
+action-name constants; `GamePanel` registers one `Action` per named binding
+(movement, inventory toggle) instead of a raw `KeyListener` switch. Each
+`Action` notifies `GameListener`s and repaints itself, so there's no
+catch-all "notify after every keypress" path — an unbound key simply never
+invokes an `Action`.
 
 **Class/stats sandbox** (`sandbox/`): a dev-only stat inspector, not
 referenced from `Main.java` and not the packaged/jpackage build's entry
