@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.15](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.14...v0.5.0-beta.15) (2026-09-04)
+
+
+### Bug Fixes
+
+* focus the actually-shown title card, not the first-added card ([33d658b](https://github.com/SwiftFaze/Veil/commit/33d658b2a2381e7f7c0f577bcc2cacbcf63c081a))
+* focus the actually-shown title card, not the first-added card ([1be0893](https://github.com/SwiftFaze/Veil/commit/1be0893fb5e7fc34859ca81a2b03bf3f308fcdf0)), closes [#159](https://github.com/SwiftFaze/Veil/issues/159)
+
 ## [0.5.0-beta.14](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.13...v0.5.0-beta.14) (2026-09-04)
 
 
