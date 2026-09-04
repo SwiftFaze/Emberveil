@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0-beta.13](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.12...v0.5.0-beta.13) (2026-09-04)
+
+
+### Features
+
+* add pause screen with ESC toggle (Resume/Settings/Exit to Main Menu) ([28a9500](https://github.com/SwiftFaze/Veil/commit/28a95002f80de124ed1112635ef3b6d8a3813b1a))
+
 ## [0.5.0-beta.12](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.11...v0.5.0-beta.12) (2026-09-04)
 
 
