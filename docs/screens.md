@@ -46,7 +46,10 @@ back-able list of eleven settings items, every row sharing one width (matching
 the widest row, same convention `RadioGroupWidget`'s vertical mode already
 uses): Brightness and Volume (both sliders, rendered as an actual bar via
 `SliderWidget.getDisplayText()`), Fullscreen (radio toggle: Windowed/
-Fullscreen), Font (radio cycle: Monospaced/Serif/SansSerif), Theme (radio
+Fullscreen; toggling it live-applies to the real game window — undecorated
+and maximized for Fullscreen mode, resizable and decorated for Windowed,
+with the `Camera` viewport tracking the live panel size so resizing reveals
+more or less map), Font (radio cycle: Monospaced/Serif/SansSerif), Theme (radio
 cycle: Default/Midnight/Sunrise — a fixed placeholder list built the same way
 as Font's, purely visual and not wired to the real mod-driven theme registry
 described in `docs/ui-widgets.md`'s "Widget theming"; see `specs/intent/widget-theming.md`'s
@@ -111,8 +114,7 @@ the main screen's), hosted via a new `ui/SettingsKeybindsWindow` (mirrors
 popup host at all). Actual key rebinding still doesn't retarget real input
 dispatch — `Keybindings.java`'s `KeyStroke` constants are unrelated and
 untouched; this page's `Map<String,String>` is a persisted display-only
-label, not real key binding. F5 still resets the entire game (back to the
-title screen) — settings on disk are unaffected either way.
+label, not real key binding.
 
 **Settings persistence** (`com.swiftfaze.veil.config`; see
 `specs/intent/settings-persistence.md`): `SettingsConfig` is a plain,

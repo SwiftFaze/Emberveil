@@ -31,4 +31,9 @@ public class CameraBehaviorSteps {
         assertEquals(x, camera.getX());
         assertEquals(y, camera.getY());
     }
+
+    @When("the viewport is resized to {int} tiles wide and {int} tiles tall")
+    public void theViewportIsResizedToTilesWideAndTilesTall(int width, int height) {
+        camera.resizeViewport(width, height);
+    }
 }

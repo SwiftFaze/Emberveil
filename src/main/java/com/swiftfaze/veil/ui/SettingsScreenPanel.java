@@ -27,6 +27,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
     private final ControlsHintBarWidget hintBar;
     private final ResetConfirmationPopup resetConfirmationPopup;
     private final SettingsStore settingsStore;
+    private Consumer<String> onWindowModeChanged = mode -> { };
 
     private static class SettingsRow {
         String name;
@@ -83,6 +84,11 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
 
         resetConfirmationPopup = new ResetConfirmationPopup();
         resetConfirmationPopup.setOnYes(this::resetAllToDefaults);
+    }
+
+    public void setOnWindowModeChanged(Consumer<String> onWindowModeChanged) {
+        this.onWindowModeChanged = onWindowModeChanged;
+        onWindowModeChanged.accept(settingsStore.config().getFullscreen());
     }
 
     private void bindKeys() {
@@ -219,6 +225,9 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
             default -> { return; }
         }
         settingsStore.persist();
+        if ("Fullscreen".equals(row.name)) {
+            onWindowModeChanged.accept(settingsStore.config().getFullscreen());
+        }
     }
 
     public void confirm() {
@@ -244,6 +253,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
         initializeRows();
         refresh();
         settingsStore.persist();
+        onWindowModeChanged.accept(settingsStore.config().getFullscreen());
     }
 
     public String getItemValue(String itemName) {
