@@ -60,3 +60,4 @@ part of any change.
 | `controls-hint-bar.md` | [#134](https://github.com/SwiftFaze/Veil/issues/134) (contextual world-action hints out of scope, tracked in [#133](https://github.com/SwiftFaze/Veil/issues/133)) |
 | `settings-persistence.md` | [#135](https://github.com/SwiftFaze/Veil/issues/135) (split out of the Fullscreen/Windowed live-toggle work; game-save/progress persistence tracked separately) |
 | `fullscreen-windowed-toggle.md` | [#136](https://github.com/SwiftFaze/Veil/issues/136) (persisting the chosen mode across restarts out of scope, tracked in [#135](https://github.com/SwiftFaze/Veil/issues/135)) |
+| `pause-screen-esc.md` | [#148](https://github.com/SwiftFaze/Veil/issues/148) (title screen's own Exit-quit action out of scope, tracked in [#147](https://github.com/SwiftFaze/Veil/issues/147)) |

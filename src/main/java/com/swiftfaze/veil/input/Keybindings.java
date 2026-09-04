@@ -32,6 +32,7 @@ public final class Keybindings {
     public static final String ACTION_MOVE_RIGHT = "move-right";
     public static final String ACTION_TOGGLE_INVENTORY = "toggle-inventory";
     public static final String ACTION_TOGGLE_CODEX = "toggle-codex";
+    public static final String ACTION_TOGGLE_PAUSE = "toggle-pause";
     public static final String ACTION_NEXT_TAB = "next-tab";
     public static final String ACTION_PREV_TAB = "prev-tab";
 

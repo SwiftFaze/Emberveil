@@ -9,6 +9,8 @@ import com.swiftfaze.veil.ui.CodexPanel;
 import com.swiftfaze.veil.ui.GameWindow;
 import com.swiftfaze.veil.ui.HintAware;
 import com.swiftfaze.veil.ui.InventoryPanel;
+import com.swiftfaze.veil.ui.PauseMenuPopup;
+import com.swiftfaze.veil.ui.PauseToggleListener;
 import com.swiftfaze.veil.ui.PopupToggleListener;
 import com.swiftfaze.veil.ui.SettingsKeybindsPanel;
 import com.swiftfaze.veil.ui.SettingsKeybindsWindow;
@@ -52,6 +54,7 @@ public class Main {
 
         GamePanel gamePanel = buildGameCard(cardPanel, cards, hintBar);
         buildUIScreens(cardLayout, cardPanel, cards, gamePanel, hintBar);
+        wirePauseMenuNavigation(cards, cardLayout, cardPanel, gamePanel);
         configureAndShowFrame(frame, cardPanel, cardLayout, hintBar, cards);
     }
 
@@ -59,16 +62,19 @@ public class Main {
         GamePanel gamePanel = new GamePanel();
         InventoryPanel inventoryPanel = new InventoryPanel(hintBar);
         CodexPanel codexPanel = new CodexPanel(hintBar);
-        wirePopups(gamePanel, inventoryPanel, codexPanel, hintBar);
+        PauseMenuPopup pauseMenuPopup = new PauseMenuPopup();
+        cards.put("pause", pauseMenuPopup);
+        wirePopups(gamePanel, inventoryPanel, codexPanel, pauseMenuPopup, hintBar);
 
         JLayeredPane gameContentArea = GameWindow.buildContentArea(gamePanel);
         gameContentArea.add(inventoryPanel, JLayeredPane.POPUP_LAYER);
         gameContentArea.add(codexPanel, JLayeredPane.POPUP_LAYER);
+        gameContentArea.add(pauseMenuPopup, JLayeredPane.POPUP_LAYER);
         gameContentArea.add(inventoryPanel.getDropConfirmationPopup(), JLayeredPane.DRAG_LAYER);
 
-        JPanel gameCard = new JPanel(new BorderLayout());
-        gameCard.add(gameContentArea, BorderLayout.CENTER);
-        cardPanel.add(gameCard, "game");
+        JPanel gameCardPanel = new JPanel(new BorderLayout());
+        gameCardPanel.add(gameContentArea, BorderLayout.CENTER);
+        cardPanel.add(gameCardPanel, "game");
         return gamePanel;
     }
 
@@ -77,7 +83,7 @@ public class Main {
     // player-info display, just enough plumbing for the two popups to open/close/exclude
     // each other and hand focus back to the game on dismiss, same as EastPanel used to.
     private static void wirePopups(GamePanel gamePanel, InventoryPanel inventoryPanel, CodexPanel codexPanel,
-                                    ControlsHintBarWidget hintBar) {
+                                    PauseMenuPopup pauseMenuPopup, ControlsHintBarWidget hintBar) {
         ModRegistry mods = ModLoader.load(Paths.get("mods"));
         FocusManager focusManager = new FocusManager();
 
@@ -91,7 +97,14 @@ public class Main {
         codexPanel.showClasses(mods.getAllPlayerClasses());
         codexPanel.setOnDismiss(() -> restoreGameFocus(gamePanel, hintBar));
 
+        pauseMenuPopup.setFocusManager(focusManager);
+        pauseMenuPopup.setOnDismiss(() -> {
+            gamePanel.setPaused(false);
+            restoreGameFocus(gamePanel, hintBar);
+        });
+
         gamePanel.addGameListener(new PopupToggleListener(inventoryPanel, codexPanel));
+        gamePanel.addGameListener(new PauseToggleListener(gamePanel, pauseMenuPopup));
     }
 
     private static void restoreGameFocus(GamePanel gamePanel, ControlsHintBarWidget hintBar) {
@@ -109,7 +122,7 @@ public class Main {
         }, hintBar);
         SettingsStore settingsStore = new SettingsStore(Path.of("").toAbsolutePath());
         SettingsScreenPanel settingsScreen = new SettingsScreenPanel(
-                screen -> navigateTo(cardLayout, cardPanel, cards, screen), Main::openFolder, hintBar, settingsStore);
+                screen -> handleSettingsBack(screen, cardLayout, cardPanel, cards), Main::openFolder, hintBar, settingsStore);
         SettingsKeybindsPanel keybindsScreen = new SettingsKeybindsPanel(
                 screen -> navigateTo(cardLayout, cardPanel, cards, screen), hintBar, settingsStore);
         cards.put("title", titleScreen);
@@ -127,8 +140,34 @@ public class Main {
             gamePanel.requestFocusInWindow();
             gamePanel.startGameLoop();
         } else if ("Settings".equals(menuItem)) {
+            ((SettingsScreenPanel) cards.get("settings")).setBackTarget("title");
             navigateTo(cardLayout, cardPanel, cards, "settings");
         }
+    }
+
+    private static void handleSettingsBack(String screen, CardLayout cardLayout, JPanel cardPanel,
+                                           Map<String, JComponent> cards) {
+        if ("pause".equals(screen)) {
+            cardLayout.show(cardPanel, "game");
+            cards.get("pause").requestFocusInWindow();
+        } else {
+            navigateTo(cardLayout, cardPanel, cards, screen);
+        }
+    }
+
+    private static void wirePauseMenuNavigation(Map<String, JComponent> cards, CardLayout cardLayout,
+                                                 JPanel cardPanel, GamePanel gamePanel) {
+        PauseMenuPopup pauseMenuPopup = (PauseMenuPopup) cards.get("pause");
+        SettingsScreenPanel settingsScreen = (SettingsScreenPanel) cards.get("settings");
+        pauseMenuPopup.setOnMenuSelect(item -> {
+            if (PauseMenuPopup.SETTINGS.equals(item)) {
+                settingsScreen.setBackTarget("pause");
+                navigateTo(cardLayout, cardPanel, cards, "settings");
+            } else if (PauseMenuPopup.EXIT_TO_MAIN_MENU.equals(item)) {
+                gamePanel.resetState();
+                navigateTo(cardLayout, cardPanel, cards, "title");
+            }
+        });
     }
 
     private static void configureAndShowFrame(JFrame frame, JPanel cardPanel, CardLayout cardLayout,

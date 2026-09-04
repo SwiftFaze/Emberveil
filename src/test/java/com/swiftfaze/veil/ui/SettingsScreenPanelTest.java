@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,5 +47,38 @@ class SettingsScreenPanelTest {
         SettingsScreenPanel panel = new SettingsScreenPanel(screen -> {}, path -> {}, new ControlsHintBarWidget(), store);
         panel.confirm();
         assertNotNull(panel);
+    }
+
+    @Test
+    void backDefaultsToTitle(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
+        List<String> capturedScreen = new ArrayList<>();
+        SettingsScreenPanel panel = new SettingsScreenPanel(
+            screen -> capturedScreen.add(screen),
+            path -> {},
+            new ControlsHintBarWidget(),
+            store
+        );
+
+        panel.back();
+
+        assertTrue(capturedScreen.contains("title"));
+    }
+
+    @Test
+    void backUsesSetBackTarget(@TempDir Path tempDir) {
+        SettingsStore store = new SettingsStore(tempDir);
+        List<String> capturedScreen = new ArrayList<>();
+        SettingsScreenPanel panel = new SettingsScreenPanel(
+            screen -> capturedScreen.add(screen),
+            path -> {},
+            new ControlsHintBarWidget(),
+            store
+        );
+
+        panel.setBackTarget("pause");
+        panel.back();
+
+        assertTrue(capturedScreen.contains("pause"));
     }
 }

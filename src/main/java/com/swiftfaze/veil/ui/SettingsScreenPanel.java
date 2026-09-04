@@ -28,6 +28,7 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
     private final ResetConfirmationPopup resetConfirmationPopup;
     private final SettingsStore settingsStore;
     private Consumer<String> onWindowModeChanged = mode -> { };
+    private String backTarget = "title";
 
     private static class SettingsRow {
         String name;
@@ -244,8 +245,16 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
         }
     }
 
+    public void setBackTarget(String backTarget) {
+        this.backTarget = backTarget;
+    }
+
+    public String getBackTarget() {
+        return backTarget;
+    }
+
     public void back() {
-        onBack.accept("title");
+        onBack.accept(backTarget);
     }
 
     private void resetAllToDefaults() {

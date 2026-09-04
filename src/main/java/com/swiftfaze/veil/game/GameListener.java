@@ -10,4 +10,7 @@ public interface GameListener {
 
     default void toggleCodex() {
     }
+
+    default void togglePause() {
+    }
 }
