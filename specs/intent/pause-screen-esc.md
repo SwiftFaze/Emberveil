@@ -13,7 +13,15 @@
 - [x] Implemented
 - [ ] Manually playtested (human) — see CLAUDE.md's "Repo-specific Step 4.5"
 - [x] Acceptance tests passing
-- [ ] Mutation testing passed
+- [ ] Mutation testing passed — `mvn org.pitest:pitest-maven:mutationCoverage` ran clean
+      (72% overall kill rate, no regression), but none of this feature's new
+      classes (`GamePanel`, `PauseMenuPopup`, `PauseToggleListener`,
+      `SettingsScreenPanel`, `Main`) are in `pom.xml`'s curated `targetClasses`
+      list — consistent with that list's existing convention of excluding
+      Swing view/composition classes (only `Keybindings`, touched here for a
+      new constant only, is in scope). Left unchecked since the run doesn't
+      actually cover this feature's own logic; not a regression, just no
+      signal either way.
 - [x] Documentation updated (`docs/`, and the wiki if player-facing)
 
 ## Problem
