@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.14](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.13...v0.5.0-beta.14) (2026-09-04)
+
+
+### Features
+
+* wire title screen Exit menu item to quit the application ([4dc573a](https://github.com/SwiftFaze/Veil/commit/4dc573a908c97d687223d00296d97b83a7b38165))
+* wire title screen Exit menu item to quit the application ([239c1e5](https://github.com/SwiftFaze/Veil/commit/239c1e53521c970fda7f9e6bab5004b3c245db68)), closes [#147](https://github.com/SwiftFaze/Veil/issues/147)
+
 ## [0.5.0-beta.13](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.12...v0.5.0-beta.13) (2026-09-04)
 
 
