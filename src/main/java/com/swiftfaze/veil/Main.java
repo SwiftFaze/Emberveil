@@ -41,7 +41,7 @@ public class Main {
             new ControlsHintBarWidget.Hint("x", "Codex"));
 
     public static void main(String[] args) {
-        loadGame();
+        SwingUtilities.invokeLater(Main::loadGame);
     }
 
     private static void loadGame() {
@@ -183,7 +183,12 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         cardLayout.show(cardPanel, "title");
-        ((JComponent) cardPanel.getComponent(0)).requestFocusInWindow();
+        // cardPanel.getComponent(0) is whichever card was added to the container FIRST
+        // (the "game" card, added in buildGameCard() before buildUIScreens() adds "title") -
+        // not whichever card CardLayout is currently showing. Requesting focus on that
+        // hidden, non-showing component silently fails, so no component ever holds
+        // keyboard focus. Look the actually-visible card up by name instead.
+        cards.get("title").requestFocusInWindow();
     }
 
     // Must run before any screen/widget is constructed below - they read WidgetTheme's
