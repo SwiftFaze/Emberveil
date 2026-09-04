@@ -61,3 +61,4 @@ part of any change.
 | `settings-persistence.md` | [#135](https://github.com/SwiftFaze/Veil/issues/135) (split out of the Fullscreen/Windowed live-toggle work; game-save/progress persistence tracked separately) |
 | `fullscreen-windowed-toggle.md` | [#136](https://github.com/SwiftFaze/Veil/issues/136) (persisting the chosen mode across restarts out of scope, tracked in [#135](https://github.com/SwiftFaze/Veil/issues/135)) |
 | `pause-screen-esc.md` | [#148](https://github.com/SwiftFaze/Veil/issues/148) (title screen's own Exit-quit action out of scope, tracked in [#147](https://github.com/SwiftFaze/Veil/issues/147)) |
+| `title-screen-exit.md` | [#147](https://github.com/SwiftFaze/Veil/issues/147) (pause menu's "Exit to Main Menu" out of scope, tracked in [#148](https://github.com/SwiftFaze/Veil/issues/148)) |

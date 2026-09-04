@@ -41,7 +41,10 @@ navigation.
 `TitleScreenPanel` shows the "VEIL" title (with Delta Corps Priest 1 font, or
 monospaced fallback if the font resource is absent) and a centered menu
 (Continue, New, Load, Settings, Exit) — New navigates to the game view and
-starts the game loop. `SettingsScreenPanel` is a centered, bordered, navigable,
+starts the game loop, Settings opens the settings screen, and Exit quits the
+application via `System.exit(0)` (the same shutdown `JFrame.EXIT_ON_CLOSE`
+already performs when closing the window via its title bar; Continue and Load
+remain non-functional placeholders). `SettingsScreenPanel` is a centered, bordered, navigable,
 back-able list of eleven settings items, every row sharing one width (matching
 the widest row, same convention `RadioGroupWidget`'s vertical mode already
 uses): Brightness and Volume (both sliders, rendered as an actual bar via
