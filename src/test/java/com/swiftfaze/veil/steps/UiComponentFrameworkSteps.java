@@ -66,6 +66,7 @@ public class UiComponentFrameworkSteps {
         codexPanel = null;
         tempDir = null;
         settingsStore = null;
+        lastWindowMode = null;
     }
 
 
@@ -106,6 +107,7 @@ public class UiComponentFrameworkSteps {
     // Settings persistence test support
     private Path tempDir;
     private SettingsStore settingsStore;
+    private String lastWindowMode;
 
     @Given("a list widget with items {string}, {string}, {string} and {string} selected")
     public void aListWidgetWithItems(String first, String second, String third, String selected) {
@@ -651,6 +653,7 @@ public class UiComponentFrameworkSteps {
             hintBar,
             settingsStore
         );
+        settingsScreenPanel.setOnWindowModeChanged(mode -> lastWindowMode = mode);
     }
 
     @Then("the settings items are {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}, {string}")
@@ -709,6 +712,11 @@ public class UiComponentFrameworkSteps {
     @Then("{string}'s value is {string}")
     public void itemsValueIs(String item, String expected) {
         assertEquals(expected, settingsScreenPanel.getRadioValue(item));
+    }
+
+    @Then("the game window switches to {string} mode")
+    public void theGameWindowSwitchesToMode(String expectedMode) {
+        assertEquals(expectedMode, lastWindowMode);
     }
 
     @Then("the install directory was opened")

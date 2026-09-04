@@ -89,6 +89,7 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        camera.resizeViewport(getWidth() / TILE_WIDTH, getHeight() / TILE_HEIGHT);
         camera.centerOn(player.getX(), player.getY());
 
         scene.renderWorld(
