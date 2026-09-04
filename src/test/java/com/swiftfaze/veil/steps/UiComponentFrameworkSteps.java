@@ -53,6 +53,7 @@ public class UiComponentFrameworkSteps {
         radioGroupWidget = null;
         sliderWidget = null;
         titleScreenPanel = null;
+        lastMenuSelection = null;
         settingsScreenPanel = null;
         keybindsPanel = null;
         confirmedTableRows.clear();
@@ -83,6 +84,7 @@ public class UiComponentFrameworkSteps {
     private RadioGroupWidget<String> radioGroupWidget;
     private SliderWidget sliderWidget;
     private TitleScreenPanel titleScreenPanel;
+    private String lastMenuSelection;
     private SettingsScreenPanel settingsScreenPanel;
     private SettingsKeybindsPanel keybindsPanel;
     private ControlsHintBarWidget hintBar;
@@ -562,17 +564,13 @@ public class UiComponentFrameworkSteps {
 
     @Given("the game is launched")
     public void theGameIsLaunched() {
-        titleScreenPanel = new TitleScreenPanel(item -> {
-            // Menu action callback - stored for verification in tests
-        }, hintBar);
+        titleScreenPanel = new TitleScreenPanel(item -> lastMenuSelection = item, hintBar);
     }
 
     @Given("the title screen is shown")
     public void theTitleScreenIsShown() {
         if (titleScreenPanel == null) {
-            titleScreenPanel = new TitleScreenPanel(item -> {
-                // Menu action callback
-            }, hintBar);
+            titleScreenPanel = new TitleScreenPanel(item -> lastMenuSelection = item, hintBar);
         }
         assertTrue(titleScreenPanel != null);
     }
@@ -604,6 +602,11 @@ public class UiComponentFrameworkSteps {
     @Then("the title screen is still shown")
     public void theTitleScreenIsStillShown() {
         assertTrue(titleScreenPanel != null);
+    }
+
+    @Then("the exit action is triggered")
+    public void theExitActionIsTriggered() {
+        assertEquals("Exit", lastMenuSelection);
     }
 
     @Given("no Delta Corps Priest {int} font resource is bundled")

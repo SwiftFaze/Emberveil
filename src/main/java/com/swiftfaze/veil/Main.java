@@ -142,6 +142,8 @@ public class Main {
         } else if ("Settings".equals(menuItem)) {
             ((SettingsScreenPanel) cards.get("settings")).setBackTarget("title");
             navigateTo(cardLayout, cardPanel, cards, "settings");
+        } else if ("Exit".equals(menuItem)) {
+            System.exit(0);
         }
     }
 

@@ -24,6 +24,12 @@ Feature: Startup welcome screen
     When the "Enter" key is pressed
     Then the settings screen is shown
 
+  Scenario: Selecting Exit from the title screen triggers the exit action
+    Given the title screen is shown
+    And "Exit" is highlighted in the title menu
+    When the "Enter" key is pressed
+    Then the exit action is triggered
+
   Scenario Outline: Confirming a non-functional placeholder menu item does nothing
     Given the title screen is shown
     And "<item>" is highlighted in the title menu
