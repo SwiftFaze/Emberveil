@@ -24,6 +24,7 @@ public class GamePanel extends JPanel {
     private final Camera camera = new Camera(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
     private final List<Positionable> entitiesToDraw = new ArrayList<>();
     private final List<GameListener> listeners = new ArrayList<>();
+    private boolean paused = false;
 
     public GamePanel() {
         setPreferredSize(new Dimension(GAME_WINDOW_WIDTH * TILE_WIDTH, GAME_WINDOW_HEIGHT * TILE_HEIGHT));
@@ -53,6 +54,7 @@ public class GamePanel extends JPanel {
         inputMap.put(Keybindings.MOVE_RIGHT_ARROW, Keybindings.ACTION_MOVE_RIGHT);
         inputMap.put(Keybindings.TOGGLE_INVENTORY, Keybindings.ACTION_TOGGLE_INVENTORY);
         inputMap.put(Keybindings.TOGGLE_CODEX, Keybindings.ACTION_TOGGLE_CODEX);
+        inputMap.put(Keybindings.MENU_CANCEL, Keybindings.ACTION_TOGGLE_PAUSE);
 
         actionMap.put(Keybindings.ACTION_MOVE_UP, new MoveAction(player::moveUp));
         actionMap.put(Keybindings.ACTION_MOVE_DOWN, new MoveAction(player::moveDown));
@@ -60,6 +62,7 @@ public class GamePanel extends JPanel {
         actionMap.put(Keybindings.ACTION_MOVE_RIGHT, new MoveAction(player::moveRight));
         actionMap.put(Keybindings.ACTION_TOGGLE_INVENTORY, new ToggleInventoryAction());
         actionMap.put(Keybindings.ACTION_TOGGLE_CODEX, new ToggleCodexAction());
+        actionMap.put(Keybindings.ACTION_TOGGLE_PAUSE, new TogglePauseAction());
     }
 
     private void notifyPlayerUpdated() {
@@ -83,6 +86,14 @@ public class GamePanel extends JPanel {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
+    public boolean isPaused() {
+        return paused;
     }
 
     @Override
@@ -123,6 +134,9 @@ public class GamePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            if (paused) {
+                return;
+            }
             move.accept(scene);
             notifyPlayerUpdated();
         }
@@ -142,6 +156,15 @@ public class GamePanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             for (GameListener l : listeners) {
                 l.toggleCodex();
+            }
+        }
+    }
+
+    private class TogglePauseAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for (GameListener l : listeners) {
+                l.togglePause();
             }
         }
     }
