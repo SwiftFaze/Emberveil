@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0-beta.16](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.15...v0.5.0-beta.16) (2026-09-05)
+
+
+### Features
+
+* persist windowed game window size across restarts ([6b38c91](https://github.com/SwiftFaze/Veil/commit/6b38c9172873c40ad00b589cc52225d9635b8bce))
+* persist windowed game window size across restarts ([42f1bf9](https://github.com/SwiftFaze/Veil/commit/42f1bf9c3633b10014de1ad93fea5df628ddbc15)), closes [#163](https://github.com/SwiftFaze/Veil/issues/163)
+
 ## [0.5.0-beta.15](https://github.com/SwiftFaze/Veil/compare/v0.5.0-beta.14...v0.5.0-beta.15) (2026-09-04)
 
 
