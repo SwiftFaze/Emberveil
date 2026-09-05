@@ -31,6 +31,7 @@ Veil is a 2D ASCII-tile desktop RPG built with Java 17 Swing (no game engine). R
   - A PR from `develop` (a release promotion), or
   - A PR from a `hotfix/*` branch (an urgent fix that can't wait for the next promotion — branch off `master`, fix, PR back to `master`, then bring the same fix into `develop` too so it isn't lost on the next promotion).
   - The `master-source-check` CI job (in `.github/workflows/ci.yml`) enforces this mechanically: it fails any PR into `master` whose head branch isn't `develop`, `hotfix/*`, or Release Please's own `release-please--branches--master`.
+- **Feature/fix/docs PRs into `develop` must be squash-merged** (`gh pr merge <n> --squash --delete-branch`, or GitHub UI's "Squash and merge") — never "Create a merge commit". A regular merge commit duplicates every changelog entry: GitHub's merge-commit body repeats the original commit's conventional-commit-formatted subject line as its own second line, and Release Please's git-log walk counts both the original commit and the merge commit as separate qualifying commits (e.g. PRs #149, #157, #160 each produced two near-identical lines in the same `CHANGELOG.md` release section — that's how this was caught). The one exception is the `develop` → `master` promotion PR (see the `close-milestone` skill), which must stay a true merge (`gh pr merge --merge`) — squashing it would collapse every accumulated beta commit into one, losing the granular history Release Please needs to generate `master`'s changelog.
 
 ## Architecture
 
