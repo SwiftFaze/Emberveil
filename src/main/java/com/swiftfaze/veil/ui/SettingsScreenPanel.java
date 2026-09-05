@@ -92,6 +92,10 @@ public class SettingsScreenPanel extends JPanel implements HintAware {
         onWindowModeChanged.accept(settingsStore.config().getFullscreen());
     }
 
+    public SettingsStore getSettingsStore() {
+        return settingsStore;
+    }
+
     private void bindKeys() {
         InputMap inputMap = getInputMap(WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();

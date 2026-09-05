@@ -20,6 +20,8 @@ public class SettingsConfig {
             "Move left", "Left",
             "Move right", "Right",
             "Toggle inventory", "I"));
+    private int windowWidth = 0;
+    private int windowHeight = 0;
 
     public int getBrightness() {
         return brightness;
@@ -67,6 +69,22 @@ public class SettingsConfig {
 
     public void setKeybinds(Map<String, String> keybinds) {
         this.keybinds = new LinkedHashMap<>(keybinds);
+    }
+
+    public int getWindowWidth() {
+        return windowWidth;
+    }
+
+    public void setWindowWidth(int windowWidth) {
+        this.windowWidth = windowWidth;
+    }
+
+    public int getWindowHeight() {
+        return windowHeight;
+    }
+
+    public void setWindowHeight(int windowHeight) {
+        this.windowHeight = windowHeight;
     }
 
     /**

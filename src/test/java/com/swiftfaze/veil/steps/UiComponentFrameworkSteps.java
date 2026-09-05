@@ -110,6 +110,7 @@ public class UiComponentFrameworkSteps {
     private Path tempDir;
     private SettingsStore settingsStore;
     private String lastWindowMode;
+    private com.swiftfaze.veil.config.SettingsConfig loadedConfig;
 
     @Given("a list widget with items {string}, {string}, {string} and {string} selected")
     public void aListWidgetWithItems(String first, String second, String third, String selected) {
@@ -979,8 +980,24 @@ public class UiComponentFrameworkSteps {
         switch (key) {
             case "Brightness" -> config.setBrightness(value);
             case "Volume" -> config.setVolume(value);
+            case "WindowWidth" -> config.setWindowWidth(value);
+            case "WindowHeight" -> config.setWindowHeight(value);
         }
         settingsStore.persist();
+    }
+
+    @When("the settings file is loaded")
+    public void theSettingsFileIsLoaded() throws Exception {
+        com.swiftfaze.veil.config.SettingsRepository repo = new com.swiftfaze.veil.config.SettingsRepository(tempDir);
+        loadedConfig = repo.load();
+    }
+
+    @Then("the loaded {string} is {int}")
+    public void theLoadedValueIs(String key, int expected) {
+        switch (key) {
+            case "WindowWidth" -> assertEquals(expected, loadedConfig.getWindowWidth());
+            case "WindowHeight" -> assertEquals(expected, loadedConfig.getWindowHeight());
+        }
     }
 
     @Given("the settings file has {string} set to {string}")
