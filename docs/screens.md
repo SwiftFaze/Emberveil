@@ -122,11 +122,12 @@ label, not real key binding.
 **Settings persistence** (`com.swiftfaze.veil.config`; see
 `specs/intent/settings-persistence.md`): `SettingsConfig` is a plain,
 Gson-serializable data holder (Brightness/Fullscreen/Font/Theme/Volume plus
-a Keybinds map) whose no-arg constructor's field initializers are the single
-source of truth for "defaults" — reused both as the fallback when
-`settings.json` is missing/corrupt/partial and as what Keybinds' own Reset
-to Defaults stages. `SettingsRepository` reads/writes `settings.json` next
-to the install (`Path.of("").toAbsolutePath()`, the same base
+a Keybinds map, and a WindowWidth/WindowHeight pair — see below) whose
+no-arg constructor's field initializers are the single source of truth for
+"defaults" — reused both as the fallback when `settings.json` is
+missing/corrupt/partial and as what Keybinds' own Reset to Defaults
+stages. `SettingsRepository` reads/writes `settings.json` next to the
+install (`Path.of("").toAbsolutePath()`, the same base
 `Main.openFolder`/`ModLoader.load` already treat as "the install"); a
 missing file, unparsable JSON, or a `keybinds` object missing some actions
 all fall back to defaults for just the affected value(s), never a crash.
@@ -137,6 +138,24 @@ share the same in-memory config object — each screen only ever mutates the
 fields it owns, but since both hold a reference to the same instance,
 neither screen's `persist()` call can clobber a change the other screen
 already made in the same session.
+
+**Windowed size persistence** (see
+`specs/intent/persist-windowed-window-size.md`): `WindowWidth`/`WindowHeight`
+default to `0`, a sentinel meaning "nothing saved yet, let the window
+`pack()` to its natural size" — unlike the other fields above, they're not
+a main-screen settings row and are deliberately excluded from
+`resetToDefaults()`, the same way Keybinds is. `Main` registers a single
+JVM shutdown hook (`registerWindowSizeShutdownHook`) that captures the live
+frame's size into these fields and persists them only if the window is
+still in Windowed mode when the app quits (checked via
+`!frame.isUndecorated()`); a Fullscreen-mode quit leaves whatever was
+previously saved untouched. `applyWindowMode`'s Windowed branch restores
+and clamps that saved size (independently per axis, to
+`[MIN_WINDOW_WIDTH, screenBounds.width]` /
+`[MIN_WINDOW_HEIGHT, screenBounds.height]`) both at launch and on a live
+Fullscreen→Windowed switch, reusing the same immediate-callback-fire
+mechanism `SettingsScreenPanel.setOnWindowModeChanged()` already uses to
+apply a persisted Fullscreen setting at launch.
 
 `InventoryPanel` extends `PopupWidget`: its body is a 50/50 split
 (`GridLayout`) between an item `ListWidget<Item>` on the left (scrollable

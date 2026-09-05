@@ -63,3 +63,4 @@ part of any change.
 | `pause-screen-esc.md` | [#148](https://github.com/SwiftFaze/Veil/issues/148) (title screen's own Exit-quit action out of scope, tracked in [#147](https://github.com/SwiftFaze/Veil/issues/147)) |
 | `title-screen-exit.md` | [#147](https://github.com/SwiftFaze/Veil/issues/147) (pause menu's "Exit to Main Menu" out of scope, tracked in [#148](https://github.com/SwiftFaze/Veil/issues/148)) |
 | `window-focus-on-launch.md` | [#159](https://github.com/SwiftFaze/Veil/issues/159) (found while manually playtesting [#147](https://github.com/SwiftFaze/Veil/issues/147)) |
+| `persist-windowed-window-size.md` | [#163](https://github.com/SwiftFaze/Veil/issues/163) (builds on [#135](https://github.com/SwiftFaze/Veil/issues/135)'s settings persistence and [#136](https://github.com/SwiftFaze/Veil/issues/136)'s Fullscreen/Windowed toggle) |

@@ -1,5 +1,6 @@
 package com.swiftfaze.veil;
 
+import com.swiftfaze.veil.config.SettingsConfig;
 import com.swiftfaze.veil.config.SettingsStore;
 import com.swiftfaze.veil.game.GamePanel;
 import com.swiftfaze.veil.mods.ModLoader;
@@ -231,16 +232,18 @@ public class Main {
 
     private static void wireWindowMode(JFrame frame, Map<String, JComponent> cards) {
         SettingsScreenPanel settingsScreen = (SettingsScreenPanel) cards.get("settings");
+        SettingsStore settingsStore = settingsScreen.getSettingsStore();
         settingsScreen.setOnWindowModeChanged(mode -> {
-            applyWindowMode(frame, mode);
+            applyWindowMode(frame, mode, settingsStore);
             settingsScreen.requestFocusInWindow();
         });
+        registerWindowSizeShutdownHook(frame, settingsStore);
     }
 
     private static final int MIN_WINDOW_WIDTH = 400;
     private static final int MIN_WINDOW_HEIGHT = 300;
 
-    private static void applyWindowMode(JFrame frame, String mode) {
+    private static void applyWindowMode(JFrame frame, String mode, SettingsStore settingsStore) {
         boolean fullscreen = "Fullscreen".equals(mode);
         boolean wasDisplayable = frame.isDisplayable();
         if (wasDisplayable) {
@@ -253,10 +256,27 @@ public class Main {
         } else {
             frame.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
             frame.pack();
+            restoreSavedWindowSize(frame, settingsStore);
         }
         if (wasDisplayable) {
             frame.setVisible(true);
         }
+    }
+
+    private static void restoreSavedWindowSize(JFrame frame, SettingsStore settingsStore) {
+        SettingsConfig config = settingsStore.config();
+        int savedWidth = config.getWindowWidth();
+        int savedHeight = config.getWindowHeight();
+        if (savedWidth > 0 && savedHeight > 0) {
+            frame.setSize(clampToScreenBounds(frame, savedWidth, savedHeight));
+        }
+    }
+
+    private static Dimension clampToScreenBounds(JFrame frame, int width, int height) {
+        Rectangle bounds = currentScreenBounds(frame);
+        int clampedWidth = Math.max(MIN_WINDOW_WIDTH, Math.min(width, bounds.width));
+        int clampedHeight = Math.max(MIN_WINDOW_HEIGHT, Math.min(height, bounds.height));
+        return new Dimension(clampedWidth, clampedHeight);
     }
 
     private static Rectangle currentScreenBounds(JFrame frame) {
@@ -265,6 +285,17 @@ public class Main {
                 ? config.getDevice()
                 : GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         return device.getDefaultConfiguration().getBounds();
+    }
+
+    private static void registerWindowSizeShutdownHook(JFrame frame, SettingsStore settingsStore) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!frame.isUndecorated()) {
+                SettingsConfig config = settingsStore.config();
+                config.setWindowWidth(frame.getWidth());
+                config.setWindowHeight(frame.getHeight());
+                settingsStore.persist();
+            }
+        }));
     }
 
 }

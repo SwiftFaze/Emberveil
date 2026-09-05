@@ -187,4 +187,45 @@ class SettingsRepositoryTest {
         assertEquals("O", loaded.getKeybinds().get("Toggle inventory"));
         assertEquals("Down", loaded.getKeybinds().get("Move down"));
     }
+
+    @Test
+    void loadReturnsZeroWindowSizeWhenFileDoesNotExist(@TempDir Path tempDir) {
+        SettingsRepository repo = new SettingsRepository(tempDir);
+        SettingsConfig config = repo.load();
+
+        assertEquals(0, config.getWindowWidth());
+        assertEquals(0, config.getWindowHeight());
+    }
+
+    @Test
+    void roundTripPreservesWindowSize(@TempDir Path tempDir) throws Exception {
+        SettingsConfig original = new SettingsConfig();
+        original.setWindowWidth(1024);
+        original.setWindowHeight(768);
+
+        SettingsRepository repo = new SettingsRepository(tempDir);
+        repo.save(original);
+        SettingsConfig loaded = repo.load();
+
+        assertEquals(1024, loaded.getWindowWidth());
+        assertEquals(768, loaded.getWindowHeight());
+    }
+
+    @Test
+    void loadFallsBackToZeroWindowSizeWhenMissingFromFile(@TempDir Path tempDir) throws Exception {
+        Path settingsFile = tempDir.resolve("settings.json");
+        String json = """
+                {
+                  "volume": 8
+                }
+                """;
+        Files.writeString(settingsFile, json);
+
+        SettingsRepository repo = new SettingsRepository(tempDir);
+        SettingsConfig config = repo.load();
+
+        assertEquals(8, config.getVolume());
+        assertEquals(0, config.getWindowWidth());
+        assertEquals(0, config.getWindowHeight());
+    }
 }
